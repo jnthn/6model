@@ -268,10 +268,15 @@ token twigil { <[*!?]> }
 
 proto token package_declarator { <...> }
 token package_declarator:sym<module> { <sym> <package_def> }
-token package_declarator:sym<class>  { $<sym>=[class|grammar|knowhow|role] <package_def> }
+token package_declarator:sym<class>  {
+    :my $*PACKAGE-SETUP := PAST::Stmts.new();
+    $<sym>=[class|grammar|knowhow|role]
+    <package_def>
+}
 
 rule package_def {
     <name>
+    [ 'is' 'repr(' <repr=.quote_EXPR> ')' ]?
     [ 'is' <parent=.name> ]?
     [
     || ';' <comp_unit>

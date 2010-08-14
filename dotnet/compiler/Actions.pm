@@ -341,25 +341,45 @@ method variable($/) {
 
 method package_declarator:sym<module>($/) { make $<package_def>.ast; }
 method package_declarator:sym<class>($/) {
-    my $past := $<package_def>.ast;
-    my $classinit :=
-        PAST::Op.new(
+    my $name := ~$<package_def><name>;
+    
+    # Prefix the class initialization with initial setup.
+    $*PACKAGE-SETUP.unshift(PAST::Stmts.new(
+        PAST::Op.new( :pasttype('bind'),
+            PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
             PAST::Op.new(
-                :inline( '    %r = get_root_global ["parrot"], "P6metaclass"')
+                :pasttype('callmethod'), :name('new_type'),
+                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('package') )
+                # XXX is repr...
+            )
+        )
+        # XXX name
+        # XXX is parent
+    ));
+
+    # Postfix it with a call to compose. We'll also install this
+    # in the package.
+    $*PACKAGE-SETUP.push(PAST::Op.new( :pasttype('bind'),
+        PAST::Var.new( :name($name) ),
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('compose'),
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('get_how'),
+                PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
-            ~$<package_def><name>,
-            :name('new_class'),
-            :pasttype('callmethod')
-        );
-    my $parent := ~$<package_def><parent>[0]
-                  || ($<sym> eq 'grammar' ?? 'Regex::Cursor' !! '');
-    if $parent {
-        $classinit.push( PAST::Val.new( :value($parent), :named('parent') ) );
-    }
-    if $past<attributes> {
-        $classinit.push( $past<attributes> );
-    }
-    @BLOCK[0].loadinit.push($classinit);
+            PAST::Var.new( :name('type_obj'), :scope('register') )
+        )
+    ));
+    
+    # Run this at loadinit time.
+    @BLOCK[0].loadinit.push($*PACKAGE-SETUP);
+
+    # Set up lexical for this to live in.
+    @BLOCK[0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
+    @BLOCK[0].symbol($name, :scope('lexical'));
+
+    # Just evaluate anything else in the package in-line.
+    my $past := $<package_def>.ast;
     make $past;
 }
 
@@ -440,19 +460,35 @@ method routine_def($/) {
 
 
 method method_def($/) {
+    # Build method block PAST.
     my $past := $<blockoid>.ast;
-    $past.blocktype('method');
+    $past.blocktype('declaration');
     if $*SCOPE eq 'our' {
         $past.pirflags(':nsentry');
     }
     $past.control('return_pir');
-    $past[0].unshift( PAST::Op.new( :inline('    .lex "self", self') ) );
+    $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
     $past.symbol('self', :scope('lexical') );
+    
+    # Provided it's named, install it in the methods table.
     if $<deflongname> {
         my $name := ~$<deflongname>[0].ast;
         $past.name($name);
+        $*PACKAGE-SETUP.push(PAST::Op.new(
+            :pasttype('callmethod'), :name('add_method'),
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('get_how'),
+                PAST::Var.new( :name('type_obj'), :scope('register') )
+            ),
+            PAST::Var.new( :name('type_obj'), :scope('register') ),
+            $name,
+            PAST::Val.new( :value($past) )
+        ));
     }
+
+    # XXX We'll have to fix this up...
     if $*MULTINESS eq 'multi' { $past.multi().unshift('_'); }
+    
     make $past;
 }
 
@@ -793,18 +829,6 @@ method quote_escape:sym<esc>($/) { make "\c[27]"; }
 ## Operators
 
 method postfix:sym<.>($/) { make $<dotty>.ast; }
-
-method postfix:sym<++>($/) {
-    make PAST::Op.new( :name('postfix:<++>'),
-                       :inline('    clone %r, %0', '    inc %0'),
-                       :pasttype('inline') );
-}
-
-method postfix:sym<-->($/) {
-    make PAST::Op.new( :name('postfix:<-->'),
-                       :inline('    clone %r, %0', '    dec %0'),
-                       :pasttype('inline') );
-}
 
 method prefix:sym<make>($/) {
     make PAST::Op.new(

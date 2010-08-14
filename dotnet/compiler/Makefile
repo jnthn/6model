@@ -19,4 +19,4 @@ gen_dnst2csharp.pir: DNST2CSharp.pm
 	parrot-nqp --target=pir DNST2CSharp.pm > gen_dnst2csharp.pir
 
 clean:
-	del gen_*.pir *.dll *.exe *.cs
+	del gen_*.pir *.dll *.pdb *.exe *.cs

@@ -11,6 +11,9 @@ method compile(PAST::Node $node) {
     # The nested blocks, flattened out.
     my @*INNER_BLOCKS;
 
+    # Any loadinits we'll need to run.
+    my @*LOADINITS;
+
     # We'll build a static block info array too; this helps us do so.
     my $*OUTER_SBI := 0;
     my $*SBI_POS := 1;
@@ -35,6 +38,12 @@ method compile(PAST::Node $node) {
     $class.push(DNST::Attribute.new( :name('StaticBlockInfo'), :type('RakudoCodeRef.Instance[]') ));
     $class.push(make_blocks_init_method('blocks_init'));
 
+    # Calls to loadinits.
+    my $loadinit_calls := DNST::Stmts.new();
+    for @*LOADINITS {
+        $loadinit_calls.push($_);
+    }
+
     # Finally, startup handling code.
     # XXX This will need to change some day for modules.
     $class.push(DNST::Method.new(
@@ -48,6 +57,7 @@ method compile(PAST::Node $node) {
             :void(1),
             'TC'
         ),
+        $loadinit_calls,
         $main_block_call
     ));
 
@@ -124,6 +134,9 @@ our multi sub dnst_for(PAST::Block $block) {
         $our_sbi_setup
     ));
 
+    # Label the PAST block with its SBI.
+    $block<SBI> := "StaticBlockInfo[$our_sbi]";
+
     # Make start of block.
     my $result := DNST::Method.new(
         :name(get_unique_id('block')),
@@ -132,12 +145,29 @@ our multi sub dnst_for(PAST::Block $block) {
     );
     
     # Emit all the statements.
-    my $stmts := DNST::Stmts.new();
     my @inner_blocks;
+    my $stmts := DNST::Stmts.new();
     for @($block) {
         my $*OUTER_SBI := $our_sbi;
         my @*INNER_BLOCKS;
         $stmts.push(dnst_for($_));
+        for @*INNER_BLOCKS {
+            @inner_blocks.push($_);
+        }
+    }
+
+    # See if we have a loadinit.
+    if +@($block.loadinit) {
+        my $*OUTER_SBI := $our_sbi;
+        my @*INNER_BLOCKS;
+
+        # We'll fake this as an inner block to compile.
+        @*LOADINITS.push(dnst_for(PAST::Block.new(
+            :blocktype('immediate'), $block.loadinit
+        )));
+
+        # Add blocks from this compilation (probably just one,
+        # but handle nested blocks from the loadinit).
         for @*INNER_BLOCKS {
             @inner_blocks.push($_);
         }
@@ -315,6 +345,14 @@ our multi sub dnst_for(PAST::Op $op) {
 
 # Emits a value.
 our multi sub dnst_for(PAST::Val $val) {
+    # If it's a block reference, hand back the SBI.
+    if $val.value ~~ PAST::Block {
+        unless $val.value<SBI> {
+            pir::die("Can't use PAST::Val for a block reference for an as-yet uncompiled block");
+        }
+        return $val.value<SBI>;
+    }
+
     # Look up the type to box to.
     my $type := $val.returns || (
         # XXX This is a bit of a Parrot-specific hack.
@@ -385,9 +423,27 @@ our multi sub dnst_for(PAST::Var $var) {
 
         return $lookup;
     }
+    elsif $scope eq 'register' {
+        if $var.isdecl {
+            my $result := DNST::Temp.new( :name($var.name), :type('IRakudoObject') );
+            unless $*BIND_CONTEXT { $result.push('null'); }
+            return $result;
+        }
+        elsif $*BIND_CONTEXT {
+            return DNST::Bind.new( $var.name );
+        }
+        else {
+            return $var.name;
+        }
+    }
     else {
         pir::die("Don't know how to compile variable scope " ~ $var.scope);
     }
+}
+
+# Catch-all for error detection.
+our multi sub dnst_for($any) {
+    pir::die("Don't know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
 }
 
 # Emits a lookup of a lexical.

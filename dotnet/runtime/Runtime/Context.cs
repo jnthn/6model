@@ -70,8 +70,30 @@ namespace Rakudo.Runtime
             }
             else
             {
-                // XXX Auto-close
-                throw new NotImplementedException("Need to implement auto-close.");
+                // Auto-close. In this we go setting up fake contexts
+                // that use the static lexpad until we find a real one.
+                var CurContext = this;
+                while (OuterBlock != null)
+                {
+                    // If we found a block with a context, we're done.
+                    if (OuterBlock.CurrentContext != null)
+                    {
+                        CurContext.Outer = OuterBlock.CurrentContext;
+                        break;
+                    }
+
+                    // Build the fake context.
+                    var OuterContext = new Context();
+                    OuterContext.StaticCodeObject = OuterBlock;
+                    OuterContext.LexPad = OuterBlock.StaticLexPad;
+
+                    // Link it.
+                    CurContext.Outer = OuterContext;
+                    
+                    // Step back one level.
+                    CurContext = OuterContext;
+                    OuterBlock = OuterBlock.OuterBlock;
+                }
             }
         }
     }

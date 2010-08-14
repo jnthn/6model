@@ -35,8 +35,7 @@ namespace Rakudo.Runtime
         public Dictionary<string, IRakudoObject> LexPad;
 
         /// <summary>
-        /// For internal use.
-        /// XXX Kill this, probably.
+        /// Creates an empty, uninitialized context.
         /// </summary>
         public Context()
         {

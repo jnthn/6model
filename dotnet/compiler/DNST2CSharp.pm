@@ -46,6 +46,10 @@ our multi sub cs_for(DNST::Class $class) {
     return $code;
 }
 
+our multi sub cs_for(DNST::Attribute $attr) {
+    return '    private static ' ~ $attr.type ~ ' ' ~ $attr.name ~ ";\n";
+}
+
 our multi sub cs_for(DNST::Method $meth) {
     my $*LAST_TEMP := '';
 
@@ -104,9 +108,12 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     my $invocant := $mc.on || @arg_names.shift;
 
     # Code-gen the call.
-    $*LAST_TEMP := get_unique_id('result');
-    $code := $code ~
-        "        var $*LAST_TEMP = $invocant." ~ $mc.name ~
+    $code := $code ~ '        ';
+    unless $mc.void {
+        $*LAST_TEMP := get_unique_id('result');
+        $code := $code ~ "var $*LAST_TEMP = ";
+    }
+    $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";
 
     return $code;
@@ -122,9 +129,12 @@ our multi sub cs_for(DNST::Call $mc) {
     }
 
     # Code-gen the call.
-    $*LAST_TEMP := get_unique_id('result');
-    $code := $code ~
-        "        var $*LAST_TEMP = " ~ $mc.name ~
+    $code := $code ~ '        ';
+    unless $mc.void {
+        $*LAST_TEMP := get_unique_id('result');
+        $code := $code ~ "var $*LAST_TEMP = ";
+    }
+    $code := $code ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";
 
     return $code;

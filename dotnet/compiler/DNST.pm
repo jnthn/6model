@@ -95,6 +95,28 @@ class DNST::Class is DNST::Node {
     }
 }
 
+class DNST::Attribute is DNST::Node {
+    has $!name;
+    has $!type;
+
+    method name($set?) {
+        if $set { $!name := $set }
+        $!name
+    }
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$name!, :$type!) {
+        my $obj := self.CREATE;
+        $obj.name($name);
+        $obj.type($type);
+        $obj;
+    }
+}
+
 class DNST::Method is DNST::Node {
     has $!name;
     has $!return_type;
@@ -127,15 +149,22 @@ class DNST::Method is DNST::Node {
 
 class DNST::Call is DNST::Node {
     has $!name;
+    has $!void;
 
     method name($set?) {
         if $set { $!name := $set }
         $!name
     }
 
-    method new(:$name!, *@children) {
+    method void($set?) {
+        if $set { $!void := $set }
+        $!void
+    }
+
+    method new(:$name!, :$void, *@children) {
         my $obj := self.CREATE;
         $obj.name($name);
+        $obj.void($void);
         $obj.set_children(@children);
         $obj;
     }
@@ -144,6 +173,7 @@ class DNST::Call is DNST::Node {
 class DNST::MethodCall is DNST::Node {
     has $!on;
     has $!name;
+    has $!void;
     
     method on($set?) {
         if $set { $!on := $set }
@@ -155,10 +185,16 @@ class DNST::MethodCall is DNST::Node {
         $!name
     }
 
-    method new(:$name!, :$on, *@children) {
+    method void($set?) {
+        if $set { $!void := $set }
+        $!void
+    }
+
+    method new(:$name!, :$on, :$void, *@children) {
         my $obj := self.CREATE;
         if $on { $obj.on($on); }
         $obj.name($name);
+        $obj.void($void);
         $obj.set_children(@children);
         $obj;
     }

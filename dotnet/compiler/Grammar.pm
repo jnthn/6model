@@ -1,12 +1,24 @@
 grammar JnthnNQP::Grammar is HLL::Grammar;
 
-
 method TOP() {
     my %*LANG;
     %*LANG<Regex>         := NQP::Regex;
     %*LANG<Regex-actions> := NQP::RegexActions;
     %*LANG<MAIN>          := NQP::Grammar;
     %*LANG<MAIN-actions>  := NQP::Actions;
+
+    # Package declarator to meta-package mapping.
+    my %*HOW;
+    %*HOW<knowhow> := 'KnowHOW';
+    %*HOW<class>   := 'NQPClassHOW';
+    %*HOW<grammar> := 'NQPGrammarHOW';
+    %*HOW<role>    := 'NQPRoleHOW';
+
+    # What attribute class to use with what HOW, plus a default.
+    my %*DEFAULT-METAATTR   := 'NQPAttribute';
+    my %*HOW-METAATTR;
+    %*HOW-METAATTR<knowhow> := 'KnowHOWAttribute';
+
     my $*SCOPE      := '';
     my $*MULTINESS  := '';
     self.comp_unit;
@@ -256,7 +268,7 @@ token twigil { <[*!?]> }
 
 proto token package_declarator { <...> }
 token package_declarator:sym<module> { <sym> <package_def> }
-token package_declarator:sym<class>  { $<sym>=[class|grammar] <package_def> }
+token package_declarator:sym<class>  { $<sym>=[class|grammar|knowhow|role] <package_def> }
 
 rule package_def {
     <name>

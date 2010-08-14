@@ -308,7 +308,7 @@ method variable($/) {
         $past.unshift( PAST::Var.new( :name('$/') ) );
     }
     else {
-        my @name := NQP::Compiler.parse_name(~$/);
+        my @name := HLL::Compiler.parse_name(~$/);
         $past := PAST::Var.new( :name(~@name.pop) );
         if (@name) {
             if @name[0] eq 'GLOBAL' { @name.shift; }

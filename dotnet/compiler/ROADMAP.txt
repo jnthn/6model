@@ -1,0 +1,83 @@
+Roadmap for NQP and Rakudo on .Net
+
+At the moment, all that exists is some very tentative early work on a .Net runtime for Rakudo. What follows is the roadmap as I see it from here. I've broken it down into a set of landmarks, with the near-term ones having some more detail on the tasks that need to be done.
+
+Last Updated: August 2010
+
+
+=== Fundementals
+These are things to make work in the really near future.
+
+* Named arguments
+
+* Support for 'is repr'
+
+* Make attributes in knowhow work
+
+* First cut at signatures so far as NQP needs them
+
+* Get us able to have a "setting" for NQP that we always load
+
+* NQPInt/NQPNum/NQPStr in the setting implemented
+
+* Coercions between these base types
+
+* .Bool on all of them
+
+* Test harness so we can start running some NQP tests (probably by here we can)
+
+* if/unless/while pasttypes
+
+* sub declarations including for operators
+
+* Basic multiple dispatch
+
+* Implement various basic operators in the NQP setting
+
+* Check our closures work (should be able to run man or boy test by this point)
+
+
+=== Compile NQPClassHOW and friends
+These are features that we need in order to reach the landmark of compiling/running NQPClassHOW.
+
+* Support for arrays and hashes
+
+* Support PAST::Op with pasttype for
+
+* return (and stuff for control exceptions and exceptions in general)
+
+* any ops that NQPClassHOW.pm needs now
+
+* Whatever else we're missing to compile NQPClassHOW and NQPAttribute
+
+
+=== Port PAST::Regex compilation
+This will mean that grammars can run.
+
+
+=== Pass NQP-RX test suite
+This is mostly tying up lose ends that have been missed so far.
+
+
+=== Bootstrapped NQP-RX implementation on .Net
+Debugging, fixing and infrastructure.
+
+
+=== Serialization contexts supported and fully used by the bootstrap
+Once bootstrapped, do the same refactors that should already been in Parrot's NQP. Note that we'll snapshot the implementation before this point, as that will be what others will need to port first (e.g. all porting efforts will probably start with cross-compiling).
+
+
+=== Rakudo's parser and actions run on .Net
+At this stage, we should be able to parse many of the Rakudo spectests.
+
+
+=== Compiling Rakudo's setting and get a working Rakudo
+It'll be buggy, most likely, but this will be a real landmark: when we have a rakudo.exe that runs on .Net.
+
+
+=== Rakudo on .NET
+Hack hack hack towards spectest success. :-)
+
+
+=== Go for beer
+Mmm. Beer.

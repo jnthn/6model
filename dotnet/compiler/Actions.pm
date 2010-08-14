@@ -592,8 +592,22 @@ method regex_declarator($/, $key?) {
 
 method dotty($/) {
     my $past := $<args> ?? $<args>[0].ast !! PAST::Op.new( :node($/) );
-    $past.name( $<quote> ?? $<quote>.ast !! ~$<longname> );
-    $past.pasttype('callmethod');
+    if $<quote> {
+        $past.name($<quote>.ast);
+        $past.pasttype('callmethod');
+    }
+    elsif $<longname> eq 'HOW' {
+        $past.name('get_how');
+        $past.pasttype('nqpop');
+    }
+    elsif $<longname> eq 'WHAT' {
+        $past.name('get_what');
+        $past.pasttype('nqpop');
+    }
+    else {
+        $past.name(~$<longname>);
+        $past.pasttype('callmethod');
+    }
     make $past;
 }
 
@@ -623,18 +637,11 @@ method term:sym<name>($/) {
     make $past;
 }
 
-method term:sym<pir::op>($/) {
+method term:sym<nqp::op>($/) {
     my $past := $<args> ?? $<args>[0].ast !! PAST::Op.new( :node($/) );
-    my $pirop := ~$<op>;
-    $pirop := Q:PIR {
-        $P0 = find_lex '$pirop'
-        $S0 = $P0
-        $P0 = split '__', $S0
-        $S0 = join ' ', $P0
-        %r = box $S0
-    };
-    $past.pirop($pirop);
-    $past.pasttype('pirop');
+    my $op_name := ~$<op>;
+    $past.name($op_name);
+    $past.pasttype('nqpop');
     make $past;
 }
 

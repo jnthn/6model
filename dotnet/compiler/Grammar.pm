@@ -383,8 +383,8 @@ token term:sym<name> {
     <name> <args>?
 }
 
-token term:sym<pir::op> {
-    'pir::' $<op>=[\w+] <args>?
+token term:sym<nqp::op> {
+    'nqp::' $<op>=[\w+] <args>?
 }
 
 token args {

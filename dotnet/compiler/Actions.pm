@@ -481,7 +481,7 @@ method method_def($/) {
                 PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
-            $name,
+            PAST::Val.new( :value($name) ),
             PAST::Val.new( :value($past) )
         ));
     }

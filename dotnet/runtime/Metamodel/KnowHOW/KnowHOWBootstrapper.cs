@@ -39,9 +39,20 @@ namespace Rakudo.Metamodel.KnowHOW
                     var KnowHOWTypeObj = CaptureHelper.GetPositional(Cap, 0);
                     var HOW = KnowHOWTypeObj.STable.REPR.instance_of(KnowHOWTypeObj.STable.WHAT);
 
-                    // Now create a new type object to go with it. We always
-                    // use the KnowHOWREPR for now.
-                    return KnowHOWTypeObj.STable.REPR.type_object_for(HOW);
+                    // Now create a new type object to go with it of the
+                    // desired REPR; we default to KnowHOW.
+                    var REPRName = CaptureHelper.GetNamed(Cap, "repr");
+                    if (REPRName != null)
+                    {
+                        // Look up the REPR.
+                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox<string>(REPRName));
+                        return REPRToUse.type_object_for(HOW);
+                    }
+                    else
+                    {
+                        // Just go with the KnowHOW REPR.
+                        return KnowHOWTypeObj.STable.REPR.type_object_for(HOW);
+                    }
                 }));
             KnowHOWMeths.Add("add_attribute", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {

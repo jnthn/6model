@@ -161,12 +161,11 @@ our multi sub cs_for(DNST::Bind $bind) {
 }
 
 our multi sub cs_for(DNST::Literal $lit) {
-    my $result := $lit.escape ??
+    $*LAST_TEMP := $lit.escape ??
         # XXX Need to really escape stuff in there.
         ('@"' ~ ~$lit.value ~ '"') !!
         $lit.value;
-    $*LAST_TEMP := get_unique_id('lit');
-    return "        var $*LAST_TEMP = $result;\n";
+    return '';
 }
 
 our multi sub cs_for(String $s) {

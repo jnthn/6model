@@ -174,6 +174,41 @@ our multi sub cs_for(String $s) {
     return '';
 }
 
+our multi sub cs_for(DNST::ArrayLiteral $al) {
+    # Code-gen all the things to go in the array.
+    my @item_names;
+    my $code := '';
+    for @($al) {
+        $code := $code ~ cs_for($_);
+        @item_names.push($*LAST_TEMP);
+    }
+
+    # Code-gen the array.
+    $*LAST_TEMP := get_unique_id('arr');
+    return $code ~ "        var $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
+        pir::join(',', @item_names) ~ "};\n";
+}
+
+our multi sub cs_for(DNST::DictionaryLiteral $dl) {
+    # Code-gen all the pieces that will go into the dictionary. The
+    # list is key,value,key,value.
+    my @items;
+    my $code := '';
+    for @($dl) -> $k, $v {
+        $code := $code ~ cs_for($k);
+        my $key := $*LAST_TEMP;
+        $code := $code ~ cs_for($v);
+        my $value := $*LAST_TEMP;
+        @items.push('{ ' ~ $key ~ ', ' ~ $value ~ ' }');
+    }
+
+    # Code-gen the dictionary.
+    $*LAST_TEMP := get_unique_id('dic');
+    return $code ~ "        var $*LAST_TEMP = new Dictionary<" ~
+        $dl.key_type ~ ', ' ~ $dl.value_type ~ '>() { ' ~
+        pir::join(',', @items) ~ " };\n";
+}
+
 our multi sub cs_for($any) {
     pir::die("DNST to C# compiler doesn't know how to compile a " ~ pir::typeof__SP($any));
 }

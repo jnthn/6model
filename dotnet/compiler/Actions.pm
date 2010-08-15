@@ -350,12 +350,16 @@ method package_declarator:sym<class>($/) {
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
                 PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('package') )
-                # XXX is repr...
             )
         )
         # XXX name
         # XXX is parent
     ));
+    if $<package_def><repr> {
+        my $repr_name := $<package_def><repr>[0].ast;
+        $repr_name.named('repr');
+        $*PACKAGE-SETUP[0][0][1].push($repr_name);
+    }
 
     # Postfix it with a call to compose. We'll also install this
     # in the package.

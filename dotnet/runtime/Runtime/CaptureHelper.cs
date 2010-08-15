@@ -67,7 +67,31 @@ namespace Rakudo.Runtime
                 if (Possies != null && Pos < Possies.Length)
                     return Possies[Pos];
                 else
+                    // XXX Probably want to return null instead and let the
+                    // binder throw.
                     throw new InvalidOperationException("Not enough positional parameters");
+            }
+            else
+            {
+                throw new NotImplementedException("Can only deal with native captures at the moment");
+            }
+        }
+
+        /// <summary>
+        /// Get a named argument from a capture.
+        /// </summary>
+        /// <param name="Capture"></param>
+        /// <param name="Pos"></param>
+        /// <returns></returns>
+        public static IRakudoObject GetNamed(IRakudoObject Capture, string Name)
+        {
+            if (Capture is P6capture.Instance)
+            {
+                var Nameds = (Capture as P6capture.Instance).Nameds;
+                if (Nameds != null && Nameds.ContainsKey(Name))
+                    return Nameds[Name];
+                else
+                    return null;
             }
             else
             {

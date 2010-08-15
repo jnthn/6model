@@ -8,11 +8,7 @@ Last Updated: August 2010
 === Fundementals
 These are things to make work in the really near future.
 
-* Named arguments
-
 * Support for 'is repr'
-
-* Make attributes in knowhow work
 
 * First cut at signatures so far as NQP needs them
 
@@ -35,6 +31,8 @@ These are things to make work in the really near future.
 * Implement various basic operators in the NQP setting
 
 * Check our closures work (should be able to run man or boy test by this point)
+
+* Make attributes in knowhow work
 
 
 === Compile NQPClassHOW and friends

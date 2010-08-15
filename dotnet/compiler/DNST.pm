@@ -260,3 +260,42 @@ class DNST::Literal is DNST::Node {
         $obj;
     }
 }
+
+class DNST::ArrayLiteral is DNST::Node {
+    has $!type;
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$type!, *@children) {
+        my $obj := self.CREATE;
+        $obj.type($type);
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class DNST::DictionaryLiteral is DNST::Node {
+    has $!key_type;
+    has $!value_type;
+
+    method key_type($set?) {
+        if $set { $!key_type := $set }
+        $!key_type
+    }
+
+    method value_type($set?) {
+        if $set { $!value_type := $set }
+        $!value_type
+    }
+
+    method new(:$key_type!, :$value_type!, *@children) {
+        my $obj := self.CREATE;
+        $obj.key_type($key_type);
+        $obj.value_type($value_type);
+        $obj.set_children(@children);
+        $obj;
+    }
+}

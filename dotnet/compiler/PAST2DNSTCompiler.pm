@@ -64,6 +64,7 @@ method compile(PAST::Node $node) {
     # Package up in a compilation unit with the required "using"s.
     return DNST::CompilationUnit.new(
         DNST::Using.new( :namespace('System') ),
+        DNST::Using.new( :namespace('System.Collections.Generic') ),
         DNST::Using.new( :namespace('Rakudo.Runtime') ),
         DNST::Using.new( :namespace('Rakudo.Metamodel') ),
         DNST::Using.new( :namespace('Rakudo.Metamodel.Representations') ),
@@ -259,12 +260,25 @@ our multi sub dnst_for(PAST::Op $op) {
         
         # How is capture formed?
         my $capture := DNST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith'),
+            :on('CaptureHelper'), :name('FormWith')
+        );
+        my $pos_part := DNST::ArrayLiteral.new(
+            :type('IRakudoObject'),
             $inv.name
         );
+        my $named_part := DNST::DictionaryLiteral.new(
+            :key_type('string'), :value_type('IRakudoObject') );
         for @args {
-            $capture.push(dnst_for($_));
+            if $_.named {
+                $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
+                $named_part.push(dnst_for($_));
+            }
+            else {
+                $pos_part.push(dnst_for($_));
+            }
         }
+        $capture.push($pos_part);
+        if +@($named_part) { $capture.push($named_part); }
 
         # Emit the call.
         return DNST::Stmts.new(
@@ -299,9 +313,20 @@ our multi sub dnst_for(PAST::Op $op) {
         my $capture := DNST::MethodCall.new(
             :on('CaptureHelper'), :name('FormWith')
         );
+        my $pos_part := DNST::ArrayLiteral.new( :type('IRakudoObject') );
+        my $named_part := DNST::DictionaryLiteral.new(
+            :key_type('string'), :value_type('IRakudoObject') );
         for @args {
-            $capture.push(dnst_for($_));
+            if $_.named {
+                $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
+                $named_part.push(dnst_for($_));
+            }
+            else {
+                $pos_part.push(dnst_for($_));
+            }
         }
+        $capture.push($pos_part);
+        if +@($named_part) { $capture.push($named_part); }
 
         # Emit call.
         return DNST::MethodCall.new(

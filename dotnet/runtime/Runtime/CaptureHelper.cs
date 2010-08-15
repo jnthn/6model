@@ -19,14 +19,37 @@ namespace Rakudo.Runtime
         internal static IRakudoObject CaptureTypeObject;
 
         /// <summary>
-        /// Forms a capture from the provided argumetns.
+        /// Empty capture former.
+        /// </summary>
+        /// <returns></returns>
+        public static IRakudoObject FormWith()
+        {
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+            return C;
+        }
+
+        /// <summary>
+        /// Forms a capture from the provided positional arguments.
         /// </summary>
         /// <param name="Args"></param>
         /// <returns></returns>
-        public static IRakudoObject FormWith(params IRakudoObject[] Args)
+        public static IRakudoObject FormWith(IRakudoObject[] PosArgs)
         {
             var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
-            C.Positionals = Args;
+            C.Positionals = PosArgs;
+            return C;
+        }
+
+        /// <summary>
+        /// Forms a capture from the provided positional and named arguments.
+        /// </summary>
+        /// <param name="Args"></param>
+        /// <returns></returns>
+        public static IRakudoObject FormWith(IRakudoObject[] PosArgs, Dictionary<string, IRakudoObject> NamedArgs)
+        {
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+            C.Positionals = PosArgs;
+            C.Nameds = NamedArgs;
             return C;
         }
 

@@ -176,6 +176,11 @@ our multi sub dnst_for(PAST::Block $block) {
         }
     }
 
+    # Before start of statements, we want to bind the signature.
+    $stmts.unshift(DNST::MethodCall.new(
+        :on('SignatureBinder'), :name('Bind'), :void(1), 'C', 'Capture'
+    ));
+
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
         :name('C'), :type('var'),

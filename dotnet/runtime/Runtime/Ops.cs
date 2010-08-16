@@ -13,6 +13,38 @@ namespace Rakudo.Runtime
     public static class Ops
     {
         /// <summary>
+        /// Creates a type object associated with the given HOW and of the
+        /// given representation.
+        /// </summary>
+        /// <param name="HOW"></param>
+        /// <param name="REPRName"></param>
+        /// <returns></returns>
+        public static IRakudoObject type_object_for(IRakudoObject HOW, string REPRName)
+        {
+            return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(HOW);
+        }
+
+        /// <summary>
+        /// Create an instance of an object.
+        /// </summary>
+        /// <param name="WHAT"></param>
+        /// <returns></returns>
+        public static IRakudoObject instance_of(IRakudoObject WHAT)
+        {
+            return WHAT.STable.REPR.instance_of(WHAT);
+        }
+
+        /// <summary>
+        /// Checks if the representation considers the object defined.
+        /// </summary>
+        /// <param name="Obj"></param>
+        /// <returns></returns>
+        public static bool repr_defined(IRakudoObject Obj)
+        {
+            return Obj.STable.REPR.defined(Obj);
+        }
+
+        /// <summary>
         /// Gets the value of an attribute.
         /// </summary>
         /// <param name="Object"></param>

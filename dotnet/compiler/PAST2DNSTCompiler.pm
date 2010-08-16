@@ -230,10 +230,32 @@ our multi sub dnst_for(PAST::Block $block) {
 }
 
 # Compiles a bunch of parameter nodes down to a signature.
+# XXX Doesn't handle default values just yet.
 sub compile_signature(@params) {
     # Go through each of the parameters and compile them.
     my $params := DNST::ArrayLiteral.new( :type('Parameter') );
     for @params {
+        my $param := DNST::New.new( :type('Parameter') );
+
+        # Type. XXX TODO.
+        $param.push('null');
+
+        # Variable name to bind into.
+        $param.push(DNST::Literal.new( :value($_.name), :escape(1) ));
+
+        # Named param or not?
+        $param.push((!$_.slurpy && $_.named) ??
+            DNST::Literal.new( :value(pir::substr($_.name, 1)), :escape(1) ) !!
+            'null');
+
+        # Flags.
+        $param.push(
+            $_.viviself           ?? 'Parameter.OPTIONAL_FLAG'     !!
+            $_.slurpy && $_.named ?? 'Parameter.NAMED_SLURPY_FLAG' !!
+            $_.slurpy             ?? 'Parameter.POS_SLURPY_FLAG'   !!
+            '0');
+
+        $params.push($param);
     }
 
     # Build up a signature object.

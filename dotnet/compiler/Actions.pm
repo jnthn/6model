@@ -376,7 +376,7 @@ method package_declarator:sym<class>($/) {
     ));
     
     # Run this at loadinit time.
-    @BLOCK[0].loadinit.push($*PACKAGE-SETUP);
+    @BLOCK[0].loadinit.push(PAST::Block.new( :blocktype('immediate'), $*PACKAGE-SETUP ));
 
     # Set up lexical for this to live in.
     @BLOCK[0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));

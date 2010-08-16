@@ -23,6 +23,7 @@ namespace Rakudo.Metamodel.Representations
             public Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject> Body;
             public Dictionary<string, IRakudoObject> StaticLexPad;
             public Instance OuterBlock;
+            public Signature Sig;
             public Context CurrentContext;
             public Instance(SharedTable STable)
             {

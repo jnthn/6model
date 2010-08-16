@@ -94,7 +94,9 @@ sub make_blocks_init_method($name) {
             'StaticBlockInfo[0]',
             DNST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
-                'null', 'null'
+                'null', 'null',
+                DNST::ArrayLiteral.new( :type('String') ),
+                'null'
             )
         ),
         DNST::Bind.new(
@@ -198,9 +200,12 @@ our multi sub dnst_for(PAST::Block $block) {
         $result.name
     ));
     $our_sbi_setup.push("StaticBlockInfo[$outer_sbi]");
+    my $lex_setup := DNST::ArrayLiteral.new( :type('string') );
     for @*LEXICALS {
-        $our_sbi_setup.push(DNST::Literal.new( :value($_), :escape(1) ));
+        $lex_setup.push(DNST::Literal.new( :value($_), :escape(1) ));
     }
+    $our_sbi_setup.push($lex_setup);
+    $our_sbi_setup.push(compile_signature(@*PARAMS));
 
     # Clear up this PAST::Block from the blocks list.
     @*PAST_BLOCKS.shift;
@@ -222,6 +227,17 @@ our multi sub dnst_for(PAST::Block $block) {
     else {
         return "StaticBlockInfo[$our_sbi]";
     }
+}
+
+# Compiles a bunch of parameter nodes down to a signature.
+sub compile_signature(@params) {
+    # Go through each of the parameters and compile them.
+    my $params := DNST::ArrayLiteral.new( :type('Parameter') );
+    for @params {
+    }
+
+    # Build up a signature object.
+    return DNST::New.new( :type('Signature'), $params );
 }
 
 # Compiles a statements node - really just all the stuff in it.

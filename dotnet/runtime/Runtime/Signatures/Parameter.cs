@@ -12,6 +12,21 @@ namespace Rakudo.Runtime
     public class Parameter
     {
         /// <summary>
+        /// Creates a new parameter object instance.
+        /// </summary>
+        /// <param name="Type"></param>
+        /// <param name="VariableName"></param>
+        /// <param name="Name"></param>
+        /// <param name="Flags"></param>
+        public Parameter(IRakudoObject Type, string VariableName, string Name, int Flags)
+        {
+            this.Type = Type;
+            this.VariableName = VariableName;
+            this.Name = Name;
+            this.Flags = Flags;
+        }
+
+        /// <summary>
         /// The type of the parameter.
         /// </summary>
         public IRakudoObject Type;

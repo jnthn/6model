@@ -200,6 +200,22 @@ class DNST::MethodCall is DNST::Node {
     }
 }
 
+class DNST::New is DNST::Node {
+    has $!type;
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$type!, *@children) {
+        my $obj := self.CREATE;
+        $obj.type($type);
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
 class DNST::TryFinally is DNST::Node {
     method new(*@children) {
         my $obj := self.CREATE;

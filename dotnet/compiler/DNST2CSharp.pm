@@ -140,6 +140,23 @@ our multi sub cs_for(DNST::Call $mc) {
     return $code;
 }
 
+our multi sub cs_for(DNST::New $new) {
+    # Code generate all the arguments.
+    my @arg_names;
+    my $code := '';
+    for @($new) {
+        $code := $code ~ cs_for($_);
+        @arg_names.push($*LAST_TEMP);
+    }
+
+    # Code-gen the constructor call.
+    $*LAST_TEMP := get_unique_id('new');
+    $code := $code ~ "        var $*LAST_TEMP = new " ~
+        $new.type ~ "(" ~ pir::join(', ', @arg_names) ~ ");\n";
+
+    return $code;
+}
+
 our multi sub cs_for(DNST::Temp $tmp) {
     unless +@($tmp) == 1 { pir::die('A DNST::Temp must have exactly one child') }
     my $code := cs_for((@($tmp))[0]);

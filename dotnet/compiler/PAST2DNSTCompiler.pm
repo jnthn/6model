@@ -177,7 +177,7 @@ our multi sub dnst_for(PAST::Block $block) {
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
         :name('C'), :type('var'),
-        "new Context(StaticBlockInfo[$our_sbi], TC.CurrentContext)"
+        DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
     $result.push(DNST::TryFinally.new(
@@ -193,9 +193,10 @@ our multi sub dnst_for(PAST::Block $block) {
     }
 
     # Finish geneating code setup block call.
-    $our_sbi_setup.push(
-        'new Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject>(' ~
-        $result.name ~ ')');
+    $our_sbi_setup.push(DNST::New.new(
+        :type('Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject>'),
+        $result.name
+    ));
     $our_sbi_setup.push("StaticBlockInfo[$outer_sbi]");
     for @*LEXICALS {
         $our_sbi_setup.push(DNST::Literal.new( :value($_), :escape(1) ));

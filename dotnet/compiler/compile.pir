@@ -12,6 +12,14 @@
 
 .sub 'main' :main
     .param pmc args
+
+    # Do we have an argument saying we're compiling the setting?
+    $P0 = new ['Integer']
+    .lex '$*COMPILING_NQP_SETTING', $P0
+    $S0 = args[2]
+    if $S0 != '--setting' goto not_setting
+    $P0 = 1
+  not_setting:
     
     .local pmc g, a, pastcomp, dnstcomp
     g = get_hll_global ['JnthnNQP'], 'Grammar'

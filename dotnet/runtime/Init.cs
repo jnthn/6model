@@ -18,48 +18,34 @@ namespace Rakudo
         /// Handles the various bits of initialization that are needed.
         /// Probably needs some don't-dupe-this work.
         /// </summary>
-        public static ThreadContext Initialize()
+        public static ThreadContext Initialize(string SettingName)
         {
             // Bootstrap the meta-model.
             RegisterRepresentations();
             var KnowHOW = KnowHOWBootstrapper.Bootstrap();
 
-            // Make a fake setting.
-            // XXX Yes, this really is just a hack to get us started. :-)
-            var Context = new Context();
-            Context.LexPad = new Dictionary<string, IRakudoObject>()
+            // See if we're to load a setting or use the fake bootstrapping one.
+            Context SettingContext;
+            if (SettingName == null)
             {
-                { "KnowHOW", KnowHOW },
-                { "print", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                    {
-                        Console.Write(CaptureHelper.GetPositionalAs<string>(C, 0));
-                        return CaptureHelper.Nil();
-                    })
-                },
-                { "say", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                    {
-                        Console.WriteLine(CaptureHelper.GetPositionalAs<string>(C, 0));
-                        return CaptureHelper.Nil();
-                    })
-                },
-                { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
-                { "Str", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
-                { "Int", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
-                { "Num", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
-                { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) },
-            };
+                SettingContext = BootstrapSetting(KnowHOW);
+            }
+            else
+            {
+                SettingContext = LoadSetting(SettingName, KnowHOW);
+            }
 
             // Cache native capture and LLCode type object.
-            CaptureHelper.CaptureTypeObject = Context.LexPad["capture"];
-            CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)Context.LexPad["LLCode"];
+            CaptureHelper.CaptureTypeObject = SettingContext.LexPad["capture"];
+            CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad["LLCode"];
 
             // Create an execution domain and a thread context for it
             // and return that.
             var ExecDom = new ExecutionDomain();
-            ExecDom.DefaultStrBoxType = Context.LexPad["Str"];
+            ExecDom.DefaultStrBoxType = SettingContext.LexPad["Str"];
             var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
-            Thread.CurrentContext = Context;
+            Thread.CurrentContext = SettingContext;
             return Thread;
         }
         
@@ -76,6 +62,50 @@ namespace Rakudo
             REPRRegistry.register_REPR("P6str", new P6str());
             REPRRegistry.register_REPR("P6capture", new P6capture());
             REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
+        }
+
+        /// <summary>
+        /// Sets up the bootstrapping setting that we use to compile the
+        /// real setting.
+        /// </summary>
+        /// <param name="KnowHOW"></param>
+        /// <returns></returns>
+        private static Context BootstrapSetting(IRakudoObject KnowHOW)
+        {
+            var SettingContext = new Context();
+            SettingContext.LexPad = new Dictionary<string, IRakudoObject>()
+                {
+                    { "KnowHOW", KnowHOW },
+                    { "print", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
+                        {
+                            Console.Write(CaptureHelper.GetPositionalAs<string>(C, 0));
+                            return CaptureHelper.Nil();
+                        })
+                    },
+                    { "say", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
+                        {
+                            Console.WriteLine(CaptureHelper.GetPositionalAs<string>(C, 0));
+                            return CaptureHelper.Nil();
+                        })
+                    },
+                    { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
+                    { "Str", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
+                    { "Int", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
+                    { "Num", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
+                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) },
+                };
+            return SettingContext;
+        }
+
+        /// <summary>
+        /// Loads the setting with the given name.
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="KnowHOW"></param>
+        /// <returns></returns>
+        public static Context LoadSetting(string Name, IRakudoObject KnowHOW)
+        {
+            throw new NotImplementedException("Setting loading is not yet implemented.");
         }
     }
 }

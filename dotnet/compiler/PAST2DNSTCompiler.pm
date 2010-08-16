@@ -50,7 +50,7 @@ method compile(PAST::Node $node) {
         :name('Main'),
         :return_type('void'),
         DNST::Temp.new( :name('TC'), :type('var'),
-            DNST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize') )
+            DNST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize'), 'null' )
         ),
         DNST::Call.new(
             :name('blocks_init'),

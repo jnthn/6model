@@ -500,12 +500,20 @@ our multi sub dnst_for(PAST::Var $var) {
         return DNST::Stmts.new();
     }
     elsif $scope eq 'lexical' {
-        if $var.isdecl { @*LEXICALS.push($var.name); }
-        return emit_lexical_lookup($var.name);
+        if $var.isdecl {
+            return declare_lexical($var);
+        }
+        else {
+            return emit_lexical_lookup($var.name);
+        }
     }
     elsif $scope eq 'contextual' {
-        if $var.isdecl { @*LEXICALS.push($var.name); }
-        return emit_dynamic_lookup($var.name);
+        if $var.isdecl {
+            return declare_lexical($var);
+        }
+        else {
+            return emit_dynamic_lookup($var.name);
+        }
     }
     elsif $scope eq 'package' {
         if $var.isdecl { pir::die("Don't know how to handle is_decl on package"); }
@@ -543,6 +551,23 @@ our multi sub dnst_for(PAST::Var $var) {
     }
     else {
         pir::die("Don't know how to compile variable scope " ~ $var.scope);
+    }
+}
+
+# Declares a lexical variable, and also handles viviself.
+sub declare_lexical($var) {
+    # Add to lexpad.
+    @*LEXICALS.push($var.name);
+
+    # Run viviself if there is one and bind it.
+    if pir::defined($var.viviself) {
+        my $*BIND_CONTEXT := 'bind_lex';
+        my $result := emit_lexical_lookup($var.name);
+        $result.push(dnst_for($var.viviself));
+        return $result;
+    }
+    else {
+        return emit_lexical_lookup($var.name);
     }
 }
 

@@ -5,6 +5,9 @@ knowhow NQPInt is repr('P6int') {
     method Int() {
         self
     }
+    method Str() {
+        nqp::coerce_int_to_str(self, NQPStr)
+    }
 }
 
 knowhow NQPStr is repr('P6str') {
@@ -22,5 +25,8 @@ knowhow NQPNum is repr('P6num') {
     }
     method Num() {
         self
+    }
+    method Str() {
+        nqp::coerce_num_to_str(self, NQPStr)
     }
 }

@@ -22,11 +22,13 @@ sub block_immediate($block) {
 }
 
 sub vivitype($sigil) {
+    # XXX Needs to change to be more portable...
     $sigil eq '%'
     ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'Hash']"))
     !! ($sigil eq '@'
         ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'ResizablePMCArray']"))
-        !! 'Undef');
+        # XXX ...and this is really wrong.
+        !! undef);
 }
 
 

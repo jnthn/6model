@@ -28,10 +28,24 @@ method compile(PAST::Node $node) {
 
     # Build a class node and add the inner code blocks.
     my $class := DNST::Class.new(
-        :name('RakudoOutput') # XXX
+        # XXX At some point we'll want to generate a unique name.
+        :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! 'RakudoOutput')
     );
     for @*INNER_BLOCKS {
         $class.push($_);
+    }
+
+    # If we're compiling the setting, we'll hack the TryFinally node of the
+    # outermost block to *not* restore the caller context, so then we can
+    # steal it and use it as the outer for our other stuff.
+    if $*COMPILING_NQP_SETTING {
+        my $outermost := @*INNER_BLOCKS[0];
+        for @($outermost) {
+            if $_ ~~ DNST::TryFinally {
+                $_.pop();
+                $_.push(DNST::Stmts.new());
+            }
+        }
     }
 
     # Also need to include setup of static block info.
@@ -46,20 +60,42 @@ method compile(PAST::Node $node) {
 
     # Finally, startup handling code.
     # XXX This will need to change some day for modules.
-    $class.push(DNST::Method.new(
-        :name('Main'),
-        :return_type('void'),
-        DNST::Temp.new( :name('TC'), :type('var'),
-            DNST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize'), 'null' )
-        ),
-        DNST::Call.new(
-            :name('blocks_init'),
-            :void(1),
-            'TC'
-        ),
-        $loadinit_calls,
-        $main_block_call
-    ));
+    if $*COMPILING_NQP_SETTING {
+        $class.push(DNST::Method.new(
+            :name('LoadSetting'),
+            :return_type('Context'),
+            DNST::Temp.new( :name('TC'), :type('var'),
+                DNST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize'), 'null' )
+            ),
+            DNST::Call.new(
+                :name('blocks_init'),
+                :void(1),
+                'TC'
+            ),
+            $loadinit_calls,
+            $main_block_call,
+            "TC.CurrentContext"
+        ));
+    }
+    else {
+        $class.push(DNST::Method.new(
+            :name('Main'),
+            :return_type('void'),
+            DNST::Temp.new( :name('TC'), :type('var'),
+                DNST::MethodCall.new(
+                    :on('Rakudo.Init'), :name('Initialize'),
+                    DNST::Literal.new( :value('NQPSetting'), :escape(1) )
+                )
+            ),
+            DNST::Call.new(
+                :name('blocks_init'),
+                :void(1),
+                'TC'
+            ),
+            $loadinit_calls,
+            $main_block_call
+        ));
+    }
 
     # Package up in a compilation unit with the required "using"s.
     return DNST::CompilationUnit.new(
@@ -425,9 +461,9 @@ our multi sub dnst_for(PAST::Val $val) {
     # Look up the type to box to.
     my $type := $val.returns || (
         # XXX This is a bit of a Parrot-specific hack.
-        pir::isa($val.value, 'Integer') ?? 'Int' !!
-        pir::isa($val.value, 'String') ?? 'Str' !!
-        pir::isa($val.value, 'Float') ?? 'Num' !!
+        pir::isa($val.value, 'Integer') ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapInt' !! 'NQPInt') !!
+        pir::isa($val.value, 'String')  ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapStr' !! 'NQPStr') !!
+        pir::isa($val.value, 'Float')   ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapNum' !! 'NQPNum') !!
         pir::die("Can not detect type of value")
     );
     my $type_dnst := emit_lexical_lookup($type);
@@ -435,7 +471,7 @@ our multi sub dnst_for(PAST::Val $val) {
     # Emit code to do the boxing.
     return DNST::MethodCall.new(
         :on('Ops'), :name('box'),
-        DNST::Literal.new( :value($val.value), :escape($type eq 'Str') ),
+        DNST::Literal.new( :value($val.value), :escape($type eq 'NQPStr' || $type eq 'BootstrapStr') ),
         $type_dnst
     );
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Rakudo.Metamodel;
 using Rakudo.Metamodel.Representations;
@@ -14,6 +15,11 @@ namespace Rakudo
     /// </summary>
     public static class Init
     {
+        /// <summary>
+        /// Have we already registered the representations?
+        /// </summary>
+        private static bool REPRS_Registered = false;
+
         /// <summary>
         /// Handles the various bits of initialization that are needed.
         /// Probably needs some don't-dupe-this work.
@@ -42,7 +48,7 @@ namespace Rakudo
             // Create an execution domain and a thread context for it
             // and return that.
             var ExecDom = new ExecutionDomain();
-            ExecDom.DefaultStrBoxType = SettingContext.LexPad["Str"];
+            ExecDom.DefaultStrBoxType = SettingContext.LexPad[SettingName == null ? "BootstrapStr" : "NQPStr"];
             var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
             Thread.CurrentContext = SettingContext;
@@ -54,14 +60,18 @@ namespace Rakudo
         /// </summary>
         private static void RegisterRepresentations()
         {
-            REPRRegistry.register_REPR("KnowHOWREPR", new KnowHOWREPR());
-            REPRRegistry.register_REPR("P6opaque", new P6opaque());
-            REPRRegistry.register_REPR("P6hash", new P6hash());
-            REPRRegistry.register_REPR("P6int", new P6native<int>());
-            REPRRegistry.register_REPR("P6num", new P6native<double>());
-            REPRRegistry.register_REPR("P6str", new P6str());
-            REPRRegistry.register_REPR("P6capture", new P6capture());
-            REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
+            if (!REPRS_Registered)
+            {
+                REPRRegistry.register_REPR("KnowHOWREPR", new KnowHOWREPR());
+                REPRRegistry.register_REPR("P6opaque", new P6opaque());
+                REPRRegistry.register_REPR("P6hash", new P6hash());
+                REPRRegistry.register_REPR("P6int", new P6native<int>());
+                REPRRegistry.register_REPR("P6num", new P6native<double>());
+                REPRRegistry.register_REPR("P6str", new P6str());
+                REPRRegistry.register_REPR("P6capture", new P6capture());
+                REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
+                REPRS_Registered = true;
+            }
         }
 
         /// <summary>
@@ -89,9 +99,9 @@ namespace Rakudo
                         })
                     },
                     { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
-                    { "Str", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
-                    { "Int", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
-                    { "Num", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
+                    { "BootstrapStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
+                    { "BootstrapInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
+                    { "BootstrapNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
                     { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) },
                 };
             return SettingContext;
@@ -105,7 +115,40 @@ namespace Rakudo
         /// <returns></returns>
         public static Context LoadSetting(string Name, IRakudoObject KnowHOW)
         {
-            throw new NotImplementedException("Setting loading is not yet implemented.");
+            // Load the assembly.
+            var SettingAssembly = AppDomain.CurrentDomain.Load(Name);
+
+            // Find the setting type and its LoadSetting method.
+            var Class = SettingAssembly.GetType("NQPSetting");
+            var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
+            
+            // Run it to get the context we want.
+            var SettingContext = (Context)Method.Invoke(null, new object[] { });
+
+            // Map bootstrapping types to bootstrapped types.
+            SettingContext.LexPad.Add("BootstrapInt", SettingContext.LexPad["NQPInt"]);
+            SettingContext.LexPad.Add("BootstrapNum", SettingContext.LexPad["NQPNum"]);
+            SettingContext.LexPad.Add("BootstrapStr", SettingContext.LexPad["NQPStr"]);
+
+            // Fudge a few more things in.
+            // XXX Should be able to toss all of thse but KnowHOW.
+            SettingContext.LexPad.Add("KnowHOW", KnowHOW);
+            SettingContext.LexPad.Add("print",
+                CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
+                    {
+                        Console.Write(CaptureHelper.GetPositionalAs<string>(C, 0));
+                        return CaptureHelper.Nil();
+                    }));
+            SettingContext.LexPad.Add("say",
+                CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
+                    {
+                        Console.WriteLine(CaptureHelper.GetPositionalAs<string>(C, 0));
+                        return CaptureHelper.Nil();
+                    }));
+            SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
+            SettingContext.LexPad.Add("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null));
+
+            return SettingContext;
         }
     }
 }

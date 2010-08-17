@@ -205,6 +205,30 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Coerces an integer into a floating point number.
+        /// </summary>
+        /// <param name="Int"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static IRakudoObject coerce_int_to_num(IRakudoObject Int, IRakudoObject TargetType)
+        {
+            int Value = Ops.unbox<int>(Int);
+            return Ops.box((double)Value, TargetType);
+        }
+
+        /// <summary>
+        /// Coerces a floating point number into an integer.
+        /// </summary>
+        /// <param name="Int"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static IRakudoObject coerce_num_to_int(IRakudoObject Num, IRakudoObject TargetType)
+        {
+            double Value = Ops.unbox<double>(Num);
+            return Ops.box((int)Value, TargetType);
+        }
+
+        /// <summary>
         /// Gets a lexical variable of the given name.
         /// </summary>
         /// <param name="i"></param>
@@ -280,6 +304,59 @@ namespace Rakudo.Runtime
                 CurContext = CurContext.Caller;
             }
             throw new InvalidOperationException("No variable " + Name + " found in the dynamic scope");
+        }
+
+        /// <summary>
+        /// Compares two floating point numbers for equality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject equal_nums(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(
+                (Ops.unbox<double>(x) == Ops.unbox<double>(y) ? 1 : 0),
+                ResultType);
+        }
+
+        /// <summary>
+        /// Compares two integers for equality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject equal_ints(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(
+                (Ops.unbox<int>(x) == Ops.unbox<int>(y) ? 1 : 0),
+                ResultType);
+        }
+
+        /// <summary>
+        /// Compares two strings for equality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject equal_strs(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(
+                (Ops.unbox<string>(x) == Ops.unbox<string>(y) ? 1 : 0),
+                ResultType);
+        }
+
+        /// <summary>
+        /// Logical not.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject logical_not_int(IRakudoObject x, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) == 0 ? 1 : 0, ResultType);
         }
     }
 }

@@ -381,7 +381,7 @@ method package_declarator:sym<class>($/) {
     @BLOCK[0].loadinit.push(PAST::Block.new( :blocktype('immediate'), $*PACKAGE-SETUP ));
 
     # Set up lexical for this to live in.
-    @BLOCK[0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
+    @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
     @BLOCK[0].symbol($name, :scope('lexical'));
 
     # Just evaluate anything else in the package in-line.

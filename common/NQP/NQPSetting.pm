@@ -3,7 +3,7 @@ knowhow NQPInt is repr('P6int') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        self != 0
+        nqp::logical_not_int(nqp::equal_ints(self, 0, NQPInt), NQPInt)
     }
     method Int() {
         self
@@ -21,7 +21,7 @@ knowhow NQPStr is repr('P6str') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        self ne ""
+        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt)
     }
     method Str() {
         self
@@ -33,7 +33,7 @@ knowhow NQPNum is repr('P6num') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        self != 0.0
+        nqp::logical_not_int(nqp::equal_nums(self, 0.0, NQPInt), NQPInt)
     }
     method Int() {
         nqp::coerce_num_to_int(self, NQPStr)

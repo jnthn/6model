@@ -21,5 +21,8 @@ NQPSetting.dll: ../../common/NQP/NQPSetting.pm  gen_actions.pir gen_grammar.pir 
 	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > NQPSetting.cs
 	csc /target:library /out:NQPSetting.dll /reference:RakudoRuntime.dll NQPSetting.cs
 
+test: all
+	prove -r --exec try ..\..\t\nqp
+
 clean:
 	perl -MExtUtils::Command -e rm_f gen_*.pir *.dll *.pdb *.exe *.cs

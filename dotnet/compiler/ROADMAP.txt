@@ -8,10 +8,6 @@ Last Updated: August 2010
 === Fundementals
 These are things to make work in the really near future.
 
-* Get us able to have a "setting" for NQP that we always load
-
-* NQPInt/NQPNum/NQPStr in the setting implemented
-
 * Coercions between these base types
 
 * .Bool on all of them

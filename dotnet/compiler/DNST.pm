@@ -260,12 +260,12 @@ class DNST::Literal is DNST::Node {
     has $!escape;
 
     method value($set?) {
-        if $set { $!value := $set }
+        if pir::defined($set) { $!value := $set }
         $!value
     }
 
     method escape($set?) {
-        if $set { $!escape := $set }
+        if pir::defined($set) { $!escape := $set }
         $!escape
     }
 

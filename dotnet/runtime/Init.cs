@@ -88,13 +88,19 @@ namespace Rakudo
                     { "KnowHOW", KnowHOW },
                     { "print", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {
-                            Console.Write(CaptureHelper.GetPositionalAs<string>(C, 0));
+                            var Value = CaptureHelper.GetPositional(C, 0);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
+                            Console.Write(Ops.unbox<string>(StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
                     { "say", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {
-                            Console.WriteLine(CaptureHelper.GetPositionalAs<string>(C, 0));
+                            var Value = CaptureHelper.GetPositional(C, 0);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
+                            Console.WriteLine(Ops.unbox<string>(StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
@@ -136,13 +142,19 @@ namespace Rakudo
             SettingContext.LexPad.Add("print",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
-                        Console.Write(CaptureHelper.GetPositionalAs<string>(C, 0));
+                        var Value = CaptureHelper.GetPositional(C, 0);
+                        var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                        var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
+                        Console.Write(Ops.unbox<string>(StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("say",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
-                        Console.WriteLine(CaptureHelper.GetPositionalAs<string>(C, 0));
+                        var Value = CaptureHelper.GetPositional(C, 0);
+                        var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                        var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
+                        Console.WriteLine(Ops.unbox<string>(StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));

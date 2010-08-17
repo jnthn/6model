@@ -181,6 +181,30 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Coerces an integer into a string.
+        /// </summary>
+        /// <param name="Int"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static IRakudoObject coerce_int_to_str(IRakudoObject Int, IRakudoObject TargetType)
+        {
+            int Value = Ops.unbox<int>(Int);
+            return Ops.box(Value.ToString(), TargetType);
+        }
+
+        /// <summary>
+        /// Coerces a floating point number into a string.
+        /// </summary>
+        /// <param name="Num"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static IRakudoObject coerce_num_to_str(IRakudoObject Num, IRakudoObject TargetType)
+        {
+            double Value = Ops.unbox<double>(Num);
+            return Ops.box(Value.ToString(), TargetType);
+        }
+
+        /// <summary>
         /// Gets a lexical variable of the given name.
         /// </summary>
         /// <param name="i"></param>

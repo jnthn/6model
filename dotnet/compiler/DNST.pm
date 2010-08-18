@@ -232,6 +232,36 @@ class DNST::If is DNST::Node {
     }
 }
 
+class DNST::Label is DNST::Node {
+    has $!name;
+
+    method name($set?) {
+        if $set { $!name := $set }
+        $!name
+    }
+
+    method new(:$name!) {
+        my $obj := self.CREATE;
+        $obj.name($name);
+        $obj;
+    }
+}
+
+class DNST::Goto is DNST::Node {
+    has $!label;
+
+    method label($set?) {
+        if $set { $!label := $set }
+        $!label
+    }
+
+    method new(:$label!) {
+        my $obj := self.CREATE;
+        $obj.label($label);
+        $obj;
+    }
+}
+
 class DNST::Temp is DNST::Node {
     has $!name;
     has $!type;

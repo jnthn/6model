@@ -358,5 +358,77 @@ namespace Rakudo.Runtime
         {
             return Ops.box<int>(Ops.unbox<int>(x) == 0 ? 1 : 0, ResultType);
         }
+
+        /// <summary>
+        /// Performs an integer addition.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject add_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) + Ops.unbox<int>(y), ResultType);
+        }
+
+        /// <summary>
+        /// Performs an integer subtraction.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject sub_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) - Ops.unbox<int>(y), ResultType);
+        }
+
+        /// <summary>
+        /// Performs an integer multiplication.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject mul_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) * Ops.unbox<int>(y), ResultType);
+        }
+
+        /// <summary>
+        /// Performs an integer division.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject div_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) / Ops.unbox<int>(y), ResultType);
+        }
+
+        /// <summary>
+        /// Performs an integer modulo.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject mod_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<int>(Ops.unbox<int>(x) % Ops.unbox<int>(y), ResultType);
+        }
+
+        /// <summary>
+        /// Performs a string concatenation.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static IRakudoObject concat(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        {
+            return Ops.box<string>(Ops.unbox<string>(x) + Ops.unbox<string>(y), ResultType);
+        }
     }
 }

@@ -123,13 +123,12 @@ namespace Rakudo.Runtime
         /// XXX In the future, we can make it call a coercion too, if
         /// needed.
         /// </summary>
-        /// <typeparam name="Type"></typeparam>
         /// <param name="Capture"></param>
         /// <param name="Pos"></param>
         /// <returns></returns>
-        public static Type GetPositionalAs<Type>(RakudoObject Capture, int Pos)
+        public static string GetPositionalAsString(RakudoObject Capture, int Pos)
         {
-            return Ops.unbox<Type>(GetPositional(Capture, Pos));
+            return Ops.unbox_str(GetPositional(Capture, Pos));
         }
 
         /// <summary>

@@ -9,7 +9,7 @@ namespace Rakudo.Metamodel.Representations
     /// A representation that we use (for now) for dealing with
     /// strings.
     /// </summary>
-    public sealed class P6str : Representation, IBoxableRepresentation<string>
+    public sealed class P6str : Representation
     {
         /// <summary>
         /// This is how the boxed form of a P6str looks.
@@ -84,24 +84,34 @@ namespace Rakudo.Metamodel.Representations
             return Hints.NO_HINT;
         }
 
-        /// <summary>
-        /// Gets the native value inside this type (for unboxing).
-        /// </summary>
-        /// <param name="Object"></param>
-        /// <returns></returns>
-        public string get_value(RakudoObject Object)
+        public override void set_int(RakudoObject Object, int Value)
         {
-            return ((Instance)Object).Value;
+            throw new InvalidOperationException("This type of representation cannot box a native int");
         }
 
-        /// <summary>
-        /// Sets the native value inside this type (for boxing)
-        /// </summary>
-        /// <param name="Object"></param>
-        /// <param name="Value"></param>
-        public void set_value(RakudoObject Object, string Value)
+        public override int get_int(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native int");
+        }
+
+        public override void set_num(RakudoObject Object, double Value)
+        {
+            throw new InvalidOperationException("This type of representation cannot box a native num");
+        }
+
+        public override double get_num(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native num");
+        }
+
+        public override void set_str(RakudoObject Object, string Value)
         {
             ((Instance)Object).Value = Value;
+        }
+
+        public override string get_str(RakudoObject Object)
+        {
+            return ((Instance)Object).Value;
         }
     }
 }

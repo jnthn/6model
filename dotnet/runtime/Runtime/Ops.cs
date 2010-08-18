@@ -149,35 +149,72 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Boxes a native type into its matching value type.
+        /// Boxes a native int into its matching value type.
         /// </summary>
         /// <param name="Value"></param>
         /// <returns></returns>
-        public static RakudoObject box<TValue>(TValue Value, RakudoObject To)
+        public static RakudoObject box_int(int Value, RakudoObject To)
         {
-            if (To.STable.REPR is IBoxableRepresentation<TValue>)
-            {
-                var Result = To.STable.REPR.instance_of(To);
-                (To.STable.REPR as IBoxableRepresentation<TValue>).set_value(Result, Value);
-                return Result;
-            }
-            else
-            {
-                throw new Exception("Can not box an " + typeof(TValue).Name + " to an object of unsuitable representation.");
-            }
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(To);
+            REPR.set_int(Result, Value);
+            return Result;
         }
 
         /// <summary>
-        /// Unboxes a value.
+        /// Boxes a native num into its matching value type.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static RakudoObject box_num(double Value, RakudoObject To)
+        {
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(To);
+            REPR.set_num(Result, Value);
+            return Result;
+        }
+
+        /// <summary>
+        /// Boxes a native string into its matching value type.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static RakudoObject box_str(string Value, RakudoObject To)
+        {
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(To);
+            REPR.set_str(Result, Value);
+            return Result;
+        }
+
+        /// <summary>
+        /// Unboxes a boxed int.
         /// </summary>
         /// <param name="Boxed"></param>
         /// <returns></returns>
-        public static TValue unbox<TValue>(RakudoObject Boxed)
+        public static int unbox_int(RakudoObject Boxed)
         {
-            if (Boxed.STable.REPR is IBoxableRepresentation<TValue>)
-                return (Boxed.STable.REPR as IBoxableRepresentation<TValue>).get_value(Boxed);
-            else
-                throw new Exception("Can not unbox an " + typeof(TValue).Name + " from an object of unsuitable representation.");
+            return Boxed.STable.REPR.get_int(Boxed);
+        }
+
+        /// <summary>
+        /// Unboxes a boxed num.
+        /// </summary>
+        /// <param name="Boxed"></param>
+        /// <returns></returns>
+        public static double unbox_num(RakudoObject Boxed)
+        {
+            return Boxed.STable.REPR.get_num(Boxed);
+        }
+
+        /// <summary>
+        /// Unboxes a boxed string.
+        /// </summary>
+        /// <param name="Boxed"></param>
+        /// <returns></returns>
+        public static string unbox_str(RakudoObject Boxed)
+        {
+            return Boxed.STable.REPR.get_str(Boxed);
         }
 
         /// <summary>
@@ -188,8 +225,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject coerce_int_to_str(RakudoObject Int, RakudoObject TargetType)
         {
-            int Value = Ops.unbox<int>(Int);
-            return Ops.box(Value.ToString(), TargetType);
+            int Value = Ops.unbox_int(Int);
+            return Ops.box_str(Value.ToString(), TargetType);
         }
 
         /// <summary>
@@ -200,8 +237,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject coerce_num_to_str(RakudoObject Num, RakudoObject TargetType)
         {
-            double Value = Ops.unbox<double>(Num);
-            return Ops.box(Value.ToString(), TargetType);
+            double Value = Ops.unbox_num(Num);
+            return Ops.box_str(Value.ToString(), TargetType);
         }
 
         /// <summary>
@@ -212,8 +249,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject coerce_int_to_num(RakudoObject Int, RakudoObject TargetType)
         {
-            int Value = Ops.unbox<int>(Int);
-            return Ops.box((double)Value, TargetType);
+            int Value = Ops.unbox_int(Int);
+            return Ops.box_num((double)Value, TargetType);
         }
 
         /// <summary>
@@ -224,8 +261,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject coerce_num_to_int(RakudoObject Num, RakudoObject TargetType)
         {
-            double Value = Ops.unbox<double>(Num);
-            return Ops.box((int)Value, TargetType);
+            double Value = Ops.unbox_num(Num);
+            return Ops.box_int((int)Value, TargetType);
         }
 
         /// <summary>
@@ -317,8 +354,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject equal_nums(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(
-                (Ops.unbox<double>(x) == Ops.unbox<double>(y) ? 1 : 0),
+            return Ops.box_int(
+                (Ops.unbox_num(x) == Ops.unbox_num(y) ? 1 : 0),
                 ResultType);
         }
 
@@ -331,8 +368,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject equal_ints(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(
-                (Ops.unbox<int>(x) == Ops.unbox<int>(y) ? 1 : 0),
+            return Ops.box_int(
+                (Ops.unbox_int(x) == Ops.unbox_int(y) ? 1 : 0),
                 ResultType);
         }
 
@@ -345,8 +382,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject equal_strs(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(
-                (Ops.unbox<string>(x) == Ops.unbox<string>(y) ? 1 : 0),
+            return Ops.box_int(
+                (Ops.unbox_str(x) == Ops.unbox_str(y) ? 1 : 0),
                 ResultType);
         }
 
@@ -358,7 +395,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject logical_not_int(RakudoObject x, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) == 0 ? 1 : 0, ResultType);
+            return Ops.box_int(Ops.unbox_int(x) == 0 ? 1 : 0, ResultType);
         }
 
         /// <summary>
@@ -370,7 +407,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject add_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) + Ops.unbox<int>(y), ResultType);
+            return Ops.box_int(Ops.unbox_int(x) + Ops.unbox_int(y), ResultType);
         }
 
         /// <summary>
@@ -382,7 +419,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject sub_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) - Ops.unbox<int>(y), ResultType);
+            return Ops.box_int(Ops.unbox_int(x) - Ops.unbox_int(y), ResultType);
         }
 
         /// <summary>
@@ -394,7 +431,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject mul_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) * Ops.unbox<int>(y), ResultType);
+            return Ops.box_int(Ops.unbox_int(x) * Ops.unbox_int(y), ResultType);
         }
 
         /// <summary>
@@ -406,7 +443,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject div_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) / Ops.unbox<int>(y), ResultType);
+            return Ops.box_int(Ops.unbox_int(x) / Ops.unbox_int(y), ResultType);
         }
 
         /// <summary>
@@ -418,7 +455,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject mod_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<int>(Ops.unbox<int>(x) % Ops.unbox<int>(y), ResultType);
+            return Ops.box_int(Ops.unbox_int(x) % Ops.unbox_int(y), ResultType);
         }
 
         /// <summary>
@@ -430,7 +467,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject concat(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
-            return Ops.box<string>(Ops.unbox<string>(x) + Ops.unbox<string>(y), ResultType);
+            return Ops.box_str(Ops.unbox_str(x) + Ops.unbox_str(y), ResultType);
         }
     }
 }

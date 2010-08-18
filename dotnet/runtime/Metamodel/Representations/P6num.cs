@@ -6,17 +6,17 @@ using System.Text;
 namespace Rakudo.Metamodel.Representations
 {
     /// <summary>
-    /// A representation that we use (for now) for dealing with
-    /// native types in their boxed forms.
+    /// A representation that we use for dealing with nums in their
+    /// boxed form.
     /// </summary>
-    public sealed class P6native<TValue> : Representation, IBoxableRepresentation<TValue> where TValue : struct
+    public sealed class P6num : Representation
     {
         /// <summary>
-        /// This is how the boxed form of a P6native looks like.
+        /// This is how the boxed form of a P6num looks like.
         /// </summary>
         internal sealed class Instance : RakudoObject
         {
-            public Nullable<TValue> Value;
+            public Nullable<double> Value;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -45,7 +45,7 @@ namespace Rakudo.Metamodel.Representations
         public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
-            Object.Value = default(TValue);
+            Object.Value = 0.0;
             return Object;
         }
 
@@ -84,24 +84,34 @@ namespace Rakudo.Metamodel.Representations
             return Hints.NO_HINT;
         }
 
-        /// <summary>
-        /// Gets the native value inside this type (for unboxing).
-        /// </summary>
-        /// <param name="Object"></param>
-        /// <returns></returns>
-        public TValue get_value(RakudoObject Object)
+        public override void set_int(RakudoObject Object, int Value)
+        {
+            throw new InvalidOperationException("This type of representation cannot box a native int");
+        }
+
+        public override int get_int(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native int");
+        }
+
+        public override void set_num(RakudoObject Object, double Value)
+        {
+            ((Instance)Object).Value = Value;
+        }
+
+        public override double get_num(RakudoObject Object)
         {
             return ((Instance)Object).Value.Value;
         }
 
-        /// <summary>
-        /// Sets the native value inside this type (for boxing)
-        /// </summary>
-        /// <param name="Object"></param>
-        /// <param name="Value"></param>
-        public void set_value(RakudoObject Object, TValue Value)
+        public override void set_str(RakudoObject Object, string Value)
         {
-            ((Instance)Object).Value = Value;
+            throw new InvalidOperationException("This type of representation cannot box a native string");
+        }
+
+        public override string get_str(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native string");
         }
     }
 }

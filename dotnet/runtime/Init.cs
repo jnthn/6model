@@ -65,8 +65,8 @@ namespace Rakudo
                 REPRRegistry.register_REPR("KnowHOWREPR", new KnowHOWREPR());
                 REPRRegistry.register_REPR("P6opaque", new P6opaque());
                 REPRRegistry.register_REPR("P6hash", new P6hash());
-                REPRRegistry.register_REPR("P6int", new P6native<int>());
-                REPRRegistry.register_REPR("P6num", new P6native<double>());
+                REPRRegistry.register_REPR("P6int", new P6int());
+                REPRRegistry.register_REPR("P6num", new P6num());
                 REPRRegistry.register_REPR("P6str", new P6str());
                 REPRRegistry.register_REPR("P6capture", new P6capture());
                 REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
@@ -91,7 +91,7 @@ namespace Rakudo
                             var Value = CaptureHelper.GetPositional(C, 0);
                             var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                             var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                            Console.Write(Ops.unbox<string>(StrVal));
+                            Console.Write(Ops.unbox_str(StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
@@ -100,7 +100,7 @@ namespace Rakudo
                             var Value = CaptureHelper.GetPositional(C, 0);
                             var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                             var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                            Console.WriteLine(Ops.unbox<string>(StrVal));
+                            Console.WriteLine(Ops.unbox_str(StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
@@ -145,7 +145,7 @@ namespace Rakudo
                         var Value = CaptureHelper.GetPositional(C, 0);
                         var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                         var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.Write(Ops.unbox<string>(StrVal));
+                        Console.Write(Ops.unbox_str(StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("say",
@@ -154,7 +154,7 @@ namespace Rakudo
                         var Value = CaptureHelper.GetPositional(C, 0);
                         var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                         var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.WriteLine(Ops.unbox<string>(StrVal));
+                        Console.WriteLine(Ops.unbox_str(StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));

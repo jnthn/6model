@@ -3,93 +3,82 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Rakudo.Metamodel.KnowHOW
+namespace Rakudo.Metamodel.Representations
 {
     /// <summary>
-    /// We have a REPR especially for the KnowHOW, which is part of the
-    /// "bootstrap".
+    /// A representation that we use for dealing with ints in their
+    /// boxed form.
     /// </summary>
-    public sealed class KnowHOWREPR : Representation
+    public sealed class P6int : Representation
     {
         /// <summary>
-        /// This represents an instance created with this underlying
-        /// representation. We use .Net data types for out attribute
-        /// and method store.
+        /// This is how the boxed form of a P6int looks like.
         /// </summary>
-        internal class KnowHOWInstance : RakudoObject
+        internal sealed class Instance : RakudoObject
         {
-            public List<RakudoObject> Attributes;
-            public Dictionary<string, RakudoObject> Methods;
-            public KnowHOWInstance(SharedTable STable)
+            public Nullable<int> Value;
+            public Instance(SharedTable STable)
             {
                 this.STable = STable;
             }
         }
 
         /// <summary>
-        /// Gets a type object pointing to the given HOW.
+        /// Create a new type object.
         /// </summary>
-        /// <param name="HOW"></param>
+        /// <param name="MetaPackage"></param>
         /// <returns></returns>
-        public override RakudoObject type_object_for(RakudoObject HOW)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
-            STable.HOW = HOW;
+            STable.HOW = MetaPackage;
             STable.REPR = this;
-            STable.WHAT = new KnowHOWInstance(STable);
+            STable.WHAT = new Instance(STable);
             return STable.WHAT;
         }
 
         /// <summary>
-        /// Create an instance of the given object.
+        /// Creates an instance of the type with the given type object.
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
         public override RakudoObject instance_of(RakudoObject WHAT)
         {
-            var Object = new KnowHOWInstance(WHAT.STable);
-            Object.Methods = new Dictionary<string, RakudoObject>();
-            Object.Attributes = new List<RakudoObject>();
+            var Object = new Instance(WHAT.STable);
+            Object.Value = 0;
             return Object;
         }
 
         /// <summary>
-        /// Checks if the object is defined or not.
+        /// Determines if the representation is defined or not.
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
         public override bool defined(RakudoObject Obj)
         {
-            return ((KnowHOWInstance)Obj).Methods != null;
+            return ((Instance)Obj).Value.HasValue;
         }
 
         public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
         public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
         public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
         public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
-        /// <summary>
-        /// We have attribute access hints for within the KnowHOW REPR, which
-        /// we just manually map to the indexes.
-        /// </summary>
-        /// <param name="ClassHandle"></param>
-        /// <param name="Name"></param>
-        /// <returns></returns>
         public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
@@ -97,12 +86,12 @@ namespace Rakudo.Metamodel.KnowHOW
 
         public override void set_int(RakudoObject Object, int Value)
         {
-            throw new InvalidOperationException("This type of representation cannot box a native int");
+            ((Instance)Object).Value = Value;
         }
 
         public override int get_int(RakudoObject Object)
         {
-            throw new InvalidOperationException("This type of representation cannot unbox to a native int");
+            return ((Instance)Object).Value.Value;
         }
 
         public override void set_num(RakudoObject Object, double Value)

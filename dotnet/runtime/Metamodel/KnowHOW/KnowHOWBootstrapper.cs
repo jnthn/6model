@@ -45,7 +45,7 @@ namespace Rakudo.Metamodel.KnowHOW
                     if (REPRName != null)
                     {
                         // Look up the REPR.
-                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox<string>(REPRName));
+                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(REPRName));
                         return REPRToUse.type_object_for(HOW);
                     }
                     else
@@ -64,7 +64,7 @@ namespace Rakudo.Metamodel.KnowHOW
             KnowHOWMeths.Add("add_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
                     var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                    var Name = CaptureHelper.GetPositionalAs<string>(Cap, 2);
+                    var Name = CaptureHelper.GetPositionalAsString(Cap, 2);
                     var Method = CaptureHelper.GetPositional(Cap, 3);
                     HOW.Methods.Add(Name, Method);
                     return CaptureHelper.Nil();
@@ -72,7 +72,7 @@ namespace Rakudo.Metamodel.KnowHOW
             KnowHOWMeths.Add("find_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                var Name = CaptureHelper.GetPositionalAs<string>(Cap, 1);
+                var Name = CaptureHelper.GetPositionalAsString(Cap, 1);
                 if (HOW.Methods.ContainsKey(Name))
                     return HOW.Methods[Name];
                 else

@@ -76,6 +76,54 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <returns></returns>
         public abstract int hint_for(RakudoObject ClassHandle, string Name);
+
+        /// <summary>
+        /// Used with boxing. Sets an integer value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract void set_int(RakudoObject Object, int Value);
+
+        /// <summary>
+        /// Used with boxing. Gets an integer value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract int get_int(RakudoObject Object);
+
+        /// <summary>
+        /// Used with boxing. Sets a floating point value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract void set_num(RakudoObject Object, double Value);
+
+        /// <summary>
+        /// Used with boxing. Gets a floating point value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract double get_num(RakudoObject Object);
+
+        /// <summary>
+        /// Used with boxing. Sets a string value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract void set_str(RakudoObject Object, string Value);
+
+        /// <summary>
+        /// Used with boxing. Gets a string value, for representations that
+        /// can hold one.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Value"></param>
+        public abstract string get_str(RakudoObject Object);
     }
 
     public static class Hints

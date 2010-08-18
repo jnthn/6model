@@ -446,7 +446,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'if' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox<int>'),
+                :on('Ops'), :name('unbox_int'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
@@ -463,7 +463,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'unless' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox<int>'),
+                :on('Ops'), :name('unbox_int'),
                 dnst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     (@($op))[0]
@@ -498,7 +498,7 @@ our multi sub dnst_for(PAST::Op $op) {
             $cond,
             DNST::If.new(
                 DNST::MethodCall.new(
-                    :on('Ops'), :name('unbox<int>'),
+                    :on('Ops'), :name('unbox_int'),
                     $cond_result
                 ),
                 $body,
@@ -528,19 +528,29 @@ our multi sub dnst_for(PAST::Val $val) {
     }
 
     # Look up the type to box to.
-    my $type := $val.returns || (
-        # XXX This is a bit of a Parrot-specific hack.
-        pir::isa($val.value, 'Integer') ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapInt' !! 'NQPInt') !!
-        pir::isa($val.value, 'String')  ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapStr' !! 'NQPStr') !!
-        pir::isa($val.value, 'Float')   ?? ($*COMPILING_NQP_SETTING ?? 'BootstrapNum' !! 'NQPNum') !!
+    my $type;
+    my $primitive;
+    if pir::isa($val.value, 'Integer') {
+        $primitive := 'int';
+        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapInt' !! 'NQPInt';
+    }
+    elsif pir::isa($val.value, 'String') {
+        $primitive := 'str';
+        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapStr' !! 'NQPStr';
+    }
+    elsif pir::isa($val.value, 'Float') {
+        $primitive := 'num';
+        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapNum' !! 'NQPNum';
+    }
+    else {
         pir::die("Can not detect type of value")
-    );
+    }
     my $type_dnst := emit_lexical_lookup($type);
     
     # Emit code to do the boxing.
     return DNST::MethodCall.new(
-        :on('Ops'), :name('box'),
-        DNST::Literal.new( :value($val.value), :escape($type eq 'NQPStr' || $type eq 'BootstrapStr') ),
+        :on('Ops'), :name('box_' ~ $primitive),
+        DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
 }

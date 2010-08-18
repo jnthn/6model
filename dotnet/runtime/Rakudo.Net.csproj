@@ -56,9 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Init.cs" />
-    <Compile Include="Metamodel\IBoxableRepresentation.cs" />
     <Compile Include="Metamodel\Representations\P6capture.cs" />
-    <Compile Include="Metamodel\Representations\P6native.cs" />
+    <Compile Include="Metamodel\Representations\P6int.cs" />
+    <Compile Include="Metamodel\Representations\P6num.cs" />
     <Compile Include="Metamodel\Representations\P6str.cs" />
     <Compile Include="Metamodel\Representations\RakudoCodeRef.cs" />
     <Compile Include="Metamodel\REPRRegistry.cs" />

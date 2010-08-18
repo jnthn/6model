@@ -95,5 +95,35 @@ namespace Rakudo.Metamodel.Representations
         {
             return Hints.NO_HINT;
         }
+
+        public override void set_int(RakudoObject Object, int Value)
+        {
+            throw new InvalidOperationException("This type of representation cannot box a native int");
+        }
+
+        public override int get_int(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native int");
+        }
+
+        public override void set_num(RakudoObject Object, double Value)
+        {
+            throw new InvalidOperationException("This type of representation cannot box a native num");
+        }
+
+        public override double get_num(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native num");
+        }
+
+        public override void set_str(RakudoObject Object, string Value)
+        {
+            throw new InvalidOperationException("This type of representation cannot box a native string");
+        }
+
+        public override string get_str(RakudoObject Object)
+        {
+            throw new InvalidOperationException("This type of representation cannot unbox to a native string");
+        }
     }
 }

@@ -474,6 +474,44 @@ our multi sub dnst_for(PAST::Op $op) {
         return $result;
     }
 
+    elsif $op.pasttype eq 'while' {
+        # Need labels for start and end.
+        my $test_label := get_unique_id('while_lab');
+        my $end_label := get_unique_id('while_end_lab');
+        my $cond_result := get_unique_id('cond');
+        
+        # Compile the condition.
+        my $cond := DNST::Temp.new(
+            :name($cond_result), :type('IRakudoObject'),
+            dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('Bool'),
+                (@($op))[0]
+            ))
+        );
+
+        # Compile the body.
+        my $body := dnst_for((@($op))[1]);
+
+        # Build up result.
+        return DNST::Stmts.new(
+            DNST::Label.new( :name($test_label) ),
+            $cond,
+            DNST::If.new(
+                DNST::MethodCall.new(
+                    :on('Ops'), :name('unbox<int>'),
+                    $cond_result
+                ),
+                $body,
+                DNST::Stmts.new(
+                    $cond_result,
+                    DNST::Goto.new( :label($end_label) )
+                )
+            ),
+            DNST::Goto.new( :label($test_label) ),
+            DNST::Label.new( :name($end_label) )
+        );
+    }
+
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }

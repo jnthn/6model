@@ -21,7 +21,8 @@ knowhow NQPStr is repr('P6str') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt)
+        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt) &&
+            nqp::logical_not_int(nqp::equal_strs(self, "0", NQPInt), NQPInt)
     }
     method Str() {
         self
@@ -102,7 +103,7 @@ sub plan($n) {
     print("1..");
     say($n);
 }
-sub ok($check) {
+sub ok($check, $diag) {
     $count := $count + 1;
     unless $check { print("not ") }
     print("ok ");

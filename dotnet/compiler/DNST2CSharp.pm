@@ -157,6 +157,33 @@ our multi sub cs_for(DNST::New $new) {
     return $code;
 }
 
+our multi sub cs_for(DNST::If $if) {
+    unless +@($if) >= 2 { pir::die('A DNST::If node must have at least 2 children') }
+
+    # Need a variable to put the final result in.
+    my $if_result := get_unique_id('if_result');
+
+    # Get the conditional and emit if.
+    my $code := cs_for((@($if))[0]);
+    $code := $code ~
+             "        IRakudoObject $if_result = null;\n" ~
+             "        if ($*LAST_TEMP != 0) \{\n";
+
+    # Compile branch(es).
+    $code := $code ~ cs_for((@($if))[1]);
+    $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
+                     "        }\n";
+    if +@($if) == 3 {
+        $code := $code ~ "        else \{\n";
+        $code := $code ~ cs_for((@($if))[2]);
+        $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
+                         "        }\n";
+    }
+
+    $*LAST_TEMP := $if_result;
+    return $code;
+}
+
 our multi sub cs_for(DNST::Temp $tmp) {
     unless +@($tmp) == 1 { pir::die('A DNST::Temp must have exactly one child') }
     my $code := cs_for((@($tmp))[0]);

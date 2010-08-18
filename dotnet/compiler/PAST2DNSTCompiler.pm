@@ -443,6 +443,37 @@ our multi sub dnst_for(PAST::Op $op) {
         return $result;
     }
 
+    elsif $op.pasttype eq 'if' {
+        my $result := DNST::If.new(
+            DNST::MethodCall.new(
+                :on('Ops'), :name('unbox<int>'),
+                dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('Bool'),
+                    (@($op))[0]
+                ))
+            ),
+            dnst_for((@($op))[1])
+        );
+        if +@($op) == 3 {
+            $result.push(dnst_for((@($op))[2]));
+        }
+        return $result;
+    }
+
+    elsif $op.pasttype eq 'unless' {
+        my $result := DNST::If.new(
+            DNST::MethodCall.new(
+                :on('Ops'), :name('unbox<int>'),
+                dnst_for(PAST::Op.new(
+                    :pasttype('call'), :name('&prefix:<!>'),
+                    (@($op))[0]
+                ))
+            ),
+            dnst_for((@($op))[1])
+        );
+        return $result;
+    }
+
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }
@@ -492,7 +523,7 @@ our multi sub dnst_for(PAST::Var $var) {
             pir::die('Symbol ' ~ $var.name ~ ' not pre-declared');
         }
     }
-    
+
     # Now go by scope.
     if $scope eq 'parameter' {
         # Parameters we'll deal with later by building up a signature.

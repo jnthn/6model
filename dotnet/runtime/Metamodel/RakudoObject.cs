@@ -9,17 +9,17 @@ namespace Rakudo.Metamodel
     /// <summary>
     /// The commonalities of every object.
     /// </summary>
-    public interface IRakudoObject
+    public abstract class RakudoObject
     {
         /// <summary>
         /// Every object must have a way to refer to the shared table,
         /// which contains the commonalities this object has.
         /// </summary>
-        SharedTable STable { get; set; }
+        public SharedTable STable;
 
         /// <summary>
         /// The serialization context this object belongs to.
         /// </summary>
-        SerializationContext SC { get; set; }
+        public SerializationContext SC;
     }
 }

@@ -25,7 +25,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="C"></param>
         /// <param name="Capture"></param>
-        public static void Bind(Context C, IRakudoObject Capture)
+        public static void Bind(Context C, RakudoObject Capture)
         {
             // The lexpad we'll bind into.
             var Target = C.LexPad;

@@ -25,7 +25,7 @@ namespace Rakudo.Runtime
         /// supports forwarding to the native code.
         /// </summary>
         /// <param name="Code"></param>
-        public static IRakudoObject WrapNativeMethod(Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject> Code)
+        public static RakudoObject WrapNativeMethod(Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Code)
         {
             var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
             var Wrapper = REPR.type_object_for(null);
@@ -39,7 +39,7 @@ namespace Rakudo.Runtime
         /// <param name="Code"></param>
         /// <returns></returns>
         public static RakudoCodeRef.Instance BuildStaticBlockInfo(
-            Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject> Code,
+            Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Code,
             RakudoCodeRef.Instance Outer, string[] LexNames, Signature Sig)
         {
             // Create code wrapper object.
@@ -51,7 +51,7 @@ namespace Rakudo.Runtime
             Result.Sig = Sig;
 
             // Setup static lexpad.
-            Result.StaticLexPad = new Dictionary<string, IRakudoObject>();
+            Result.StaticLexPad = new Dictionary<string, RakudoObject>();
             foreach (var Lex in LexNames)
                 Result.StaticLexPad.Add(Lex, null);
 

@@ -66,8 +66,8 @@
     <Compile Include="Runtime\ExecutionDomain.cs" />
     <Compile Include="Metamodel\KnowHOW\KnowHOWBootstrapper.cs" />
     <Compile Include="Metamodel\KnowHOW\KnowHOWREPR.cs" />
-    <Compile Include="Metamodel\IRakudoObject.cs" />
-    <Compile Include="Metamodel\IRepresentation.cs" />
+    <Compile Include="Metamodel\RakudoObject.cs" />
+    <Compile Include="Metamodel\Representation.cs" />
     <Compile Include="Metamodel\SharedTable.cs" />
     <Compile Include="Metamodel\Representations\P6hash.cs" />
     <Compile Include="Metamodel\Representations\P6opaque.cs" />

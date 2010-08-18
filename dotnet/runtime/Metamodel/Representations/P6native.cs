@@ -9,15 +9,13 @@ namespace Rakudo.Metamodel.Representations
     /// A representation that we use (for now) for dealing with
     /// native types in their boxed forms.
     /// </summary>
-    public class P6native<TValue> : IRepresentation, IBoxableRepresentation<TValue> where TValue : struct
+    public sealed class P6native<TValue> : Representation, IBoxableRepresentation<TValue> where TValue : struct
     {
         /// <summary>
         /// This is how the boxed form of a P6native looks like.
         /// </summary>
-        internal class Instance : IRakudoObject
+        internal sealed class Instance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
             public Nullable<TValue> Value;
             public Instance(SharedTable STable)
             {
@@ -30,7 +28,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="MetaPackage"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject MetaPackage)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
@@ -44,7 +42,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
             Object.Value = default(TValue);
@@ -56,32 +54,32 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject Obj)
+        public override bool defined(RakudoObject Obj)
         {
             return ((Instance)Obj).Value.HasValue;
         }
 
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             throw new InvalidOperationException("Boxed native types cannot store additional attributes.");
         }
 
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
         }
@@ -91,7 +89,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Object"></param>
         /// <returns></returns>
-        public TValue get_value(IRakudoObject Object)
+        public TValue get_value(RakudoObject Object)
         {
             return ((Instance)Object).Value.Value;
         }
@@ -101,7 +99,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public void set_value(IRakudoObject Object, TValue Value)
+        public void set_value(RakudoObject Object, TValue Value)
         {
             ((Instance)Object).Value = Value;
         }

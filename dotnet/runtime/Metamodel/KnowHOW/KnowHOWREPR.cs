@@ -9,19 +9,17 @@ namespace Rakudo.Metamodel.KnowHOW
     /// We have a REPR especially for the KnowHOW, which is part of the
     /// "bootstrap".
     /// </summary>
-    public class KnowHOWREPR : IRepresentation
+    public sealed class KnowHOWREPR : Representation
     {
         /// <summary>
         /// This represents an instance created with this underlying
         /// representation. We use .Net data types for out attribute
         /// and method store.
         /// </summary>
-        internal class KnowHOWInstance : IRakudoObject
+        internal class KnowHOWInstance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
-            public List<IRakudoObject> Attributes;
-            public Dictionary<string, IRakudoObject> Methods;
+            public List<RakudoObject> Attributes;
+            public Dictionary<string, RakudoObject> Methods;
             public KnowHOWInstance(SharedTable STable)
             {
                 this.STable = STable;
@@ -33,7 +31,7 @@ namespace Rakudo.Metamodel.KnowHOW
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject HOW)
+        public override RakudoObject type_object_for(RakudoObject HOW)
         {
             var STable = new SharedTable();
             STable.HOW = HOW;
@@ -47,11 +45,11 @@ namespace Rakudo.Metamodel.KnowHOW
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new KnowHOWInstance(WHAT.STable);
-            Object.Methods = new Dictionary<string, IRakudoObject>();
-            Object.Attributes = new List<IRakudoObject>();
+            Object.Methods = new Dictionary<string, RakudoObject>();
+            Object.Attributes = new List<RakudoObject>();
             return Object;
         }
 
@@ -60,27 +58,27 @@ namespace Rakudo.Metamodel.KnowHOW
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject Obj)
+        public override bool defined(RakudoObject Obj)
         {
             return ((KnowHOWInstance)Obj).Methods != null;
         }
 
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             throw new NotImplementedException();
         }
 
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             throw new NotImplementedException();
         }
 
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             throw new NotImplementedException();
         }
 
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             throw new NotImplementedException();
         }
@@ -92,7 +90,7 @@ namespace Rakudo.Metamodel.KnowHOW
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
         }

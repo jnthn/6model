@@ -83,7 +83,7 @@ our multi sub cs_for(DNST::Stmts $stmts) {
 our multi sub cs_for(DNST::TryFinally $tf) {
     unless +@($tf) == 2 { pir::die('DNST::TryFinally nodes must have 2 children') }
     my $try_result := get_unique_id('try_result');
-    my $code := "        IRakudoObject $try_result;\n" ~
+    my $code := "        RakudoObject $try_result;\n" ~
                 "        try \{\n" ~
                 cs_for((@($tf))[0]);
     $code := $code ~
@@ -166,7 +166,7 @@ our multi sub cs_for(DNST::If $if) {
     # Get the conditional and emit if.
     my $code := cs_for((@($if))[0]);
     $code := $code ~
-             "        IRakudoObject $if_result = null;\n" ~
+             "        RakudoObject $if_result = null;\n" ~
              "        if ($*LAST_TEMP != 0) \{\n";
 
     # Compile branch(es).

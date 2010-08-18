@@ -10,7 +10,7 @@ namespace Rakudo.Metamodel.Representations
     /// the attributes. No real restriction on the sort of class it can be
     /// used with. Also dead easy to implement. :-)
     /// </summary>
-    public sealed class P6hash : IRepresentation
+    public sealed class P6hash : Representation
     {
         /// <summary>
         /// This class represents our instances. It's inner workings are
@@ -20,11 +20,9 @@ namespace Rakudo.Metamodel.Representations
         /// consider concurrency in accesses to the Dictionary. But
         /// this is OK for a prototype. -- jnthn
         /// </summary>
-        private sealed class Instance : IRakudoObject
+        private sealed class Instance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
-            public Dictionary<IRakudoObject, Dictionary<string, IRakudoObject>> Storage;
+            public Dictionary<RakudoObject, Dictionary<string, RakudoObject>> Storage;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -38,7 +36,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject MetaPackage)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
@@ -53,10 +51,10 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
-            Object.Storage = new Dictionary<IRakudoObject, Dictionary<string, IRakudoObject>>();
+            Object.Storage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             return Object;
         }
 
@@ -67,7 +65,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Object"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject Object)
+        public override bool defined(RakudoObject Object)
         {
             return ((Instance)Object).Storage != null;
         }
@@ -78,7 +76,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             // If no storage ever allocated, trivially no value. Otherwise,
             // return what we find.
@@ -97,7 +95,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             return get_attribute(Object, ClassHandle, Name);
         }
@@ -109,14 +107,14 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <param name="Value"></param>
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             // If no storage at all, allocate some.
             var I = (Instance)Object;
             if (I.Storage == null)
-                I.Storage = new Dictionary<IRakudoObject, Dictionary<string, IRakudoObject>>();
+                I.Storage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             if (!I.Storage.ContainsKey(ClassHandle))
-                I.Storage.Add(ClassHandle, new Dictionary<string, IRakudoObject>());
+                I.Storage.Add(ClassHandle, new Dictionary<string, RakudoObject>());
             
             // Now stick in the name slot for the class storage, creating if it
             // needed.
@@ -135,7 +133,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <param name="Value"></param>
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             bind_attribute(Object, ClassHandle, Name, Value);
         }
@@ -146,7 +144,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
         }

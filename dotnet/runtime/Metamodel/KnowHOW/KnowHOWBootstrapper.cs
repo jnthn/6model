@@ -23,7 +23,7 @@ namespace Rakudo.Metamodel.KnowHOW
         /// into the methods dictionary.
         /// </summary>
         /// <returns></returns>
-        public static IRakudoObject Bootstrap()
+        public static RakudoObject Bootstrap()
         {
             // Create our KnowHOW type object. Note we don't have a HOW
             // just yet, so pass in null.
@@ -32,7 +32,7 @@ namespace Rakudo.Metamodel.KnowHOW
 
             // We'll set up a dictionary of our various methods to go into
             // KnowHOW's HOW, since we'll want to work with them a bit.
-            var KnowHOWMeths = new Dictionary<string, IRakudoObject>();
+            var KnowHOWMeths = new Dictionary<string, RakudoObject>();
             KnowHOWMeths.Add("new_type", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
                     // We first create a new HOW instance.

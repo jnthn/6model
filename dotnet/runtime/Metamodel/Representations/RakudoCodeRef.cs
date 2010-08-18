@@ -11,17 +11,15 @@ namespace Rakudo.Metamodel.Representations
     /// specific to this Rakudo backend, not something standard accross all
     /// Rakudo backends.
     /// </summary>
-    public class RakudoCodeRef : IRepresentation
+    public sealed class RakudoCodeRef : Representation
     {
         /// <summary>
         /// This is how the boxed form of a P6str looks.
         /// </summary>
-        public class Instance : IRakudoObject
+        public sealed class Instance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
-            public Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject> Body;
-            public Dictionary<string, IRakudoObject> StaticLexPad;
+            public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
+            public Dictionary<string, RakudoObject> StaticLexPad;
             public Instance OuterBlock;
             public Signature Sig;
             public Context CurrentContext;
@@ -36,7 +34,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="MetaPackage"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject MetaPackage)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             // Do the usual bits of setup for the type-object.
             var STable = new SharedTable();
@@ -57,7 +55,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
             return Object;
@@ -68,32 +66,32 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject Obj)
+        public override bool defined(RakudoObject Obj)
         {
             return ((Instance)Obj).Body != null;
         }
 
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             throw new InvalidOperationException("RakudoCodeRef objects cannot store additional attributes.");
         }
 
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             throw new InvalidOperationException("RakudoCodeRef objects cannot store additional attributes.");
         }
 
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             throw new InvalidOperationException("RakudoCodeRef objects cannot store additional attributes.");
         }
 
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             throw new InvalidOperationException("RakudoCodeRef objects cannot store additional attributes.");
         }
 
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
         }

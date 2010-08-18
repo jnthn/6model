@@ -17,13 +17,13 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <returns></returns>
-        TValue get_value(IRakudoObject Object);
+        TValue get_value(RakudoObject Object);
 
         /// <summary>
         /// For reprs that store a single native value, sets this.
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="?"></param>
-        void set_value(IRakudoObject Object, TValue Value);
+        void set_value(RakudoObject Object, TValue Value);
     }
 }

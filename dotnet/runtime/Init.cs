@@ -80,10 +80,10 @@ namespace Rakudo
         /// </summary>
         /// <param name="KnowHOW"></param>
         /// <returns></returns>
-        private static Context BootstrapSetting(IRakudoObject KnowHOW)
+        private static Context BootstrapSetting(RakudoObject KnowHOW)
         {
             var SettingContext = new Context();
-            SettingContext.LexPad = new Dictionary<string, IRakudoObject>()
+            SettingContext.LexPad = new Dictionary<string, RakudoObject>()
                 {
                     { "KnowHOW", KnowHOW },
                     { "print", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
@@ -119,7 +119,7 @@ namespace Rakudo
         /// <param name="Name"></param>
         /// <param name="KnowHOW"></param>
         /// <returns></returns>
-        public static Context LoadSetting(string Name, IRakudoObject KnowHOW)
+        public static Context LoadSetting(string Name, RakudoObject KnowHOW)
         {
             // Load the assembly.
             var SettingAssembly = AppDomain.CurrentDomain.Load(Name);

@@ -16,13 +16,13 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Cache of the native capture type object.
         /// </summary>
-        internal static IRakudoObject CaptureTypeObject;
+        internal static RakudoObject CaptureTypeObject;
 
         /// <summary>
         /// Empty capture former.
         /// </summary>
         /// <returns></returns>
-        public static IRakudoObject FormWith()
+        public static RakudoObject FormWith()
         {
             var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
             return C;
@@ -33,7 +33,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Args"></param>
         /// <returns></returns>
-        public static IRakudoObject FormWith(IRakudoObject[] PosArgs)
+        public static RakudoObject FormWith(RakudoObject[] PosArgs)
         {
             var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
             C.Positionals = PosArgs;
@@ -45,7 +45,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Args"></param>
         /// <returns></returns>
-        public static IRakudoObject FormWith(IRakudoObject[] PosArgs, Dictionary<string, IRakudoObject> NamedArgs)
+        public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs)
         {
             var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
             C.Positionals = PosArgs;
@@ -59,11 +59,12 @@ namespace Rakudo.Runtime
         /// <param name="Capture"></param>
         /// <param name="Pos"></param>
         /// <returns></returns>
-        public static IRakudoObject GetPositional(IRakudoObject Capture, int Pos)
+        public static RakudoObject GetPositional(RakudoObject Capture, int Pos)
         {
-            if (Capture is P6capture.Instance)
+            var NativeCapture = Capture as P6capture.Instance;
+            if (NativeCapture != null)
             {
-                var Possies = (Capture as P6capture.Instance).Positionals;
+                var Possies = NativeCapture.Positionals;
                 if (Possies != null && Pos < Possies.Length)
                     return Possies[Pos];
                 else
@@ -80,11 +81,12 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static int NumPositionals(IRakudoObject Capture)
+        public static int NumPositionals(RakudoObject Capture)
         {
-            if (Capture is P6capture.Instance)
+            var NativeCapture = Capture as P6capture.Instance;
+            if (NativeCapture != null)
             {
-                var Possies = (Capture as P6capture.Instance).Positionals;
+                var Possies = NativeCapture.Positionals;
                 return Possies == null ? 0 : Possies.Length;
             }
             else
@@ -99,11 +101,12 @@ namespace Rakudo.Runtime
         /// <param name="Capture"></param>
         /// <param name="Pos"></param>
         /// <returns></returns>
-        public static IRakudoObject GetNamed(IRakudoObject Capture, string Name)
+        public static RakudoObject GetNamed(RakudoObject Capture, string Name)
         {
-            if (Capture is P6capture.Instance)
+            var NativeCapture = Capture as P6capture.Instance;
+            if (NativeCapture != null)
             {
-                var Nameds = (Capture as P6capture.Instance).Nameds;
+                var Nameds = NativeCapture.Nameds;
                 if (Nameds != null && Nameds.ContainsKey(Name))
                     return Nameds[Name];
                 else
@@ -124,7 +127,7 @@ namespace Rakudo.Runtime
         /// <param name="Capture"></param>
         /// <param name="Pos"></param>
         /// <returns></returns>
-        public static Type GetPositionalAs<Type>(IRakudoObject Capture, int Pos)
+        public static Type GetPositionalAs<Type>(RakudoObject Capture, int Pos)
         {
             return Ops.unbox<Type>(GetPositional(Capture, Pos));
         }
@@ -133,7 +136,7 @@ namespace Rakudo.Runtime
         /// XXX This is very wrong...
         /// </summary>
         /// <returns></returns>
-        public static IRakudoObject Nil()
+        public static RakudoObject Nil()
         {
             return null;
         }

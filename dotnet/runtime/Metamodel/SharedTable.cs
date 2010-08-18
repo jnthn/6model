@@ -16,7 +16,7 @@ namespace Rakudo.Metamodel
         /// <summary>
         /// This finds a method with the given name or using a hint.
         /// </summary>
-        public Func<ThreadContext, IRakudoObject, string, int, IRakudoObject> FindMethod =
+        public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
             (TC, Obj, Name, Hint) =>
             {
                 // See if we can find it by hint.
@@ -32,7 +32,7 @@ namespace Rakudo.Metamodel
                     var Meth = HOW.STable.FindMethod(TC, HOW, "find_method", Hints.NO_HINT);
                     
                     // Call it.
-                    var Cap = CaptureHelper.FormWith(new IRakudoObject[] { HOW, Ops.box<string>(Name, TC.Domain.DefaultStrBoxType) });
+                    var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box<string>(Name, TC.Domain.DefaultStrBoxType) });
                     return Meth.STable.Invoke(TC, Meth, Cap);
                 }
             };
@@ -41,7 +41,7 @@ namespace Rakudo.Metamodel
         /// The default invoke looks up a postcircumfix:<( )> and runs that.
         /// XXX Cache the hint where we can.
         /// </summary>
-        public Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject> Invoke =
+        public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Invoke =
             (TC, Obj, Cap) =>
             {
                 var Invokable = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT);
@@ -51,23 +51,23 @@ namespace Rakudo.Metamodel
         /// <summary>
         /// The representation object that manages object layout.
         /// </summary>
-        public IRepresentation REPR;
+        public Representation REPR;
 
         /// <summary>
         /// The HOW (which is the meta-package). If we do $obj.HOW then
         /// it will refer to a getting of this field.
         /// </summary>
-        public IRakudoObject HOW;
+        public RakudoObject HOW;
 
         /// <summary>
         /// The type-object. If we do $obj.WHAT then it will refer to a 
         /// getting of this field.
         /// </summary>
-        public IRakudoObject WHAT;
+        public RakudoObject WHAT;
 
         /// <summary>
         /// The generated v-table, if any.
         /// </summary>
-        public IRakudoObject[] VTable;
+        public RakudoObject[] VTable;
     }
 }

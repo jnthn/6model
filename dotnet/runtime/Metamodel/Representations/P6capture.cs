@@ -8,17 +8,15 @@ namespace Rakudo.Metamodel.Representations
     /// <summary>
     /// A representation that we use (for now) for native captures.
     /// </summary>
-    public class P6capture : IRepresentation
+    public sealed class P6capture : Representation
     {
         /// <summary>
         /// This is how a Capture looks.
         /// </summary>
-        internal class Instance : IRakudoObject
+        internal sealed class Instance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
-            public IRakudoObject[] Positionals;
-            public Dictionary<string, IRakudoObject> Nameds;
+            public RakudoObject[] Positionals;
+            public Dictionary<string, RakudoObject> Nameds;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -30,7 +28,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="MetaPackage"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject MetaPackage)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
@@ -44,7 +42,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
             return Object;
@@ -55,33 +53,33 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject O)
+        public override bool defined(RakudoObject O)
         {
             var Obj = (Instance)O;
             return Obj.Positionals != null || Obj.Nameds != null;
         }
 
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             throw new InvalidOperationException("Native captures cannot store additional attributes.");
         }
 
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             throw new InvalidOperationException("Native captures cannot store additional attributes.");
         }
 
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             throw new InvalidOperationException("Native captures cannot store additional attributes.");
         }
 
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             throw new InvalidOperationException("Native captures cannot store additional attributes.");
         }
 
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             return Hints.NO_HINT;
         }

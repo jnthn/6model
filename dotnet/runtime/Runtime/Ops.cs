@@ -19,7 +19,7 @@ namespace Rakudo.Runtime
         /// <param name="HOW"></param>
         /// <param name="REPRName"></param>
         /// <returns></returns>
-        public static IRakudoObject type_object_for(IRakudoObject HOW, string REPRName)
+        public static RakudoObject type_object_for(RakudoObject HOW, string REPRName)
         {
             return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(HOW);
         }
@@ -29,7 +29,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public static IRakudoObject instance_of(IRakudoObject WHAT)
+        public static RakudoObject instance_of(RakudoObject WHAT)
         {
             return WHAT.STable.REPR.instance_of(WHAT);
         }
@@ -39,7 +39,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static bool repr_defined(IRakudoObject Obj)
+        public static bool repr_defined(RakudoObject Obj)
         {
             return Obj.STable.REPR.defined(Obj);
         }
@@ -51,7 +51,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static IRakudoObject get_attr(IRakudoObject Object, IRakudoObject Class, string Name)
+        public static RakudoObject get_attr(RakudoObject Object, RakudoObject Class, string Name)
         {
             return Object.STable.REPR.get_attribute(Object, Class, Name);
         }
@@ -64,7 +64,7 @@ namespace Rakudo.Runtime
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public static IRakudoObject get_attr_with_hint(IRakudoObject Object, IRakudoObject Class, string Name, int Hint)
+        public static RakudoObject get_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, int Hint)
         {
             return Object.STable.REPR.get_attribute_with_hint(Object, Class, Name, Hint);
         }
@@ -76,7 +76,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(IRakudoObject Object, IRakudoObject Class, string Name, IRakudoObject Value)
+        public static void bind_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute(Object, Class, Name, Value);
         }
@@ -89,7 +89,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(IRakudoObject Object, IRakudoObject Class, string Name, int Hint, IRakudoObject Value)
+        public static void bind_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute_with_hint(Object, Class, Name, Hint, Value);
         }
@@ -100,7 +100,7 @@ namespace Rakudo.Runtime
         /// <param name="Object"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static IRakudoObject find_method(ThreadContext TC, IRakudoObject Object, string Name)
+        public static RakudoObject find_method(ThreadContext TC, RakudoObject Object, string Name)
         {
             return Object.STable.FindMethod(TC, Object, Name, Hints.NO_HINT);
         }
@@ -112,7 +112,7 @@ namespace Rakudo.Runtime
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public static IRakudoObject find_method_with_hint(ThreadContext TC, IRakudoObject Object, string Name, int Hint)
+        public static RakudoObject find_method_with_hint(ThreadContext TC, RakudoObject Object, string Name, int Hint)
         {
             return Object.STable.FindMethod(TC, Object, Name, Hint);
         }
@@ -123,7 +123,7 @@ namespace Rakudo.Runtime
         /// <param name="Invokee"></param>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static IRakudoObject invoke(ThreadContext TC, IRakudoObject Invokee, IRakudoObject Capture)
+        public static RakudoObject invoke(ThreadContext TC, RakudoObject Invokee, RakudoObject Capture)
         {
             return Invokee.STable.Invoke(TC, Invokee, Capture);
         }
@@ -133,7 +133,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static IRakudoObject get_how(IRakudoObject Obj)
+        public static RakudoObject get_how(RakudoObject Obj)
         {
             return Obj.STable.HOW;
         }
@@ -143,7 +143,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static IRakudoObject get_what(IRakudoObject Obj)
+        public static RakudoObject get_what(RakudoObject Obj)
         {
             return Obj.STable.WHAT;
         }
@@ -153,7 +153,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Value"></param>
         /// <returns></returns>
-        public static IRakudoObject box<TValue>(TValue Value, IRakudoObject To)
+        public static RakudoObject box<TValue>(TValue Value, RakudoObject To)
         {
             if (To.STable.REPR is IBoxableRepresentation<TValue>)
             {
@@ -172,7 +172,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Boxed"></param>
         /// <returns></returns>
-        public static TValue unbox<TValue>(IRakudoObject Boxed)
+        public static TValue unbox<TValue>(RakudoObject Boxed)
         {
             if (Boxed.STable.REPR is IBoxableRepresentation<TValue>)
                 return (Boxed.STable.REPR as IBoxableRepresentation<TValue>).get_value(Boxed);
@@ -186,7 +186,7 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static IRakudoObject coerce_int_to_str(IRakudoObject Int, IRakudoObject TargetType)
+        public static RakudoObject coerce_int_to_str(RakudoObject Int, RakudoObject TargetType)
         {
             int Value = Ops.unbox<int>(Int);
             return Ops.box(Value.ToString(), TargetType);
@@ -198,7 +198,7 @@ namespace Rakudo.Runtime
         /// <param name="Num"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static IRakudoObject coerce_num_to_str(IRakudoObject Num, IRakudoObject TargetType)
+        public static RakudoObject coerce_num_to_str(RakudoObject Num, RakudoObject TargetType)
         {
             double Value = Ops.unbox<double>(Num);
             return Ops.box(Value.ToString(), TargetType);
@@ -210,7 +210,7 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static IRakudoObject coerce_int_to_num(IRakudoObject Int, IRakudoObject TargetType)
+        public static RakudoObject coerce_int_to_num(RakudoObject Int, RakudoObject TargetType)
         {
             int Value = Ops.unbox<int>(Int);
             return Ops.box((double)Value, TargetType);
@@ -222,7 +222,7 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static IRakudoObject coerce_num_to_int(IRakudoObject Num, IRakudoObject TargetType)
+        public static RakudoObject coerce_num_to_int(RakudoObject Num, RakudoObject TargetType)
         {
             double Value = Ops.unbox<double>(Num);
             return Ops.box((int)Value, TargetType);
@@ -234,13 +234,14 @@ namespace Rakudo.Runtime
         /// <param name="i"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static IRakudoObject get_lex(Context C, string Name)
+        public static RakudoObject get_lex(Context C, string Name)
         {
             var CurContext = C;
             while (CurContext != null)
             {
-                if (CurContext.LexPad.ContainsKey(Name))
-                    return CurContext.LexPad[Name];
+                RakudoObject Found;
+                if (CurContext.LexPad.TryGetValue(Name, out Found))
+                    return Found;
                 CurContext = CurContext.Outer;
             }
             throw new InvalidOperationException("No variable " + Name + " found in the lexical scope");
@@ -252,7 +253,7 @@ namespace Rakudo.Runtime
         /// <param name="i"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static IRakudoObject bind_lex(Context C, string Name, IRakudoObject Value)
+        public static RakudoObject bind_lex(Context C, string Name, RakudoObject Value)
         {
             var CurContext = C;
             while (CurContext != null)
@@ -273,13 +274,14 @@ namespace Rakudo.Runtime
         /// <param name="C"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static IRakudoObject get_dynamic(Context C, string Name)
+        public static RakudoObject get_dynamic(Context C, string Name)
         {
             var CurContext = C;
             while (CurContext != null)
             {
-                if (CurContext.LexPad.ContainsKey(Name))
-                    return CurContext.LexPad[Name];
+                RakudoObject Found;
+                if (CurContext.LexPad.TryGetValue(Name, out Found))
+                    return Found;
                 CurContext = CurContext.Caller;
             }
             throw new InvalidOperationException("No variable " + Name + " found in the dynamic scope");
@@ -291,7 +293,7 @@ namespace Rakudo.Runtime
         /// <param name="C"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static IRakudoObject bind_dynamic(Context C, string Name, IRakudoObject Value)
+        public static RakudoObject bind_dynamic(Context C, string Name, RakudoObject Value)
         {
             var CurContext = C;
             while (CurContext != null)
@@ -313,7 +315,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject equal_nums(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject equal_nums(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(
                 (Ops.unbox<double>(x) == Ops.unbox<double>(y) ? 1 : 0),
@@ -327,7 +329,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject equal_ints(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject equal_ints(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(
                 (Ops.unbox<int>(x) == Ops.unbox<int>(y) ? 1 : 0),
@@ -341,7 +343,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject equal_strs(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject equal_strs(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(
                 (Ops.unbox<string>(x) == Ops.unbox<string>(y) ? 1 : 0),
@@ -354,7 +356,7 @@ namespace Rakudo.Runtime
         /// <param name="x"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject logical_not_int(IRakudoObject x, IRakudoObject ResultType)
+        public static RakudoObject logical_not_int(RakudoObject x, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) == 0 ? 1 : 0, ResultType);
         }
@@ -366,7 +368,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject add_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject add_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) + Ops.unbox<int>(y), ResultType);
         }
@@ -378,7 +380,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject sub_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject sub_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) - Ops.unbox<int>(y), ResultType);
         }
@@ -390,7 +392,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject mul_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject mul_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) * Ops.unbox<int>(y), ResultType);
         }
@@ -402,7 +404,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject div_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject div_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) / Ops.unbox<int>(y), ResultType);
         }
@@ -414,7 +416,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject mod_int(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject mod_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<int>(Ops.unbox<int>(x) % Ops.unbox<int>(y), ResultType);
         }
@@ -426,7 +428,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static IRakudoObject concat(IRakudoObject x, IRakudoObject y, IRakudoObject ResultType)
+        public static RakudoObject concat(RakudoObject x, RakudoObject y, RakudoObject ResultType)
         {
             return Ops.box<string>(Ops.unbox<string>(x) + Ops.unbox<string>(y), ResultType);
         }

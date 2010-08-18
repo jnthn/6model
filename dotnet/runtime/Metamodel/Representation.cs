@@ -8,7 +8,7 @@ namespace Rakudo.Metamodel
     /// <summary>
     /// All representations should implement this API.
     /// </summary>
-    public interface IRepresentation
+    public abstract class Representation
     {
         /// <summary>
         /// Creates a new type object of this representation, and
@@ -17,21 +17,21 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        IRakudoObject type_object_for(IRakudoObject HOW);
+        public abstract RakudoObject type_object_for(RakudoObject HOW);
 
         /// <summary>
         /// Creates a new instance based on the type object.
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        IRakudoObject instance_of(IRakudoObject WHAT);
+        public abstract RakudoObject instance_of(RakudoObject WHAT);
 
         /// <summary>
         /// Checks if a given object is defined.
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        bool defined(IRakudoObject Obj);
+        public abstract bool defined(RakudoObject Obj);
 
         /// <summary>
         /// Gets the current value for an attribute.
@@ -39,7 +39,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name);
+        public abstract RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name);
 
         /// <summary>
         /// Gets the current value for an attribute, obtained using the
@@ -49,7 +49,7 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint);
+        public abstract RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint);
 
         /// <summary>
         /// Binds the given value to the specified attribute.
@@ -57,7 +57,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <param name="Value"></param>
-        void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value);
+        public abstract void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value);
 
         /// <summary>
         /// Binds the given value to the specified attribute, using the
@@ -67,7 +67,7 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <param name="Value"></param>
-        void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value);
+        public abstract void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value);
 
         /// <summary>
         /// Gets the hint for the given attribute ID.
@@ -75,7 +75,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        int hint_for(IRakudoObject ClassHandle, string Name);
+        public abstract int hint_for(RakudoObject ClassHandle, string Name);
     }
 
     public static class Hints

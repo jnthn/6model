@@ -12,14 +12,14 @@ namespace Rakudo.Metamodel.Representations
     /// can. Alas, that's Quite Tricky to write, so for now we just do
     /// something easy, but at least with the hints.
     /// </summary>
-    public sealed class P6opaque : IRepresentation
+    public sealed class P6opaque : Representation
     {
         /// <summary>
         /// This stores a mapping of classes/names to slots in the event
         /// we need to do a lookup.
         /// </summary>
-        internal Dictionary<IRakudoObject, Dictionary<string, int>> SlotAllocation
-            = new Dictionary<IRakudoObject, Dictionary<string, int>>();
+        internal Dictionary<RakudoObject, Dictionary<string, int>> SlotAllocation
+            = new Dictionary<RakudoObject, Dictionary<string, int>>();
         internal int Slots = 0;
 
         /// <summary>
@@ -28,12 +28,10 @@ namespace Rakudo.Metamodel.Representations
         /// up by index. There's also an unallocated spill-over store for any
         /// attributes that are added through augment, or in MI cases.
         /// </summary>
-        private class Instance : IRakudoObject
+        private sealed class Instance : RakudoObject
         {
-            public SharedTable STable { get; set; }
-            public Serialization.SerializationContext SC { get; set; }
-            public IRakudoObject[] SlotStorage;
-            public Dictionary<IRakudoObject, Dictionary<string, IRakudoObject>> SpillStorage;
+            public RakudoObject[] SlotStorage;
+            public Dictionary<RakudoObject, Dictionary<string, RakudoObject>> SpillStorage;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -46,7 +44,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public IRakudoObject type_object_for(IRakudoObject MetaPackage)
+        public override RakudoObject type_object_for(RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
@@ -61,10 +59,10 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public IRakudoObject instance_of(IRakudoObject WHAT)
+        public override RakudoObject instance_of(RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
-            Object.SlotStorage = new IRakudoObject[Slots];
+            Object.SlotStorage = new RakudoObject[Slots];
             return Object;
         }
 
@@ -75,12 +73,12 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Object"></param>
         /// <returns></returns>
-        public bool defined(IRakudoObject Object)
+        public override bool defined(RakudoObject Object)
         {
             return ((Instance)Object).SlotStorage != null;
         }
 
-        public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             // XXX
             throw new NotImplementedException();
@@ -94,7 +92,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             var I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
@@ -120,7 +118,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <param name="Value"></param>
-        public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, string Name, IRakudoObject Value)
+        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             // XXX
             throw new NotImplementedException();
@@ -134,7 +132,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <param name="Value"></param>
-        public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, string Name, int Hint, IRakudoObject Value)
+        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             var I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
@@ -144,9 +142,9 @@ namespace Rakudo.Metamodel.Representations
             else
             {
                 if (I.SpillStorage == null)
-                    I.SpillStorage = new Dictionary<IRakudoObject, Dictionary<string, IRakudoObject>>();
+                    I.SpillStorage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
                 if (!I.SpillStorage.ContainsKey(ClassHandle))
-                    I.SpillStorage.Add(ClassHandle, new Dictionary<string, IRakudoObject>());
+                    I.SpillStorage.Add(ClassHandle, new Dictionary<string, RakudoObject>());
                 var ClassStore = I.SpillStorage[ClassHandle];
                 if (ClassStore.ContainsKey(Name))
                     ClassStore[Name] = Value;
@@ -162,7 +160,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public int hint_for(IRakudoObject ClassHandle, string Name)
+        public override int hint_for(RakudoObject ClassHandle, string Name)
         {
             if (SlotAllocation.ContainsKey(ClassHandle) && SlotAllocation[ClassHandle].ContainsKey(Name))
                 return SlotAllocation[ClassHandle][Name];

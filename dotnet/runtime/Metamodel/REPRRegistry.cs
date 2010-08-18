@@ -13,7 +13,7 @@ namespace Rakudo.Metamodel
         /// <summary>
         /// ID indexed list.
         /// </summary>
-        private static List<IRepresentation> Registry = new List<IRepresentation>();
+        private static List<Representation> Registry = new List<Representation>();
 
         /// <summary>
         /// Maps names to IDs so we can do named lookups too.
@@ -27,7 +27,7 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <param name="REPR"></param>
         /// <returns></returns>
-        public static int register_REPR(string Name, IRepresentation REPR)
+        public static int register_REPR(string Name, Representation REPR)
         {
             Registry.Add(REPR);
             var ID = Registry.Count - 1;
@@ -40,7 +40,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="ID"></param>
         /// <returns></returns>
-        public static IRepresentation get_REPR_by_id(int ID)
+        public static Representation get_REPR_by_id(int ID)
         {
             return Registry[ID];
         }
@@ -50,7 +50,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static IRepresentation get_REPR_by_name(string Name)
+        public static Representation get_REPR_by_name(string Name)
         {
             return Registry[NamedToIDMapper[Name]];
         }

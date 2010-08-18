@@ -179,8 +179,8 @@ our multi sub dnst_for(PAST::Block $block) {
     # Make start of block.
     my $result := DNST::Method.new(
         :name(get_unique_id('block')),
-        :params('ThreadContext TC', 'IRakudoObject Block', 'IRakudoObject Capture'),
-        :return_type('IRakudoObject')
+        :params('ThreadContext TC', 'RakudoObject Block', 'RakudoObject Capture'),
+        :return_type('RakudoObject')
     );
     
     # Emit all the statements.
@@ -237,7 +237,7 @@ our multi sub dnst_for(PAST::Block $block) {
 
     # Finish geneating code setup block call.
     $our_sbi_setup.push(DNST::New.new(
-        :type('Func<ThreadContext, IRakudoObject, IRakudoObject, IRakudoObject>'),
+        :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
         $result.name
     ));
     $our_sbi_setup.push("StaticBlockInfo[$outer_sbi]");
@@ -343,11 +343,11 @@ our multi sub dnst_for(PAST::Op $op) {
             :on('CaptureHelper'), :name('FormWith')
         );
         my $pos_part := DNST::ArrayLiteral.new(
-            :type('IRakudoObject'),
+            :type('RakudoObject'),
             $inv.name
         );
         my $named_part := DNST::DictionaryLiteral.new(
-            :key_type('string'), :value_type('IRakudoObject') );
+            :key_type('string'), :value_type('RakudoObject') );
         for @args {
             if $_.named {
                 $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
@@ -393,9 +393,9 @@ our multi sub dnst_for(PAST::Op $op) {
         my $capture := DNST::MethodCall.new(
             :on('CaptureHelper'), :name('FormWith')
         );
-        my $pos_part := DNST::ArrayLiteral.new( :type('IRakudoObject') );
+        my $pos_part := DNST::ArrayLiteral.new( :type('RakudoObject') );
         my $named_part := DNST::DictionaryLiteral.new(
-            :key_type('string'), :value_type('IRakudoObject') );
+            :key_type('string'), :value_type('RakudoObject') );
         for @args {
             if $_.named {
                 $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
@@ -482,7 +482,7 @@ our multi sub dnst_for(PAST::Op $op) {
         
         # Compile the condition.
         my $cond := DNST::Temp.new(
-            :name($cond_result), :type('IRakudoObject'),
+            :name($cond_result), :type('RakudoObject'),
             dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
@@ -607,7 +607,7 @@ our multi sub dnst_for(PAST::Var $var) {
     }
     elsif $scope eq 'register' {
         if $var.isdecl {
-            my $result := DNST::Temp.new( :name($var.name), :type('IRakudoObject') );
+            my $result := DNST::Temp.new( :name($var.name), :type('RakudoObject') );
             unless $*BIND_CONTEXT { $result.push('null'); }
             return $result;
         }

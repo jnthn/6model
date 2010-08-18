@@ -13,6 +13,6 @@ namespace Rakudo.Runtime
     /// </summary>
     public class ExecutionDomain
     {
-        public IRakudoObject DefaultStrBoxType;
+        public RakudoObject DefaultStrBoxType;
     }
 }

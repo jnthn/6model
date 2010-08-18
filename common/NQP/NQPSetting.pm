@@ -95,3 +95,16 @@ sub &infix:<%>($x, $y) {
 sub &infix:<~>($x, $y) {
     nqp::concat($x.Str, $y.Str, NQPStr);
 }
+
+# For tests.
+my $count := NQPInt.new();
+sub plan($n) {
+    print("1..");
+    say($n);
+}
+sub ok($check) {
+    $count := $count + 1;
+    unless $check { print("not ") }
+    print("ok ");
+    say($count);
+}

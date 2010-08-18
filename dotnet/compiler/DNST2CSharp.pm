@@ -184,6 +184,14 @@ our multi sub cs_for(DNST::If $if) {
     return $code;
 }
 
+our multi sub cs_for(DNST::Label $lab) {
+    return "      " ~ $lab.name ~ ":\n";
+}
+
+our multi sub cs_for(DNST::Goto $gt) {
+    return "        goto " ~ $gt.label ~ ";\n";
+}
+
 our multi sub cs_for(DNST::Temp $tmp) {
     unless +@($tmp) == 1 { pir::die('A DNST::Temp must have exactly one child') }
     my $code := cs_for((@($tmp))[0]);

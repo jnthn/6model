@@ -224,6 +224,14 @@ class DNST::TryFinally is DNST::Node {
     }
 }
 
+class DNST::If is DNST::Node {
+    method new(*@children) {
+        my $obj := self.CREATE;
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
 class DNST::Temp is DNST::Node {
     has $!name;
     has $!type;

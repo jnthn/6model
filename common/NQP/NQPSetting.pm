@@ -71,3 +71,27 @@ sub &prefix:<!>($x) {
 sub &prefix:<?>($x) {
     $x.Bool
 }
+
+sub &infix:<+>($x, $y) {
+    nqp::add_int($x.Int, $y.Int, NQPInt);
+}
+
+sub &infix:<->($x, $y) {
+    nqp::sub_int($x.Int, $y.Int, NQPInt);
+}
+
+sub &infix:<*>($x, $y) {
+    nqp::mul_int($x.Int, $y.Int, NQPInt);
+}
+
+sub &infix:</>($x, $y) {
+    nqp::div_int($x.Int, $y.Int, NQPInt);
+}
+
+sub &infix:<%>($x, $y) {
+    nqp::mod_int($x.Int, $y.Int, NQPInt);
+}
+
+sub &infix:<~>($x, $y) {
+    nqp::concat($x.Str, $y.Str, NQPStr);
+}

@@ -19,6 +19,11 @@ method compile(PAST::Node $node) {
     my $*SBI_POS := 1;
     my $*SBI_SETUP := DNST::Stmts.new();
 
+    # We'll do similar for values - essentially, this builds a constants
+    # table so we don't have to build them again and again.
+    my @*CONSTANTS;
+    my $*CONSTANTS_POS := 0;
+
     # Also need to track the PAST blocks we're in.
     my @*PAST_BLOCKS;
 
@@ -50,7 +55,9 @@ method compile(PAST::Node $node) {
 
     # Also need to include setup of static block info.
     $class.push(DNST::Attribute.new( :name('StaticBlockInfo'), :type('RakudoCodeRef.Instance[]') ));
+    $class.push(DNST::Attribute.new( :name('ConstantsTable'), :type('RakudoObject[]') ));
     $class.push(make_blocks_init_method('blocks_init'));
+    $class.push(make_constants_init_method('constants_init'));
 
     # Calls to loadinits.
     my $loadinit_calls := DNST::Stmts.new();
@@ -89,6 +96,11 @@ method compile(PAST::Node $node) {
             ),
             DNST::Call.new(
                 :name('blocks_init'),
+                :void(1),
+                'TC'
+            ),
+            DNST::Call.new(
+                :name('constants_init'),
                 :void(1),
                 'TC'
             ),
@@ -143,6 +155,36 @@ sub make_blocks_init_method($name) {
         # The others.
         $*SBI_SETUP
     );
+}
+
+# Sets up the constants table initialization method.
+sub make_constants_init_method($name) {
+    # Build init method.
+    my @params;
+    @params.push('ThreadContext TC');
+    my $result := DNST::Method.new(
+        :name($name),
+        :params(@params),
+        :return_type('void'),
+        
+        # Create array for storing these.
+        DNST::Bind.new(
+            'ConstantsTable',
+            'new RakudoObject[' ~ $*CONSTANTS_POS ~ ']'
+        )
+    );
+
+    # Add all constants into table.
+    my $i := 0;
+    while $i < $*CONSTANTS_POS {
+        $result.push(DNST::Bind.new(
+            "ConstantsTable[$i]",
+            @*CONSTANTS[$i]
+        ));
+        $i := $i + 1;
+    }
+
+    return $result;
 }
 
 # Quick hack so we can get unique (for this compilation) IDs.

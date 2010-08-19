@@ -22,7 +22,6 @@ method compile(PAST::Node $node) {
     # We'll do similar for values - essentially, this builds a constants
     # table so we don't have to build them again and again.
     my @*CONSTANTS;
-    my $*CONSTANTS_POS := 0;
 
     # Also need to track the PAST blocks we're in.
     my @*PAST_BLOCKS;
@@ -102,7 +101,8 @@ method compile(PAST::Node $node) {
             DNST::Call.new(
                 :name('constants_init'),
                 :void(1),
-                'TC'
+                'TC',
+                'TC.CurrentContext'
             ),
             $loadinit_calls,
             $main_block_call
@@ -160,23 +160,21 @@ sub make_blocks_init_method($name) {
 # Sets up the constants table initialization method.
 sub make_constants_init_method($name) {
     # Build init method.
-    my @params;
-    @params.push('ThreadContext TC');
     my $result := DNST::Method.new(
         :name($name),
-        :params(@params),
+        :params('ThreadContext TC', 'Context C'),
         :return_type('void'),
         
         # Create array for storing these.
         DNST::Bind.new(
             'ConstantsTable',
-            'new RakudoObject[' ~ $*CONSTANTS_POS ~ ']'
+            'new RakudoObject[' ~ +@*CONSTANTS ~ ']'
         )
     );
 
     # Add all constants into table.
     my $i := 0;
-    while $i < $*CONSTANTS_POS {
+    while $i < +@*CONSTANTS {
         $result.push(DNST::Bind.new(
             "ConstantsTable[$i]",
             @*CONSTANTS[$i]
@@ -589,12 +587,20 @@ our multi sub dnst_for(PAST::Val $val) {
     }
     my $type_dnst := emit_lexical_lookup($type);
     
-    # Emit code to do the boxing.
-    return DNST::MethodCall.new(
+    # Add to constants table (for now, not in the setting - that hits issues.)
+    my $make_const := DNST::MethodCall.new(
         :on('Ops'), :name('box_' ~ $primitive),
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
+    if $*COMPILING_NQP_SETTING {
+        return $make_const;
+    }
+    else {
+        my $const_id := +@*CONSTANTS;
+        @*CONSTANTS.push($make_const);
+        return "ConstantsTable[$const_id]";
+    }
 }
 
 # Emits code for a variable node.

@@ -1,3 +1,16 @@
+knowhow NQPStr is repr('P6str') {
+    method new() {
+        nqp::instance_of(self.WHAT);
+    }
+    method Bool() {
+        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt) &&
+            nqp::logical_not_int(nqp::equal_strs(self, "0", NQPInt), NQPInt)
+    }
+    method Str() {
+        self
+    }
+}
+
 knowhow NQPInt is repr('P6int') {
     method new() {
         nqp::instance_of(self.WHAT);
@@ -13,19 +26,6 @@ knowhow NQPInt is repr('P6int') {
     }
     method Str() {
         nqp::coerce_int_to_str(self, NQPStr)
-    }
-}
-
-knowhow NQPStr is repr('P6str') {
-    method new() {
-        nqp::instance_of(self.WHAT);
-    }
-    method Bool() {
-        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt) &&
-            nqp::logical_not_int(nqp::equal_strs(self, "0", NQPInt), NQPInt)
-    }
-    method Str() {
-        self
     }
 }
 

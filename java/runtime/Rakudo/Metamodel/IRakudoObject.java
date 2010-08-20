@@ -5,7 +5,7 @@ import Rakudo.Serialization.SerializationContext;
 /// <summary>
 /// The commonalities of every object.
 /// </summary>
-interface IRakudoObject
+public interface IRakudoObject
 {
 
     /// <summary>

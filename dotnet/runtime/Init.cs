@@ -48,10 +48,13 @@ namespace Rakudo
             // Create an execution domain and a thread context for it
             // and return that.
             var ExecDom = new ExecutionDomain();
-            ExecDom.DefaultStrBoxType = SettingContext.LexPad[SettingName == null ? "BootstrapStr" : "NQPStr"];
             var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
             Thread.CurrentContext = SettingContext;
+            Thread.DefaultBoolBoxType = SettingContext.LexPad["NQPInt"];
+            Thread.DefaultIntBoxType = SettingContext.LexPad["NQPInt"];
+            Thread.DefaultNumBoxType = SettingContext.LexPad["NQPNum"];
+            Thread.DefaultStrBoxType = SettingContext.LexPad["NQPStr"];
             return Thread;
         }
         
@@ -91,7 +94,7 @@ namespace Rakudo
                             var Value = CaptureHelper.GetPositional(C, 0);
                             var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                             var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                            Console.Write(Ops.unbox_str(StrVal));
+                            Console.Write(Ops.unbox_str(TC, StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
@@ -100,12 +103,14 @@ namespace Rakudo
                             var Value = CaptureHelper.GetPositional(C, 0);
                             var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                             var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                            Console.WriteLine(Ops.unbox_str(StrVal));
+                            Console.WriteLine(Ops.unbox_str(TC, StrVal));
                             return CaptureHelper.Nil();
                         })
                     },
                     { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
-                    { "BootstrapStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
+                    { "NQPInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
+                    { "NQPNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
+                    { "NQPStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
                     { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) }
                 };
             return SettingContext;
@@ -138,7 +143,7 @@ namespace Rakudo
                         var Value = CaptureHelper.GetPositional(C, 0);
                         var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                         var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.Write(Ops.unbox_str(StrVal));
+                        Console.Write(Ops.unbox_str(null, StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("say",
@@ -147,7 +152,7 @@ namespace Rakudo
                         var Value = CaptureHelper.GetPositional(C, 0);
                         var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
                         var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.WriteLine(Ops.unbox_str(StrVal));
+                        Console.WriteLine(Ops.unbox_str(null, StrVal));
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));

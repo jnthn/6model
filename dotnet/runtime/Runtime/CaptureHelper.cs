@@ -128,7 +128,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static string GetPositionalAsString(RakudoObject Capture, int Pos)
         {
-            return Ops.unbox_str(GetPositional(Capture, Pos));
+            return Ops.unbox_str(null, GetPositional(Capture, Pos));
         }
 
         /// <summary>

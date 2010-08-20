@@ -45,7 +45,7 @@ namespace Rakudo.Metamodel.KnowHOW
                     if (REPRName != null)
                     {
                         // Look up the REPR.
-                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(REPRName));
+                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(null, REPRName));
                         return REPRToUse.type_object_for(HOW);
                     }
                     else

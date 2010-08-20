@@ -3,8 +3,8 @@ knowhow NQPStr is repr('P6str') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        nqp::logical_not_int(nqp::equal_strs(self, "", NQPInt), NQPInt) &&
-            nqp::logical_not_int(nqp::equal_strs(self, "0", NQPInt), NQPInt)
+        nqp::logical_not_int(nqp::equal_strs(self, "")) &&
+            nqp::logical_not_int(nqp::equal_strs(self, "0"))
     }
     method Str() {
         self
@@ -16,7 +16,7 @@ knowhow NQPInt is repr('P6int') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        nqp::logical_not_int(nqp::equal_ints(self, 0, NQPInt), NQPInt)
+        nqp::logical_not_int(nqp::equal_ints(self, 0))
     }
     method Int() {
         self
@@ -34,7 +34,7 @@ knowhow NQPNum is repr('P6num') {
         nqp::instance_of(self.WHAT);
     }
     method Bool() {
-        nqp::logical_not_int(nqp::equal_nums(self, 0.0, NQPInt), NQPInt)
+        nqp::logical_not_int(nqp::equal_nums(self, 0.0))
     }
     method Int() {
         nqp::coerce_num_to_int(self, NQPStr)
@@ -50,23 +50,23 @@ knowhow NQPNum is repr('P6num') {
 ## XXX All of these should become multi when we can do that.
 
 sub &infix:<==>($x, $y) {
-    nqp::equal_nums($x.Num, $y.Num, NQPInt)
+    nqp::equal_nums($x.Num, $y.Num)
 }
 
 sub &infix:<!=>($x, $y) {
-    !nqp::equal_nums($x.Num, $y.Num, NQPInt)
+    !nqp::equal_nums($x.Num, $y.Num)
 }
 
 sub &infix:<eq>($x, $y) {
-    nqp::equal_strs($x.Str, $y.Str, NQPInt)
+    nqp::equal_strs($x.Str, $y.Str)
 }
 
 sub &infix:<ne>($x, $y) {
-    !nqp::equal_strs($x.Str, $y.Str, NQPInt)
+    !nqp::equal_strs($x.Str, $y.Str)
 }
 
 sub &prefix:<!>($x) {
-    nqp::logical_not_int($x.Bool.Int, NQPInt)
+    nqp::logical_not_int($x.Bool)
 }
 
 sub &prefix:<?>($x) {
@@ -74,27 +74,27 @@ sub &prefix:<?>($x) {
 }
 
 sub &infix:<+>($x, $y) {
-    nqp::add_int($x.Int, $y.Int, NQPInt);
+    nqp::add_int($x.Int, $y.Int);
 }
 
 sub &infix:<->($x, $y) {
-    nqp::sub_int($x.Int, $y.Int, NQPInt);
+    nqp::sub_int($x.Int, $y.Int);
 }
 
 sub &infix:<*>($x, $y) {
-    nqp::mul_int($x.Int, $y.Int, NQPInt);
+    nqp::mul_int($x.Int, $y.Int);
 }
 
 sub &infix:</>($x, $y) {
-    nqp::div_int($x.Int, $y.Int, NQPInt);
+    nqp::div_int($x.Int, $y.Int);
 }
 
 sub &infix:<%>($x, $y) {
-    nqp::mod_int($x.Int, $y.Int, NQPInt);
+    nqp::mod_int($x.Int, $y.Int);
 }
 
 sub &infix:<~>($x, $y) {
-    nqp::concat($x.Str, $y.Str, NQPStr);
+    nqp::concat($x.Str, $y.Str);
 }
 
 # For tests.

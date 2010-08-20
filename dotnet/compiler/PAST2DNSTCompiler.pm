@@ -507,9 +507,10 @@ our multi sub dnst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'nqpop' {
-        # Just a call on the Ops class.
+        # Just a call on the Ops class. Always pass thread context
+        # as the first parameter.
         my $result := DNST::MethodCall.new(
-            :on('Ops'), :name($op.name)
+            :on('Ops'), :name($op.name), 'TC'
         );
         for @($op) {
             $result.push(dnst_for($_));
@@ -520,7 +521,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'if' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'),
+                :on('Ops'), :name('unbox_int'), 'TC',
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
@@ -537,7 +538,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'unless' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'),
+                :on('Ops'), :name('unbox_int'), 'TC',
                 dnst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     (@($op))[0]
@@ -573,7 +574,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::If.new(
                 DNST::MethodCall.new(
                     :on('Ops'), :name('unbox_int'),
-                    $cond_result
+                    'TC', $cond_result
                 ),
                 $body,
                 DNST::Stmts.new(
@@ -624,6 +625,7 @@ our multi sub dnst_for(PAST::Val $val) {
     # Add to constants table.
     my $make_const := DNST::MethodCall.new(
         :on('Ops'), :name('box_' ~ $primitive),
+        'TC',
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
@@ -741,7 +743,7 @@ our multi sub dnst_for($any) {
 sub emit_lexical_lookup($name) {
     return DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
-        'C',
+        'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );
 }
@@ -750,7 +752,7 @@ sub emit_lexical_lookup($name) {
 sub emit_dynamic_lookup($name) {
     return DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
-        'C',
+        'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );
 }

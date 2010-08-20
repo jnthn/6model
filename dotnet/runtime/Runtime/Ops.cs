@@ -19,7 +19,7 @@ namespace Rakudo.Runtime
         /// <param name="HOW"></param>
         /// <param name="REPRName"></param>
         /// <returns></returns>
-        public static RakudoObject type_object_for(RakudoObject HOW, string REPRName)
+        public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, string REPRName)
         {
             return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(HOW);
         }
@@ -29,7 +29,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public static RakudoObject instance_of(RakudoObject WHAT)
+        public static RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
             return WHAT.STable.REPR.instance_of(WHAT);
         }
@@ -39,7 +39,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static bool repr_defined(RakudoObject Obj)
+        public static bool repr_defined(ThreadContext TC, RakudoObject Obj)
         {
             return Obj.STable.REPR.defined(Obj);
         }
@@ -51,7 +51,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static RakudoObject get_attr(RakudoObject Object, RakudoObject Class, string Name)
+        public static RakudoObject get_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name)
         {
             return Object.STable.REPR.get_attribute(Object, Class, Name);
         }
@@ -64,7 +64,7 @@ namespace Rakudo.Runtime
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public static RakudoObject get_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, int Hint)
+        public static RakudoObject get_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint)
         {
             return Object.STable.REPR.get_attribute_with_hint(Object, Class, Name, Hint);
         }
@@ -76,7 +76,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
+        public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute(Object, Class, Name, Value);
         }
@@ -89,7 +89,7 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
+        public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute_with_hint(Object, Class, Name, Hint, Value);
         }
@@ -133,7 +133,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static RakudoObject get_how(RakudoObject Obj)
+        public static RakudoObject get_how(ThreadContext TC, RakudoObject Obj)
         {
             return Obj.STable.HOW;
         }
@@ -143,7 +143,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public static RakudoObject get_what(RakudoObject Obj)
+        public static RakudoObject get_what(ThreadContext TC, RakudoObject Obj)
         {
             return Obj.STable.WHAT;
         }
@@ -153,7 +153,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Value"></param>
         /// <returns></returns>
-        public static RakudoObject box_int(int Value, RakudoObject To)
+        public static RakudoObject box_int(ThreadContext TC, int Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
             var Result = REPR.instance_of(To);
@@ -166,7 +166,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Value"></param>
         /// <returns></returns>
-        public static RakudoObject box_num(double Value, RakudoObject To)
+        public static RakudoObject box_num(ThreadContext TC, double Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
             var Result = REPR.instance_of(To);
@@ -179,7 +179,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Value"></param>
         /// <returns></returns>
-        public static RakudoObject box_str(string Value, RakudoObject To)
+        public static RakudoObject box_str(ThreadContext TC, string Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
             var Result = REPR.instance_of(To);
@@ -192,7 +192,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Boxed"></param>
         /// <returns></returns>
-        public static int unbox_int(RakudoObject Boxed)
+        public static int unbox_int(ThreadContext TC, RakudoObject Boxed)
         {
             return Boxed.STable.REPR.get_int(Boxed);
         }
@@ -202,7 +202,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Boxed"></param>
         /// <returns></returns>
-        public static double unbox_num(RakudoObject Boxed)
+        public static double unbox_num(ThreadContext TC, RakudoObject Boxed)
         {
             return Boxed.STable.REPR.get_num(Boxed);
         }
@@ -212,7 +212,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="Boxed"></param>
         /// <returns></returns>
-        public static string unbox_str(RakudoObject Boxed)
+        public static string unbox_str(ThreadContext TC, RakudoObject Boxed)
         {
             return Boxed.STable.REPR.get_str(Boxed);
         }
@@ -223,10 +223,10 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static RakudoObject coerce_int_to_str(RakudoObject Int, RakudoObject TargetType)
+        public static RakudoObject coerce_int_to_str(ThreadContext TC, RakudoObject Int, RakudoObject TargetType)
         {
-            int Value = Ops.unbox_int(Int);
-            return Ops.box_str(Value.ToString(), TargetType);
+            int Value = Ops.unbox_int(TC, Int);
+            return Ops.box_str(TC, Value.ToString(), TargetType);
         }
 
         /// <summary>
@@ -235,10 +235,10 @@ namespace Rakudo.Runtime
         /// <param name="Num"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static RakudoObject coerce_num_to_str(RakudoObject Num, RakudoObject TargetType)
+        public static RakudoObject coerce_num_to_str(ThreadContext TC, RakudoObject Num, RakudoObject TargetType)
         {
-            double Value = Ops.unbox_num(Num);
-            return Ops.box_str(Value.ToString(), TargetType);
+            double Value = Ops.unbox_num(TC, Num);
+            return Ops.box_str(TC, Value.ToString(), TargetType);
         }
 
         /// <summary>
@@ -247,10 +247,10 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static RakudoObject coerce_int_to_num(RakudoObject Int, RakudoObject TargetType)
+        public static RakudoObject coerce_int_to_num(ThreadContext TC, RakudoObject Int, RakudoObject TargetType)
         {
-            int Value = Ops.unbox_int(Int);
-            return Ops.box_num((double)Value, TargetType);
+            int Value = Ops.unbox_int(TC, Int);
+            return Ops.box_num(TC, (double)Value, TargetType);
         }
 
         /// <summary>
@@ -259,10 +259,10 @@ namespace Rakudo.Runtime
         /// <param name="Int"></param>
         /// <param name="TargetType"></param>
         /// <returns></returns>
-        public static RakudoObject coerce_num_to_int(RakudoObject Num, RakudoObject TargetType)
+        public static RakudoObject coerce_num_to_int(ThreadContext TC, RakudoObject Num, RakudoObject TargetType)
         {
-            double Value = Ops.unbox_num(Num);
-            return Ops.box_int((int)Value, TargetType);
+            double Value = Ops.unbox_num(TC, Num);
+            return Ops.box_int(TC, (int)Value, TargetType);
         }
 
         /// <summary>
@@ -271,9 +271,9 @@ namespace Rakudo.Runtime
         /// <param name="i"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static RakudoObject get_lex(Context C, string Name)
+        public static RakudoObject get_lex(ThreadContext TC, string Name)
         {
-            var CurContext = C;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 RakudoObject Found;
@@ -290,9 +290,9 @@ namespace Rakudo.Runtime
         /// <param name="i"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static RakudoObject bind_lex(Context C, string Name, RakudoObject Value)
+        public static RakudoObject bind_lex(ThreadContext TC, string Name, RakudoObject Value)
         {
-            var CurContext = C;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 if (CurContext.LexPad.ContainsKey(Name))
@@ -311,9 +311,9 @@ namespace Rakudo.Runtime
         /// <param name="C"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static RakudoObject get_dynamic(Context C, string Name)
+        public static RakudoObject get_dynamic(ThreadContext TC, string Name)
         {
-            var CurContext = C;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 RakudoObject Found;
@@ -330,9 +330,9 @@ namespace Rakudo.Runtime
         /// <param name="C"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public static RakudoObject bind_dynamic(Context C, string Name, RakudoObject Value)
+        public static RakudoObject bind_dynamic(ThreadContext TC, string Name, RakudoObject Value)
         {
-            var CurContext = C;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 if (CurContext.LexPad.ContainsKey(Name))
@@ -352,11 +352,11 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_nums(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject equal_nums(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(
-                (Ops.unbox_num(x) == Ops.unbox_num(y) ? 1 : 0),
-                ResultType);
+            return Ops.box_int(TC,
+                (Ops.unbox_num(TC, x) == Ops.unbox_num(TC, y) ? 1 : 0),
+                TC.DefaultBoolBoxType);
         }
 
         /// <summary>
@@ -366,11 +366,11 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_ints(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject equal_ints(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(
-                (Ops.unbox_int(x) == Ops.unbox_int(y) ? 1 : 0),
-                ResultType);
+            return Ops.box_int(TC,
+                (Ops.unbox_int(TC, x) == Ops.unbox_int(TC, y) ? 1 : 0),
+                TC.DefaultBoolBoxType);
         }
 
         /// <summary>
@@ -380,11 +380,11 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_strs(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject equal_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(
-                (Ops.unbox_str(x) == Ops.unbox_str(y) ? 1 : 0),
-                ResultType);
+            return Ops.box_int(TC,
+                (Ops.unbox_str(TC, x) == Ops.unbox_str(TC, y) ? 1 : 0),
+                TC.DefaultBoolBoxType);
         }
 
         /// <summary>
@@ -393,9 +393,9 @@ namespace Rakudo.Runtime
         /// <param name="x"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject logical_not_int(RakudoObject x, RakudoObject ResultType)
+        public static RakudoObject logical_not_int(ThreadContext TC, RakudoObject x)
         {
-            return Ops.box_int(Ops.unbox_int(x) == 0 ? 1 : 0, ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) == 0 ? 1 : 0, TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -405,9 +405,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject add_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject add_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(Ops.unbox_int(x) + Ops.unbox_int(y), ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) + Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -417,9 +417,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject sub_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject sub_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(Ops.unbox_int(x) - Ops.unbox_int(y), ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) - Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -429,9 +429,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject mul_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject mul_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(Ops.unbox_int(x) * Ops.unbox_int(y), ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) * Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -441,9 +441,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject div_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject div_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(Ops.unbox_int(x) / Ops.unbox_int(y), ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) / Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -453,9 +453,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject mod_int(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject mod_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_int(Ops.unbox_int(x) % Ops.unbox_int(y), ResultType);
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) % Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
         }
 
         /// <summary>
@@ -465,9 +465,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject concat(RakudoObject x, RakudoObject y, RakudoObject ResultType)
+        public static RakudoObject concat(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
-            return Ops.box_str(Ops.unbox_str(x) + Ops.unbox_str(y), ResultType);
+            return Ops.box_str(TC, Ops.unbox_str(TC, x) + Ops.unbox_str(TC, y), TC.DefaultStrBoxType);
         }
     }
 }

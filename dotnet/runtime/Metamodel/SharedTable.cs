@@ -32,7 +32,7 @@ namespace Rakudo.Metamodel
                     var Meth = HOW.STable.FindMethod(TC, HOW, "find_method", Hints.NO_HINT);
                     
                     // Call it.
-                    var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(Name, TC.Domain.DefaultStrBoxType) });
+                    var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
                     return Meth.STable.Invoke(TC, Meth, Cap);
                 }
             };

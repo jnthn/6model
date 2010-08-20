@@ -78,6 +78,12 @@ method compile(PAST::Node $node) {
                 :void(1),
                 'TC'
             ),
+            DNST::Call.new(
+                :name('constants_init'),
+                :void(1),
+                'TC',
+                'TC.CurrentContext'
+            ),
             $loadinit_calls,
             $main_block_call,
             "TC.CurrentContext"

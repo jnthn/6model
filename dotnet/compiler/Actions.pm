@@ -345,7 +345,8 @@ method package_declarator:sym<module>($/) { make $<package_def>.ast; }
 method package_declarator:sym<class>($/) {
     my $name := ~$<package_def><name>;
     
-    # Prefix the class initialization with initial setup.
+    # Prefix the class initialization with initial setup. Also install it
+    # in the symbol table right away.
     $*PACKAGE-SETUP.unshift(PAST::Stmts.new(
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
@@ -353,6 +354,10 @@ method package_declarator:sym<class>($/) {
                 :pasttype('callmethod'), :name('new_type'),
                 PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('package') )
             )
+        ),
+        PAST::Op.new( :pasttype('bind'),
+            PAST::Var.new( :name($name) ),
+            PAST::Var.new( :name('type_obj'), :scope('register') )
         )
         # XXX name
         # XXX is parent
@@ -363,18 +368,14 @@ method package_declarator:sym<class>($/) {
         $*PACKAGE-SETUP[0][0][1].push($repr_name);
     }
 
-    # Postfix it with a call to compose. We'll also install this
-    # in the package.
-    $*PACKAGE-SETUP.push(PAST::Op.new( :pasttype('bind'),
-        PAST::Var.new( :name($name) ),
+    # Postfix it with a call to compose.
+    $*PACKAGE-SETUP.push(PAST::Op.new(
+        :pasttype('callmethod'), :name('compose'),
         PAST::Op.new(
-            :pasttype('callmethod'), :name('compose'),
-            PAST::Op.new(
-                :pasttype('nqpop'), :name('get_how'),
-                PAST::Var.new( :name('type_obj'), :scope('register') )
-            ),
+            :pasttype('nqpop'), :name('get_how'),
             PAST::Var.new( :name('type_obj'), :scope('register') )
-        )
+        ),
+        PAST::Var.new( :name('type_obj'), :scope('register') )
     ));
     
     # Run this at loadinit time.

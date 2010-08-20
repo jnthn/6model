@@ -8,10 +8,6 @@ Last Updated: August 2010
 === Fundementals
 These are things to make work in the really near future.
 
-* First cut of various basic operators in the NQP setting as single dispatch
-
-* while pasttype
-
 * Basic multiple dispatch
 
 * Re-work operators to use multi-dispatch

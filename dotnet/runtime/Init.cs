@@ -106,9 +106,7 @@ namespace Rakudo
                     },
                     { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
                     { "BootstrapStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
-                    { "BootstrapInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
-                    { "BootstrapNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
-                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) },
+                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) }
                 };
             return SettingContext;
         }
@@ -130,11 +128,6 @@ namespace Rakudo
             
             // Run it to get the context we want.
             var SettingContext = (Context)Method.Invoke(null, new object[] { });
-
-            // Map bootstrapping types to bootstrapped types.
-            SettingContext.LexPad.Add("BootstrapInt", SettingContext.LexPad["NQPInt"]);
-            SettingContext.LexPad.Add("BootstrapNum", SettingContext.LexPad["NQPNum"]);
-            SettingContext.LexPad.Add("BootstrapStr", SettingContext.LexPad["NQPStr"]);
 
             // Fudge a few more things in.
             // XXX Should be able to toss all of thse but KnowHOW.
@@ -159,7 +152,7 @@ namespace Rakudo
                     }));
             SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
             SettingContext.LexPad.Add("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null));
-
+            
             return SettingContext;
         }
     }

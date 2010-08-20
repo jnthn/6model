@@ -11,7 +11,8 @@ method compile(PAST::Node $node) {
     # The nested blocks, flattened out.
     my @*INNER_BLOCKS;
 
-    # Any loadinits we'll need to run.
+    # Any loadinits we'll need to run, and if we're in one.
+    my $*IN_LOADINIT;
     my @*LOADINITS;
 
     # We'll build a static block info array too; this helps us do so.
@@ -78,13 +79,22 @@ method compile(PAST::Node $node) {
                 :void(1),
                 'TC'
             ),
+
+            # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
+            # but best I can think of for now. :-)
+            DNST::Bind.new(
+                'StaticBlockInfo[1].StaticLexPad["NQPStr"]',
+                'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null)'
+            ),
+
+            # We do the loadinit calls before building the constants, as we
+            # may build some constants with types we're yet to define.
+            $loadinit_calls,
             DNST::Call.new(
                 :name('constants_init'),
                 :void(1),
-                'TC',
-                'TC.CurrentContext'
+                'TC'
             ),
-            $loadinit_calls,
             $main_block_call,
             "TC.CurrentContext"
         ));
@@ -107,8 +117,7 @@ method compile(PAST::Node $node) {
             DNST::Call.new(
                 :name('constants_init'),
                 :void(1),
-                'TC',
-                'TC.CurrentContext'
+                'TC'
             ),
             $loadinit_calls,
             $main_block_call
@@ -166,10 +175,28 @@ sub make_blocks_init_method($name) {
 # Sets up the constants table initialization method.
 sub make_constants_init_method($name) {
     # Build init method.
+    my @params;
+    @params.push('ThreadContext TC');
     my $result := DNST::Method.new(
         :name($name),
-        :params('ThreadContext TC', 'Context C'),
+        :params(@params),
         :return_type('void'),
+
+        # Fake up a context with the outer being the main block.
+        DNST::Temp.new(
+            :name('C'), :type('Context'),
+            DNST::New.new(
+                :type('Context'),
+                DNST::MethodCall.new(
+                    :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    'null',
+                    'StaticBlockInfo[1]',
+                    DNST::ArrayLiteral.new( :type('string') ),
+                    'null'
+                ),
+                'TC.CurrentContext'
+            )
+        ),
         
         # Create array for storing these.
         DNST::Bind.new(
@@ -247,6 +274,7 @@ our multi sub dnst_for(PAST::Block $block) {
         my @*INNER_BLOCKS;
 
         # We'll fake this as an inner block to compile.
+        my $*IN_LOADINIT := 1;
         @*LOADINITS.push(dnst_for(PAST::Block.new(
             :blocktype('immediate'), $block.loadinit
         )));
@@ -578,28 +606,28 @@ our multi sub dnst_for(PAST::Val $val) {
     my $primitive;
     if pir::isa($val.value, 'Integer') {
         $primitive := 'int';
-        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapInt' !! 'NQPInt';
+        $type := 'NQPInt';
     }
     elsif pir::isa($val.value, 'String') {
         $primitive := 'str';
-        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapStr' !! 'NQPStr';
+        $type := 'NQPStr';
     }
     elsif pir::isa($val.value, 'Float') {
         $primitive := 'num';
-        $type := $*COMPILING_NQP_SETTING ?? 'BootstrapNum' !! 'NQPNum';
+        $type := 'NQPNum';
     }
     else {
         pir::die("Can not detect type of value")
     }
     my $type_dnst := emit_lexical_lookup($type);
     
-    # Add to constants table (for now, not in the setting - that hits issues.)
+    # Add to constants table.
     my $make_const := DNST::MethodCall.new(
         :on('Ops'), :name('box_' ~ $primitive),
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
-    if $*COMPILING_NQP_SETTING {
+    if $*COMPILING_NQP_SETTING && $*IN_LOADINIT {
         return $make_const;
     }
     else {

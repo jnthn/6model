@@ -47,6 +47,11 @@ namespace Rakudo.Runtime
         public int Flags;
 
         /// <summary>
+        /// (Un-)flag for positional parameters.
+        /// </summary>
+        public const int POS_FLAG = 0;
+
+        /// <summary>
         /// Flag for optional parameters.
         /// </summary>
         public const int OPTIONAL_FLAG = 1;
@@ -60,5 +65,10 @@ namespace Rakudo.Runtime
         /// Flag for named slurpy parameters.
         /// </summary>
         public const int NAMED_SLURPY_FLAG = 4;
+
+        /// <summary>
+        /// Flag for named parameters.
+        /// </summary>
+        public const int NAMED_FLAG = 8;
     }
 }

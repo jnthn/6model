@@ -365,10 +365,12 @@ sub compile_signature(@params) {
 
         # Flags.
         $param.push(
-            $_.viviself           ?? 'Parameter.OPTIONAL_FLAG'     !!
-            $_.slurpy && $_.named ?? 'Parameter.NAMED_SLURPY_FLAG' !!
-            $_.slurpy             ?? 'Parameter.POS_SLURPY_FLAG'   !!
-            '0');
+            $_.viviself && $_.named ?? 'Parameter.OPTIONAL_FLAG | Parameter.NAMED_FLAG' !!
+            $_.viviself             ?? 'Parameter.OPTIONAL_FLAG'                        !!
+            $_.slurpy && $_.named   ?? 'Parameter.NAMED_SLURPY_FLAG'                    !!
+            $_.slurpy               ?? 'Parameter.POS_SLURPY_FLAG'                      !!
+            $_.named                ?? 'Parameter.NAMED_FLAG'                           !!
+            'Parameter.POS_FLAG');
 
         $params.push($param);
     }

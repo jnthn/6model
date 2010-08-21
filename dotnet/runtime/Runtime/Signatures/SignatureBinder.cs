@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rakudo.Metamodel;
+using Rakudo.Metamodel.Representations;
 
 namespace Rakudo.Runtime
 {
@@ -11,6 +12,16 @@ namespace Rakudo.Runtime
     /// </summary>
     public static class SignatureBinder
     {
+        /// <summary>
+        /// Singleton empty positionals array.
+        /// </summary>
+        private static RakudoObject[] EmptyPos = new RakudoObject[0];
+
+        /// <summary>
+        /// Single empty nameds hash.
+        /// </summary>
+        private static Dictionary<string, RakudoObject> EmptyNamed = new Dictionary<string, RakudoObject>();
+
         /// <summary>
         /// Binds the capture against the given signature and stores the
         /// bound values into variables in the lexpad.
@@ -30,6 +41,14 @@ namespace Rakudo.Runtime
             // The lexpad we'll bind into.
             var Target = C.LexPad;
 
+            // Make sure the object is really a low level capture (don't handle
+            // otherwise yet) and grab the pieces.
+            var NativeCapture = Capture as P6capture.Instance;
+            if (NativeCapture == null)
+                throw new NotImplementedException("Can only deal with native captures at the moment");
+            var Positionals = NativeCapture.Positionals ?? EmptyPos;
+            var Nameds = NativeCapture.Nameds ?? EmptyNamed;
+
             // Current positional.
             var CurPositional = 0;
 
@@ -37,8 +56,44 @@ namespace Rakudo.Runtime
             var Params = C.StaticCodeObject.Sig.Parameters;
             foreach (var Param in Params)
             {
+                // Positional required?
+                if (Param.Flags == Parameter.POS_FLAG)
+                {
+                    if (CurPositional < Positionals.Length)
+                    {
+                        // We have an argument, just bind it.
+                        Target[Param.VariableName] = Positionals[CurPositional];
+                    }
+                    else
+                    {
+                        throw new Exception("Not enough positional parameters; got " +
+                            CurPositional.ToString() + " but needed " +
+                            NumRequiredPositionals(C.StaticCodeObject.Sig).ToString());
+                    }
+
+                    // Increment positional counter.
+                    CurPositional++;
+                }
+
+                // Positonal optional?
+                else if (Param.Flags == Parameter.OPTIONAL_FLAG)
+                {
+                    if (CurPositional < Positionals.Length)
+                    {
+                        // We have an argument, just bind it.
+                        Target[Param.VariableName] = Positionals[CurPositional];
+                    }
+                    else
+                    {
+                        // XXX Default value, vivification.
+                    }
+
+                    // Increment positional counter.
+                    CurPositional++;
+                }
+
                 // Named slurpy?
-                if ((Param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
+                else if ((Param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
                 {
                     throw new Exception("Named slurpy parameters are not yet implemented.");
                 }
@@ -53,8 +108,8 @@ namespace Rakudo.Runtime
                 else if (Param.Name != null)
                 {
                     // Yes, try and get argument.
-                    var Value = CaptureHelper.GetNamed(Capture, Param.Name);
-                    if (Value != null)
+                    RakudoObject Value;
+                    if (Nameds.TryGetValue(Param.Name, out Value))
                     {
                         // We have an argument, just bind it.
                         Target[Param.VariableName] = Value;
@@ -73,37 +128,15 @@ namespace Rakudo.Runtime
                     }
                 }
 
-                // Otherwise, it's a positional.
+                // Otherwise, WTF?
                 else
                 {
-                    var Value = CaptureHelper.GetPositional(Capture, CurPositional);
-                    if (Value != null)
-                    {
-                        // We have an argument, just bind it.
-                        Target[Param.VariableName] = Value;
-                    }
-                    else
-                    {
-                        // Optional?
-                        if ((Param.Flags & Parameter.OPTIONAL_FLAG) == 0)
-                        {
-                            throw new Exception("Not enough positional parameters; got " +
-                                CurPositional.ToString() + " but needed " +
-                                NumRequiredPositionals(C.StaticCodeObject.Sig).ToString());
-                        }
-                        else
-                        {
-                            // XXX Default value, vivification.
-                        }
-                    }
 
-                    // Increment positional counter.
-                    CurPositional++;
                 }
             }
 
             // Ensure we had enough positionals.
-            var PossiesInCapture = CaptureHelper.NumPositionals(Capture);
+            var PossiesInCapture = Positionals.Length;
             if (CurPositional != PossiesInCapture)
                 throw new Exception("Too many positional arguments passed; expected " +
                     NumRequiredPositionals(C.StaticCodeObject.Sig).ToString() +

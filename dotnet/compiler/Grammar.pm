@@ -330,6 +330,11 @@ token multi_declarator:sym<multi> {
     <sym>
     <.ws> [ <declarator> || <routine_def> || <.panic: 'Malformed multi'> ]
 }
+token multi_declarator:sym<proto> {
+    :my $*MULTINESS := 'proto';
+    <sym>
+    <.ws> [ <declarator> || <routine_def> || <.panic: 'Malformed proto'> ]
+}
 token multi_declarator:sym<null> {
     :my $*MULTINESS := '';
     <declarator>

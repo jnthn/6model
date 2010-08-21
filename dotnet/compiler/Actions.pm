@@ -414,6 +414,7 @@ method declarator($/) {
 }
 
 method multi_declarator:sym<multi>($/) { make $<declarator> ?? $<declarator>.ast !! $<routine_def>.ast }
+method multi_declarator:sym<proto>($/) { make $<declarator> ?? $<declarator>.ast !! $<routine_def>.ast }
 method multi_declarator:sym<null>($/)  { make $<declarator>.ast }
 
 
@@ -455,11 +456,40 @@ method routine_def($/) {
     if $<deflongname> {
         my $name := ~$<sigil>[0] ~ $<deflongname>[0].ast;
         $past.name($name);
-        if $*SCOPE ne 'our' {
-            @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
-                                  :viviself($past), :scope('lexical') ) );
-            @BLOCK[0].symbol($name, :scope('lexical') );
+        if $*SCOPE eq '' || $*SCOPE eq 'my' {
+            if $*MULTINESS eq 'multi' {
+                # Find the proto.
+                my $found := 0;
+                for @BLOCK {
+                    my %sym := $_.symbol($name);
+                    if %sym {
+                        if %sym<proto> {
+                            @BLOCK[0][0].push(PAST::Op.new(
+                                :pasttype('callmethod'), :name('!add_dispatchee'),
+                                PAST::Var.new( :name($name) ),
+                                $past
+                            ));
+                            $found := 1;
+                            last;
+                        }
+                        else {
+                            $/.CURSOR.panic("multi cannot be declared when only in scope");
+                        }
+                    }
+                }
+                unless $found {
+                    $/.CURSOR.panic("multi cannot be declared without a proto in scope");
+                }
+            }
+            else {
+                @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
+                                      :viviself($past), :scope('lexical') ) );
+                @BLOCK[0].symbol($name, :scope('lexical'), :proto($*MULTINESS eq 'proto') );
+            }
             $past := PAST::Var.new( :name($name) );
+        }
+        else {
+            $/.CURSOR.panic("$*SCOPE scoped routines are not supported yet");
         }
     }
     make $past;
@@ -482,7 +512,7 @@ method method_def($/) {
         my $name := ~$<deflongname>[0].ast;
         $past.name($name);
         $*PACKAGE-SETUP.push(PAST::Op.new(
-            :pasttype('callmethod'), :name('add_method'),
+            :pasttype('callmethod'), :name($*MULTINESS eq 'multi' ?? 'add_multi_method' !! 'add_method'),
             PAST::Op.new(
                 :pasttype('nqpop'), :name('get_how'),
                 PAST::Var.new( :name('type_obj'), :scope('register') )
@@ -492,9 +522,6 @@ method method_def($/) {
             PAST::Val.new( :value($past) )
         ));
     }
-
-    # XXX We'll have to fix this up...
-    if $*MULTINESS eq 'multi' { $past.multi().unshift('_'); }
     
     make $past;
 }
@@ -502,17 +529,7 @@ method method_def($/) {
 
 method signature($/) {
     my $BLOCKINIT := @BLOCK[0][0];
-
     for $<parameter> { $BLOCKINIT.push($_.ast); }
-    
-    # Generate :multi pragma
-    if $*MULTINESS eq "multi" {
-        my @params;
-        for $BLOCKINIT.list {
-            @params.push($_.multitype // '_');
-        }
-        @BLOCK[0].multi(@params);
-    }
 }
 
 method parameter($/) {
@@ -545,14 +562,22 @@ method parameter($/) {
     }
     unless $past.viviself { @BLOCK[0].arity( +@BLOCK[0].arity + 1 ); }
 
-    # We don't have support for multitype in PAST::Var (yet)
+    # We're hijacking multi-type a bit here comapred to what Parrot NQP
+    # uses it for.
     if $<typename> {
-        my @multitype;
-        for $<typename>[0]<name><identifier> { @multitype.push(~$_); }
-        $past.multitype(@multitype);
+        $past.multitype($<typename>.ast);
     }
 
     make $past;
+}
+
+method typename($/) {
+    my @name := HLL::Compiler.parse_name(~$/);
+    make PAST::Var.new(
+        :name(@name.pop),
+        :namespace(@name),
+        :scope('package')
+    );
 }
 
 method param_var($/) {
@@ -717,6 +742,8 @@ method arglist($/) {
 
 
 method term:sym<value>($/) { make $<value>.ast; }
+
+method term:sym<multi_declarator>($/) { make $<multi_declarator>.ast; }
 
 method circumfix:sym<( )>($/) {
     make $<EXPR>

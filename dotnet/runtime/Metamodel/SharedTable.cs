@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Rakudo.Runtime;
+using Rakudo.Serialization;
 
 namespace Rakudo.Metamodel
 {
@@ -66,8 +68,32 @@ namespace Rakudo.Metamodel
         public RakudoObject WHAT;
 
         /// <summary>
+        /// The serialization context of this STable, if any.
+        /// </summary>
+        public SerializationContext SC;
+
+        /// <summary>
         /// The generated v-table, if any.
         /// </summary>
         public RakudoObject[] VTable;
+
+        /// <summary>
+        /// The unique ID for this type. Note that this ID is not ever,
+        /// ever, ever, ever to be used as a handle for the type for looking
+        /// it up. It is only ever valid to use in a cache situation where a
+        /// reference to the STable is held for at least as long as the cache
+        /// will exist. It is also NOT going to be the same between runs (or
+        /// at lesat not automatically), and will be set up whenever the STable
+        /// is deserialized. Thus never, ever serialize this ID anywhere; it's
+        /// for strictly for per-run scoped caches _only_. You have been warned.
+        /// </summary>
+        public long TypeCacheID = Interlocked.Increment(ref TypeIDSource);
+
+        /// <summary>
+        /// Source of type IDs. The lowest one is 4. This is to make the lower
+        /// two bits available for defined/undefined/don't care flags for the
+        /// multi dispatch cache, which is the primary user of these IDs.
+        /// </summary>
+        private static long TypeCacheIDSource = 4;
     }
 }

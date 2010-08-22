@@ -565,7 +565,7 @@ method parameter($/) {
     # We're hijacking multi-type a bit here comapred to what Parrot NQP
     # uses it for.
     if $<typename> {
-        $past.multitype($<typename>.ast);
+        $past.multitype($<typename>[0].ast);
     }
 
     make $past;

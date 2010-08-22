@@ -355,8 +355,13 @@ sub compile_signature(@params) {
     for @params {
         my $param := DNST::New.new( :type('Parameter') );
 
-        # Type. XXX TODO.
-        $param.push('null');
+        # Type.
+        if $_.multitype {
+            $param.push(dnst_for($_.multitype));
+        }
+        else {
+            $param.push('null');
+        }
 
         # Variable name to bind into.
         $param.push(DNST::Literal.new( :value($_.name), :escape(1) ));

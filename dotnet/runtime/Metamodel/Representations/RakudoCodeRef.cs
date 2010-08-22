@@ -18,11 +18,36 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         public sealed class Instance : RakudoObject
         {
+            /// <summary>
+            /// The code body - the thing that actually runs instructions.
+            /// </summary>
             public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
+            
+            /// <summary>
+            /// The static lexpad.
+            /// </summary>
             public Dictionary<string, RakudoObject> StaticLexPad;
+            
+            /// <summary>
+            /// Our static outer block.
+            /// </summary>
             public Instance OuterBlock;
+
+            /// <summary>
+            /// Signature object.
+            /// </summary>
             public Signature Sig;
+
+            /// <summary>
+            /// The context currently using this sub.
+            /// </summary>
             public Context CurrentContext;
+            
+            /// <summary>
+            /// Things we have control over the dispatch of.
+            /// </summary>
+            public List<Instance> Dispatchees;
+            
             public Instance(SharedTable STable)
             {
                 this.STable = STable;

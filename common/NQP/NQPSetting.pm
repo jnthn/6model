@@ -53,14 +53,26 @@ knowhow NQPList is repr('P6list') {
 knowhow NQPArray is repr('P6list') {
 }
 
-## XXX All of these should become multi when we can do that.
+## XXX Need coercive Any fallbacks too.
 
-sub &infix:<==>($x, $y) {
-    nqp::equal_nums($x.Num, $y.Num)
+proto sub &infix:<==>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<==>");
+}
+multi sub &infix:<==>(NQPInt $x, NQPInt $y) {
+    nqp::equal_ints($x, $y)
+}
+multi sub &infix:<==>(NQPNum $x, NQPNum $y) {
+    nqp::equal_nums($x, $y)
 }
 
-sub &infix:<!=>($x, $y) {
-    !nqp::equal_nums($x.Num, $y.Num)
+proto sub &infix:<!=>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<!=>");
+}
+multi sub &infix:<!=>(NQPInt $x, NQPInt $y) {
+    !nqp::equal_ints($x, $y)
+}
+multi sub &infix:<!=>(NQPNum $x, NQPNum $y) {
+    !nqp::equal_nums($x, $y)
 }
 
 sub &infix:<eq>($x, $y) {
@@ -79,24 +91,39 @@ sub &prefix:<?>($x) {
     $x.Bool
 }
 
-sub &infix:<+>($x, $y) {
-    nqp::add_int($x.Int, $y.Int);
+proto sub &infix:<+>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<+>");
+}
+multi sub &infix:<+>(NQPInt $x, NQPInt $y) {
+    nqp::add_int($x, $y);
 }
 
-sub &infix:<->($x, $y) {
-    nqp::sub_int($x.Int, $y.Int);
+proto sub &infix:<->($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<->");
+}
+multi sub &infix:<->(NQPInt $x, NQPInt $y) {
+    nqp::sub_int($x, $y);
 }
 
-sub &infix:<*>($x, $y) {
-    nqp::mul_int($x.Int, $y.Int);
+proto sub &infix:<*>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<*>");
+}
+multi sub &infix:<*>(NQPInt $x, NQPInt $y) {
+    nqp::mul_int($x, $y);
 }
 
-sub &infix:</>($x, $y) {
-    nqp::div_int($x.Int, $y.Int);
+proto sub &infix:</>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:</>");
+}
+multi sub &infix:</>(NQPInt $x, NQPInt $y) {
+    nqp::div_int($x, $y);
 }
 
-sub &infix:<%>($x, $y) {
-    nqp::mod_int($x.Int, $y.Int);
+proto sub &infix:<%>($x, $y) {
+    nqp::multi_dispatch_over_lexical_candidates("&infix:<%>");
+}
+multi sub &infix:<%>(NQPInt $x, NQPInt $y) {
+    nqp::mod_int($x, $y);
 }
 
 sub &infix:<~>($x, $y) {

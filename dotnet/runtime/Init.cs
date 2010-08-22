@@ -45,8 +45,7 @@ namespace Rakudo
             CaptureHelper.CaptureTypeObject = SettingContext.LexPad["capture"];
             CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad["LLCode"];
 
-            // Create an execution domain and a thread context for it
-            // and return that.
+            // Create an execution domain and a thread context for it.
             var ExecDom = new ExecutionDomain();
             var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
@@ -55,6 +54,10 @@ namespace Rakudo
             Thread.DefaultIntBoxType = SettingContext.LexPad["NQPInt"];
             Thread.DefaultNumBoxType = SettingContext.LexPad["NQPNum"];
             Thread.DefaultStrBoxType = SettingContext.LexPad["NQPStr"];
+
+            // LLCode type object should get a HOW.
+            SetupLLCodeHOW(Thread, (RakudoCodeRef.Instance)SettingContext.LexPad["LLCode"]);
+
             return Thread;
         }
         
@@ -75,6 +78,30 @@ namespace Rakudo
                 REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
                 REPRS_Registered = true;
             }
+        }
+
+        /// <summary>
+        /// Adds to the low level code object's HOW.
+        /// </summary>
+        /// <param name="KnowHOW"></param>
+        /// <param name="instance"></param>
+        private static void SetupLLCodeHOW(ThreadContext TC, RakudoCodeRef.Instance LLCode)
+        {
+            var HOW = LLCode.STable.HOW;
+            var Meth = HOW.STable.FindMethod(TC, HOW, "add_method", Hints.NO_HINT);
+            Meth.STable.Invoke(TC, Meth, CaptureHelper.FormWith(new RakudoObject[] {
+                HOW, LLCode,
+                Runtime.Ops.box_str(TC, "!add_dispatchee", TC.DefaultStrBoxType),
+                CodeObjectUtility.WrapNativeMethod((TC_unused, self, c) =>
+                    {
+                        var Instance = CaptureHelper.GetPositional(c, 0) as RakudoCodeRef.Instance;
+                        var Dispatchee = CaptureHelper.GetPositional(c, 1) as RakudoCodeRef.Instance;
+                        if (Instance.Dispatchees == null)
+                            Instance.Dispatchees = new List<RakudoCodeRef.Instance>();
+                        Instance.Dispatchees.Add(Dispatchee);
+                        return CaptureHelper.Nil();
+                    })
+            }));
         }
 
         /// <summary>
@@ -111,7 +138,7 @@ namespace Rakudo
                     { "NQPInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
                     { "NQPNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
                     { "NQPStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
-                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null) }
+                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)) }
                 };
             return SettingContext;
         }
@@ -156,7 +183,7 @@ namespace Rakudo
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.Add("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
-            SettingContext.LexPad.Add("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null));
+            SettingContext.LexPad.Add("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)));
             
             return SettingContext;
         }

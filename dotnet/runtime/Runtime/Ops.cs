@@ -469,5 +469,22 @@ namespace Rakudo.Runtime
         {
             return Ops.box_str(TC, Ops.unbox_str(TC, x) + Ops.unbox_str(TC, y), TC.DefaultStrBoxType);
         }
+
+        /// <summary>
+        /// Entry point to multi-dispatch over the candidates in the inner
+        /// dispatcher.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <returns></returns>
+        public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext TC, RakudoObject Name)
+        {
+            var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
+                MultiDispatch.LexicalCandidateFinder.FindCandidates(
+                    TC.CurrentContext.Caller,
+                    TC.CurrentContext,
+                    "!" + Ops.unbox_str(TC, Name) + "-candidates"),
+                TC.CurrentContext.Capture);
+            return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);
+        }
     }
 }

@@ -55,9 +55,6 @@ namespace Rakudo
             Thread.DefaultNumBoxType = SettingContext.LexPad["NQPNum"];
             Thread.DefaultStrBoxType = SettingContext.LexPad["NQPStr"];
 
-            // LLCode type object should get a HOW.
-            SetupLLCodeHOW(Thread, (RakudoCodeRef.Instance)SettingContext.LexPad["LLCode"]);
-
             return Thread;
         }
         
@@ -78,30 +75,6 @@ namespace Rakudo
                 REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
                 REPRS_Registered = true;
             }
-        }
-
-        /// <summary>
-        /// Adds to the low level code object's HOW.
-        /// </summary>
-        /// <param name="KnowHOW"></param>
-        /// <param name="instance"></param>
-        private static void SetupLLCodeHOW(ThreadContext TC, RakudoCodeRef.Instance LLCode)
-        {
-            var HOW = LLCode.STable.HOW;
-            var Meth = HOW.STable.FindMethod(TC, HOW, "add_method", Hints.NO_HINT);
-            Meth.STable.Invoke(TC, Meth, CaptureHelper.FormWith(new RakudoObject[] {
-                HOW, LLCode,
-                Runtime.Ops.box_str(TC, "!add_dispatchee", TC.DefaultStrBoxType),
-                CodeObjectUtility.WrapNativeMethod((TC_unused, self, c) =>
-                    {
-                        var Instance = CaptureHelper.GetPositional(c, 0) as RakudoCodeRef.Instance;
-                        var Dispatchee = CaptureHelper.GetPositional(c, 1) as RakudoCodeRef.Instance;
-                        if (Instance.Dispatchees == null)
-                            Instance.Dispatchees = new List<RakudoCodeRef.Instance>();
-                        Instance.Dispatchees.Add(Dispatchee);
-                        return CaptureHelper.Nil();
-                    })
-            }));
         }
 
         /// <summary>

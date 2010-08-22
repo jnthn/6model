@@ -43,11 +43,6 @@ namespace Rakudo.Metamodel.Representations
             /// </summary>
             public Context CurrentContext;
             
-            /// <summary>
-            /// Things we have control over the dispatch of.
-            /// </summary>
-            public List<Instance> Dispatchees;
-            
             public Instance(SharedTable STable)
             {
                 this.STable = STable;

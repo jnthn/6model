@@ -458,28 +458,45 @@ method routine_def($/) {
         $past.name($name);
         if $*SCOPE eq '' || $*SCOPE eq 'my' {
             if $*MULTINESS eq 'multi' {
-                # Find the proto.
-                my $found := 0;
-                for @BLOCK {
-                    my %sym := $_.symbol($name);
-                    if %sym {
-                        if %sym<proto> {
-                            @BLOCK[0][0].push(PAST::Op.new(
-                                :pasttype('callmethod'), :name('!add_dispatchee'),
-                                PAST::Var.new( :name($name) ),
-                                $past
-                            ));
-                            $found := 1;
-                            last;
-                        }
-                        else {
-                            $/.CURSOR.panic("multi cannot be declared when only in scope");
+                my $chname := '!' ~ $name ~ '-candidates';
+                my $cholder;
+                # Does the current block have a candidate holder in place?
+                my %sym := @BLOCK[0].symbol($chname);
+                if %sym {
+                    $cholder := %sym<cholder>;
+                }
+                
+                # Otherwise, no candidate holder, so add one.
+                else {
+                    # Check we have a proto in scope.
+                    my $found := 0;
+                    for @BLOCK {
+                        my %sym := $_.symbol($name);
+                        if %sym {
+                            if %sym<proto> {
+                                $found := 1;
+                                last;
+                            }
+                            else {
+                                $/.CURSOR.panic("multi cannot be declared when only in scope");
+                            }
                         }
                     }
+                    unless $found {
+                        $/.CURSOR.panic("multi cannot be declared without a proto in scope");
+                    }
+
+                    # Valid to add a candidate holder, so do so.
+                    $cholder := PAST::Op.new(
+                        :pasttype('call'), :name('&list'),
+                    );
+                    @BLOCK[0][0].push(PAST::Var.new( :name($chname), :isdecl(1),
+                                      :viviself($cholder), :scope('lexical') ) );
+                    @BLOCK[0].symbol($chname, :cholder($cholder) );
                 }
-                unless $found {
-                    $/.CURSOR.panic("multi cannot be declared without a proto in scope");
-                }
+
+                # Add this candidate to the holder.
+                $cholder.push($past);
             }
             else {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),

@@ -488,7 +488,7 @@ method routine_def($/) {
 
                     # Valid to add a candidate holder, so do so.
                     $cholder := PAST::Op.new(
-                        :pasttype('call'), :name('&list'),
+                        :pasttype('call'), :name('list'),
                     );
                     @BLOCK[0][0].push(PAST::Var.new( :name($chname), :isdecl(1),
                                       :viviself($cholder), :scope('lexical') ) );

@@ -481,7 +481,7 @@ namespace Rakudo.Runtime
             var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
                 MultiDispatch.LexicalCandidateFinder.FindCandidates(
                     TC.CurrentContext.Caller,
-                    TC.CurrentContext,
+                    TC.CurrentContext.Outer,
                     "!" + Ops.unbox_str(TC, Name) + "-candidates"),
                 TC.CurrentContext.Capture);
             return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);

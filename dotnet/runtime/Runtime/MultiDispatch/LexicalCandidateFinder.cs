@@ -28,10 +28,14 @@ namespace Rakudo.Runtime.MultiDispatch
                 // Get the next outer scope, or alternatively start off with the
                 // caller scope.
                 CurScope = CurScope == null ? CallerScope : CurScope.Outer;
+                if (CurScope == null)
+                    break;
 
                 // Any candidates here?
-
-
+                RakudoObject ScopeList;
+                if (CurScope.LexPad != null && CurScope.LexPad.TryGetValue(CandidateHolderName, out ScopeList))
+                    foreach (var Candidate in (ScopeList as P6list.Instance).Storage)
+                        Result.Add(Candidate as RakudoCodeRef.Instance);
             } while (CurScope != ProtoScope);
             return Result;
         }

@@ -192,7 +192,8 @@ sub make_constants_init_method($name) {
                     'StaticBlockInfo[1]',
                     DNST::ArrayLiteral.new( :type('string') )
                 ),
-                'TC.CurrentContext'
+                'TC.CurrentContext',
+                'null'
             )
         ),
         
@@ -298,7 +299,7 @@ our multi sub dnst_for(PAST::Block $block) {
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
         :name('C'), :type('var'),
-        DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext" )
+        DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext", "Capture" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
     $result.push(DNST::TryFinally.new(
@@ -736,7 +737,10 @@ sub declare_lexical($var) {
     if pir::defined($var.viviself) {
         my $*BIND_CONTEXT := 'bind_lex';
         my $result := emit_lexical_lookup($var.name);
-        $result.push(dnst_for($var.viviself));
+        {
+            my $*BIND_CONTEXT := '';
+            $result.push(dnst_for($var.viviself));
+        }
         return $result;
     }
     else {

@@ -35,6 +35,11 @@ namespace Rakudo.Runtime
         public Dictionary<string, RakudoObject> LexPad;
 
         /// <summary>
+        /// The capture passed as part of the current call.
+        /// </summary>
+        public RakudoObject Capture;
+
+        /// <summary>
         /// Creates an empty, uninitialized context.
         /// </summary>
         public Context()
@@ -46,11 +51,12 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="StaticCodeObject"></param>
         /// <param name="Caller"></param>
-        public Context(RakudoCodeRef.Instance StaticCodeObject, Context Caller)
+        public Context(RakudoCodeRef.Instance StaticCodeObject, Context Caller, RakudoObject Capture)
         {
             // Set up static code object and caller pointers.
             this.StaticCodeObject = StaticCodeObject;
             this.Caller = Caller;
+            this.Capture = Capture;
 
             // Static sub object should have this as the current
             // context.

@@ -49,11 +49,16 @@ namespace Rakudo.Runtime
             var Positionals = NativeCapture.Positionals ?? EmptyPos;
             var Nameds = NativeCapture.Nameds ?? EmptyNamed;
 
+            // If we have no signature, that's same as an empty signature.
+            var Sig = C.StaticCodeObject.Sig;
+            if (Sig == null)
+                return;
+
             // Current positional.
             var CurPositional = 0;
 
             // Iterate over the parameters.
-            var Params = C.StaticCodeObject.Sig.Parameters;
+            var Params = Sig.Parameters;
             foreach (var Param in Params)
             {
                 // Positional required?

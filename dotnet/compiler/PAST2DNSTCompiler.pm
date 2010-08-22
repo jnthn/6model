@@ -14,6 +14,7 @@ method compile(PAST::Node $node) {
     # Any loadinits we'll need to run, and if we're in one.
     my $*IN_LOADINIT;
     my @*LOADINITS;
+    my @*SIGINITS;
 
     # We'll build a static block info array too; this helps us do so.
     my $*OUTER_SBI := 0;
@@ -62,6 +63,9 @@ method compile(PAST::Node $node) {
     # Calls to loadinits.
     my $loadinit_calls := DNST::Stmts.new();
     for @*LOADINITS {
+        $loadinit_calls.push($_);
+    }
+    for @*SIGINITS {
         $loadinit_calls.push($_);
     }
 
@@ -267,7 +271,7 @@ our multi sub dnst_for(PAST::Block $block) {
         }
     }
 
-    # See if we have a loadinit.
+    # Handle loadinit. 
     if +@($block.loadinit) {
         my $*OUTER_SBI := $our_sbi;
         my @*INNER_BLOCKS;
@@ -285,11 +289,37 @@ our multi sub dnst_for(PAST::Block $block) {
         }
     }
 
-    # Add signature generation/setup as a kind of loadinit.
-    @*LOADINITS.push(DNST::Bind.new(
-        "StaticBlockInfo[$our_sbi].Sig",
-        compile_signature(@*PARAMS)
+    # Add signature generation/setup. We need to do this in the
+    # correct lexical scope.
+    my $sig_setup_block := get_unique_id('block');
+    my @params;
+    @params.push('ThreadContext TC');
+    @inner_blocks.push(DNST::Method.new(
+        :return_type('void'),
+        :name($sig_setup_block),
+        :params(@params),
+        DNST::Temp.new(
+            :type('Context'), :name('C'),
+            DNST::New.new(
+                :type('Context'),
+                DNST::MethodCall.new(
+                    :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    'null',
+                    "StaticBlockInfo[$our_sbi]",
+                    DNST::ArrayLiteral.new( :type('string') )
+                ),
+                'TC.CurrentContext',
+                'null'
+            )
+        ),
+        DNST::Bind.new( 'TC.CurrentContext', 'C' ),
+        DNST::Bind.new(
+            "StaticBlockInfo[$our_sbi].Sig",
+            compile_signature(@*PARAMS)
+        ),
+        DNST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
+    @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), 'TC' ));
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(

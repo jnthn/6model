@@ -73,6 +73,7 @@ namespace Rakudo
                 REPRRegistry.register_REPR("P6str", new P6str());
                 REPRRegistry.register_REPR("P6capture", new P6capture());
                 REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
+                REPRRegistry.register_REPR("P6list", new P6list());
                 REPRS_Registered = true;
             }
         }
@@ -89,6 +90,11 @@ namespace Rakudo
             SettingContext.LexPad = new Dictionary<string, RakudoObject>()
                 {
                     { "KnowHOW", KnowHOW },
+                    { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
+                    { "NQPInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
+                    { "NQPNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
+                    { "NQPStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
+                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)) },
                     { "print", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {
                             var Value = CaptureHelper.GetPositional(C, 0);
@@ -107,11 +113,16 @@ namespace Rakudo
                             return CaptureHelper.Nil();
                         })
                     },
-                    { "capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null) },
-                    { "NQPInt", REPRRegistry.get_REPR_by_name("P6int").type_object_for(null) },
-                    { "NQPNum", REPRRegistry.get_REPR_by_name("P6num").type_object_for(null) },
-                    { "NQPStr", REPRRegistry.get_REPR_by_name("P6str").type_object_for(null) },
-                    { "LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)) }
+                    { "list", CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
+                        {
+                            var NQPList = Ops.get_lex(TC, "NQPList");
+                            var List = NQPList.STable.REPR.instance_of(NQPList) as P6list.Instance;
+                            var NativeCapture = C as P6capture.Instance;
+                            foreach (var Obj in NativeCapture.Positionals)
+                                List.Storage.Add(Obj);
+                            return List;
+                        })
+                    }
                 };
             return SettingContext;
         }

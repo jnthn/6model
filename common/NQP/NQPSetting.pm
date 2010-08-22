@@ -47,6 +47,12 @@ knowhow NQPNum is repr('P6num') {
     }
 }
 
+knowhow NQPList is repr('P6list') {
+}
+
+knowhow NQPArray is repr('P6list') {
+}
+
 ## XXX All of these should become multi when we can do that.
 
 sub &infix:<==>($x, $y) {

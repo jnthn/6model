@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Init.cs" />
+    <Compile Include="Metamodel\Representations\P6list.cs" />
     <Compile Include="Metamodel\Representations\P6capture.cs" />
     <Compile Include="Metamodel\Representations\P6int.cs" />
     <Compile Include="Metamodel\Representations\P6num.cs" />

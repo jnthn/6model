@@ -49,12 +49,12 @@ namespace Rakudo.Runtime.MultiDispatch
                 
                 /* Check if it's admissable by arity. */
                 var NumArgs = NativeCapture.Positionals.Length;
-                if (NumArgs < Candidate.Sig.NumRequiredPositionals() ||
-                    NumArgs > Candidate.Sig.NumPositionals())
+                if (NumArgs < Candidate.Sig.NumRequiredPositionals ||
+                    NumArgs > Candidate.Sig.NumPositionals)
                     continue;
 
                 /* Check if it's admissable by type. */
-                var TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals());
+                var TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals);
                 var TypeMismatch = false;
                 for (int i = 0; i < TypeCheckCount; i++) {
                     var Arg = NativeCapture.Positionals[i];
@@ -102,10 +102,10 @@ namespace Rakudo.Runtime.MultiDispatch
 
             /* Work out how many parameters to compare, factoring in slurpiness
              * and optionals. */
-            if (a.Sig.NumPositionals() == b.Sig.NumPositionals())
-                TypesToCheck = a.Sig.NumPositionals();
-            else if (a.Sig.NumRequiredPositionals() == b.Sig.NumRequiredPositionals())
-                TypesToCheck = Math.Min(a.Sig.NumPositionals(), b.Sig.NumPositionals());
+            if (a.Sig.NumPositionals == b.Sig.NumPositionals)
+                TypesToCheck = a.Sig.NumPositionals;
+            else if (a.Sig.NumRequiredPositionals == b.Sig.NumRequiredPositionals)
+                TypesToCheck = Math.Min(a.Sig.NumPositionals, b.Sig.NumPositionals);
             else
                 return 0;
 

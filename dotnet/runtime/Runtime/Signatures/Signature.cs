@@ -16,40 +16,39 @@ namespace Rakudo.Runtime
         /// <param name="Parameters"></param>
         public Signature(Parameter[] Parameters)
         {
+            // Set parameters array in place.
             this.Parameters = Parameters;
-        }
 
-        /// <summary>
-        /// Gets the number of positionals.
-        /// </summary>
-        /// <returns></returns>
-        internal int NumPositionals()
-        {
-            int Num = 0;
+            // Build and cache number of positionals.
             for (int i = 0; i < Parameters.Length; i++)
                 if (Parameters[i].Flags == Parameter.POS_FLAG)
-                    Num++;
+                {
+                    NumRequiredPositionals++;
+                    NumPositionals++;
+                }
                 else if (Parameters[i].Flags == Parameter.OPTIONAL_FLAG)
-                    Num++;
+                    NumPositionals++;
                 else
                     break;
-            return Num;
         }
 
+
         /// <summary>
-        /// Gets the number of required positionals.
+        /// The parameters we have.
+        /// </summary>
+        public Parameter[] Parameters;
+
+        /// <summary>
+        /// The total number of positionals.
         /// </summary>
         /// <returns></returns>
-        internal int NumRequiredPositionals()
-        {
-            int Num = 0;
-            for (int i = 0; i < Parameters.Length; i++)
-                if (Parameters[i].Flags == Parameter.POS_FLAG)
-                    Num++;
-                else
-                    break;
-            return Num;
-        }
+        internal int NumPositionals;
+
+        /// <summary>
+        /// The number of required positionals.
+        /// </summary>
+        /// <returns></returns>
+        internal int NumRequiredPositionals;
 
         /// <summary>
         /// Do we have a slurpy positional parameter?
@@ -62,10 +61,5 @@ namespace Rakudo.Runtime
                     return true;
             return false;
         }
-
-        /// <summary>
-        /// The parameters we have.
-        /// </summary>
-        public Parameter[] Parameters;
     }
 }

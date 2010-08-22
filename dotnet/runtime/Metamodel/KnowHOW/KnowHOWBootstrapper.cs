@@ -71,12 +71,15 @@ namespace Rakudo.Metamodel.KnowHOW
                 }));
             KnowHOWMeths.Add("find_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
-                var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                var Name = CaptureHelper.GetPositionalAsString(Cap, 1);
-                if (HOW.Methods.ContainsKey(Name))
-                    return HOW.Methods[Name];
+                // We go to some effort to be really fast in here, 'cus it's a
+                // hot path for dynamic dispatches.
+                var Positionals = (Cap as P6capture.Instance).Positionals;
+                var HOW = Positionals[0] as KnowHOWREPR.KnowHOWInstance;
+                RakudoObject Method;
+                if (HOW.Methods.TryGetValue(Ops.unbox_str(TC, Positionals[1]), out Method))
+                    return Method;
                 else
-                    throw new InvalidOperationException("No such method " + Name);
+                    throw new InvalidOperationException("No such method " + Ops.unbox_str(TC, Positionals[1]));
             }));
             KnowHOWMeths.Add("compose", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {

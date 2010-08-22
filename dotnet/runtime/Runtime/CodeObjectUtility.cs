@@ -40,7 +40,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoCodeRef.Instance BuildStaticBlockInfo(
             Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Code,
-            RakudoCodeRef.Instance Outer, string[] LexNames, Signature Sig)
+            RakudoCodeRef.Instance Outer, string[] LexNames)
         {
             // Create code wrapper object.
             var Result = (RakudoCodeRef.Instance)LLCodeTypeObject.STable.REPR.instance_of(LLCodeTypeObject);
@@ -48,7 +48,6 @@ namespace Rakudo.Runtime
             // Put body, outer and signature in place.
             Result.Body = Code;
             Result.OuterBlock = Outer;
-            Result.Sig = Sig;
 
             // Setup static lexpad.
             Result.StaticLexPad = new Dictionary<string, RakudoObject>();

@@ -114,12 +114,12 @@ method compile(PAST::Node $node) {
                 :void(1),
                 'TC'
             ),
+            $loadinit_calls,
             DNST::Call.new(
                 :name('constants_init'),
                 :void(1),
                 'TC'
             ),
-            $loadinit_calls,
             $main_block_call
         ));
     }
@@ -158,8 +158,7 @@ sub make_blocks_init_method($name) {
             DNST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 'null', 'null',
-                DNST::ArrayLiteral.new( :type('String') ),
-                'null'
+                DNST::ArrayLiteral.new( :type('String') )
             )
         ),
         DNST::Bind.new(
@@ -191,8 +190,7 @@ sub make_constants_init_method($name) {
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     'null',
                     'StaticBlockInfo[1]',
-                    DNST::ArrayLiteral.new( :type('string') ),
-                    'null'
+                    DNST::ArrayLiteral.new( :type('string') )
                 ),
                 'TC.CurrentContext'
             )
@@ -286,6 +284,12 @@ our multi sub dnst_for(PAST::Block $block) {
         }
     }
 
+    # Add signature generation/setup as a kind of loadinit.
+    @*LOADINITS.push(DNST::Bind.new(
+        "StaticBlockInfo[$our_sbi].Sig",
+        compile_signature(@*PARAMS)
+    ));
+
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(
         :on('SignatureBinder'), :name('Bind'), :void(1), 'C', 'Capture'
@@ -320,7 +324,6 @@ our multi sub dnst_for(PAST::Block $block) {
         $lex_setup.push(DNST::Literal.new( :value($_), :escape(1) ));
     }
     $our_sbi_setup.push($lex_setup);
-    $our_sbi_setup.push(compile_signature(@*PARAMS));
 
     # Clear up this PAST::Block from the blocks list.
     @*PAST_BLOCKS.shift;

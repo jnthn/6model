@@ -1,11 +1,11 @@
 package Rakudo.Metamodel;
 
-import Rakudo.Metamodel.IRakudoObject;
+import Rakudo.Metamodel.RakudoObject;
 
 /// <summary>
 /// All representations should implement this API.
 /// </summary>
-public interface IRepresentation
+public interface Representation
 {
     /// <summary>
     /// Creates a new type object of this representation, and
@@ -14,21 +14,21 @@ public interface IRepresentation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    IRakudoObject type_object_for(IRakudoObject HOW);
+    RakudoObject type_object_for(RakudoObject HOW);
 
     /// <summary>
     /// Creates a new instance based on the type object.
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    IRakudoObject instance_of(IRakudoObject WHAT);
+    RakudoObject instance_of(RakudoObject WHAT);
 
     /// <summary>
     /// Checks if a given object is defined.
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    boolean defined(IRakudoObject Obj);
+    boolean defined(RakudoObject Obj);
 
     /// <summary>
     /// Gets the current value for an attribute.
@@ -36,7 +36,7 @@ public interface IRepresentation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, String Name);
+    RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name);
 
     /// <summary>
     /// Gets the current value for an attribute, obtained using the
@@ -46,7 +46,7 @@ public interface IRepresentation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
-    IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, String Name, int Hint);
+    RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint);
 
     /// <summary>
     /// Binds the given value to the specified attribute.
@@ -54,7 +54,7 @@ public interface IRepresentation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Value"></param>
-    void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, String Name, IRakudoObject Value);
+    void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value);
 
     /// <summary>
     /// Binds the given value to the specified attribute, using the
@@ -64,7 +64,7 @@ public interface IRepresentation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <param name="Value"></param>
-    void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, String Name, int Hint, IRakudoObject Value);
+    void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value);
 
     /// <summary>
     /// Gets the hint for the given attribute ID.
@@ -72,5 +72,6 @@ public interface IRepresentation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    int hint_for(IRakudoObject ClassHandle, String Name);
+    int hint_for(RakudoObject ClassHandle, String Name);
 }
+

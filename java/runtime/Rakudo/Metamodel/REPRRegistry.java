@@ -11,7 +11,7 @@ public          class REPRRegistry
     /// <summary>
     /// ID indexed list.
     /// </summary>
-    private static ArrayList<IRepresentation> Registry = new ArrayList<IRepresentation>();
+    private static ArrayList<Representation> Registry = new ArrayList<Representation>();
 //  private static      List<IRepresentation> Registry = new      List<IRepresentation>(); // the C# version
 
     /// <summary>
@@ -27,7 +27,7 @@ public          class REPRRegistry
     /// <param name="Name"></param>
     /// <param name="REPR"></param>
     /// <returns></returns>
-    public static int register_REPR(String Name, IRepresentation REPR)
+    public static int register_REPR(String Name, Representation REPR)
     {
         Registry.add(REPR);
         int ID = Registry.size() - 1;
@@ -40,7 +40,7 @@ public          class REPRRegistry
     /// </summary>
     /// <param name="ID"></param>
     /// <returns></returns>
-    public static IRepresentation get_REPR_by_id(int ID)
+    public static Representation get_REPR_by_id(int ID)
     {
         return Registry.get( new Integer(ID) );
     }
@@ -50,7 +50,7 @@ public          class REPRRegistry
     /// </summary>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public static IRepresentation get_REPR_by_name(String Name)
+    public static Representation get_REPR_by_name(String Name)
     {
         return Registry.get( NamedToIDMapper.get(Name) );
     }

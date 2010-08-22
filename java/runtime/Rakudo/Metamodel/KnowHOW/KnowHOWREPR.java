@@ -2,8 +2,8 @@ package Rakudo.Metamodel.KnowHOW;
 
 import java.util.*;
 import Rakudo.Metamodel.Hints;
-import Rakudo.Metamodel.IRakudoObject;
-import Rakudo.Metamodel.IRepresentation;
+import Rakudo.Metamodel.RakudoObject;
+import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
 // One could be lazy and import Rakudo.Metamodel.*, but that would be
 // less informative.
@@ -13,14 +13,14 @@ import Rakudo.Serialization.SerializationContext;
 /// We have a REPR especially for the KnowHOW, which is part of the
 /// "bootstrap".
 /// </summary>
-public class KnowHOWREPR implements IRepresentation
+public class KnowHOWREPR implements Representation
 {
     /// <summary>
     /// This represents an instance created with this underlying
     /// representation. We use .Net data types for out attribute
     /// and method store.
     /// </summary>
-    public class KnowHOWInstance implements IRakudoObject
+    public class KnowHOWInstance implements RakudoObject
     // internal class KnowHOWInstance implements IRakudoObject // the C# version
     {
         // public SharedTable STable { get; set; } // the C# version
@@ -33,9 +33,9 @@ public class KnowHOWREPR implements IRepresentation
         public SerializationContext getSC() { return SC; }
         public void setSC( SerializationContext sc ) { SC = sc; }
 
-        public ArrayList<IRakudoObject> Attributes;
+        public ArrayList<RakudoObject> Attributes;
         // public List<IRakudoObject> Attributes; // the C# version
-        public HashMap<String, IRakudoObject> Methods;
+        public HashMap<String, RakudoObject> Methods;
         // public Dictionary<string, IRakudoObject> Methods;
         public KnowHOWInstance(SharedTable STable)
         {
@@ -48,7 +48,7 @@ public class KnowHOWREPR implements IRepresentation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public IRakudoObject type_object_for(IRakudoObject HOW)
+    public RakudoObject type_object_for(RakudoObject HOW)
     {
         SharedTable STable = new SharedTable();
         // var STable = new SharedTable();
@@ -63,12 +63,12 @@ public class KnowHOWREPR implements IRepresentation
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    public IRakudoObject instance_of(IRakudoObject WHAT)
+    public RakudoObject instance_of(RakudoObject WHAT)
     {
         KnowHOWInstance Object = new KnowHOWInstance(WHAT.getSTable());
         // var Object = new KnowHOWInstance(WHAT.STable);
-        Object.Methods = new HashMap<String, IRakudoObject>();
-        Object.Attributes = new ArrayList<IRakudoObject>();
+        Object.Methods = new HashMap<String, RakudoObject>();
+        Object.Attributes = new ArrayList<RakudoObject>();
         return Object;
     }
 
@@ -77,27 +77,27 @@ public class KnowHOWREPR implements IRepresentation
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public boolean defined(IRakudoObject Obj)
+    public boolean defined(RakudoObject Obj)
     {
         return ((KnowHOWInstance)Obj).Methods != null;
     }
 
-    public IRakudoObject get_attribute(IRakudoObject Object, IRakudoObject ClassHandle, String Name)
+    public RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public IRakudoObject get_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, String Name, int Hint)
+    public RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
     {
         throw new UnsupportedOperationException();
     }
 
-    public void bind_attribute(IRakudoObject Object, IRakudoObject ClassHandle, String Name, IRakudoObject Value)
+    public void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public void bind_attribute_with_hint(IRakudoObject Object, IRakudoObject ClassHandle, String Name, int Hint, IRakudoObject Value)
+    public void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
     {
         throw new UnsupportedOperationException();
     }
@@ -109,7 +109,7 @@ public class KnowHOWREPR implements IRepresentation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public int hint_for(IRakudoObject ClassHandle, String Name)
+    public int hint_for(RakudoObject ClassHandle, String Name)
     {
         return Hints.NO_HINT;
     }

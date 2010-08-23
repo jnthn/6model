@@ -16,7 +16,8 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         internal sealed class Instance : RakudoObject
         {
-            public Nullable<int> Value;
+            public int Value;
+            public bool Undefined;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -33,8 +34,10 @@ namespace Rakudo.Metamodel.Representations
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = this;
-            STable.WHAT = new Instance(STable);
-            return STable.WHAT;
+            var WHAT = new Instance(STable);
+            WHAT.Undefined = true;
+            STable.WHAT = WHAT;
+            return WHAT;
         }
 
         /// <summary>
@@ -44,9 +47,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject instance_of(RakudoObject WHAT)
         {
-            var Object = new Instance(WHAT.STable);
-            Object.Value = 0;
-            return Object;
+            return new Instance(WHAT.STable);
         }
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override bool defined(RakudoObject Obj)
         {
-            return ((Instance)Obj).Value.HasValue;
+            return !((Instance)Obj).Undefined;
         }
 
         public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
@@ -91,7 +92,7 @@ namespace Rakudo.Metamodel.Representations
 
         public override int get_int(RakudoObject Object)
         {
-            return ((Instance)Object).Value.Value;
+            return ((Instance)Object).Value;
         }
 
         public override void set_num(RakudoObject Object, double Value)

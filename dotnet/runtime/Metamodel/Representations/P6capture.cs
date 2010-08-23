@@ -44,8 +44,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject instance_of(RakudoObject WHAT)
         {
-            var Object = new Instance(WHAT.STable);
-            return Object;
+            return new Instance(WHAT.STable);
         }
 
         /// <summary>

@@ -18,10 +18,11 @@ namespace Rakudo.Runtime
         /// <param name="VariableName"></param>
         /// <param name="Name"></param>
         /// <param name="Flags"></param>
-        public Parameter(RakudoObject Type, string VariableName, string Name, int Flags)
+        public Parameter(RakudoObject Type, string VariableName, int VariableLexpadPosition, string Name, int Flags)
         {
             this.Type = Type;
             this.VariableName = VariableName;
+            this.VariableLexpadPosition = VariableLexpadPosition;
             this.Name = Name;
             this.Flags = Flags;
         }
@@ -35,6 +36,11 @@ namespace Rakudo.Runtime
         /// The name of the lexical to bind the parameter to.
         /// </summary>
         public string VariableName;
+
+        /// <summary>
+        /// The position in the lexpad where the variable will be stored.
+        /// </summary>
+        public int VariableLexpadPosition;
 
         /// <summary>
         /// Name, for named parameters.

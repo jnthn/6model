@@ -396,8 +396,10 @@ sub compile_signature(@params) {
         }
 
         # Variable name to bind into.
+        my $lexpad_position := +@*LEXICALS;
         @*LEXICALS.push($_.name);
         $param.push(DNST::Literal.new( :value($_.name), :escape(1) ));
+        $param.push(DNST::Literal.new( :value($lexpad_position) ));
 
         # Named param or not?
         $param.push((!$_.slurpy && $_.named) ??

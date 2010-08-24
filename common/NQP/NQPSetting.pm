@@ -69,10 +69,10 @@ proto sub &infix:<!=>($x, $y) {
     nqp::multi_dispatch_over_lexical_candidates("&infix:<!=>");
 }
 multi sub &infix:<!=>(NQPInt $x, NQPInt $y) {
-    !nqp::equal_ints($x, $y)
+    nqp::logical_not_int(nqp::equal_ints($x, $y))
 }
 multi sub &infix:<!=>(NQPNum $x, NQPNum $y) {
-    !nqp::equal_nums($x, $y)
+    nqp::logical_not_int(nqp::equal_nums($x, $y))
 }
 
 sub &infix:<eq>($x, $y) {

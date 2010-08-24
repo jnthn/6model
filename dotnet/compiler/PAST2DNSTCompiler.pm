@@ -86,8 +86,9 @@ method compile(PAST::Node $node) {
 
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
-            DNST::Bind.new(
-                'StaticBlockInfo[1].StaticLexPad["NQPStr"]',
+            DNST::MethodCall.new(
+                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'),
+                DNST::Literal.new( :value('NQPStr'), :escape(1) ),
                 'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null)'
             ),
 
@@ -395,6 +396,7 @@ sub compile_signature(@params) {
         }
 
         # Variable name to bind into.
+        @*LEXICALS.push($_.name);
         $param.push(DNST::Literal.new( :value($_.name), :escape(1) ));
 
         # Named param or not?

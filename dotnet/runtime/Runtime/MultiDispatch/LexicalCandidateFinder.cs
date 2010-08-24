@@ -32,9 +32,9 @@ namespace Rakudo.Runtime.MultiDispatch
                     break;
 
                 // Any candidates here?
-                RakudoObject ScopeList;
-                if (CurScope.LexPad != null && CurScope.LexPad.TryGetValue(CandidateHolderName, out ScopeList))
-                    foreach (var Candidate in (ScopeList as P6list.Instance).Storage)
+                int Index;
+                if (CurScope.LexPad != null && CurScope.LexPad.SlotMapping.TryGetValue(CandidateHolderName, out Index))
+                    foreach (var Candidate in (CurScope.LexPad.Storage[Index] as P6list.Instance).Storage)
                         Result.Add(Candidate as RakudoCodeRef.Instance);
             } while (CurScope != ProtoScope);
             return Result;

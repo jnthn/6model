@@ -276,9 +276,9 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                RakudoObject Found;
-                if (CurContext.LexPad.TryGetValue(Name, out Found))
-                    return Found;
+                int Index;
+                if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index))
+                    return CurContext.LexPad.Storage[Index];
                 CurContext = CurContext.Outer;
             }
             throw new InvalidOperationException("No variable " + Name + " found in the lexical scope");
@@ -295,9 +295,10 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                if (CurContext.LexPad.ContainsKey(Name))
+                int Index;
+                if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index))
                 {
-                    CurContext.LexPad[Name] = Value;
+                    CurContext.LexPad.Storage[Index] = Value;
                     return Value;
                 }
                 CurContext = CurContext.Outer;
@@ -316,9 +317,9 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                RakudoObject Found;
-                if (CurContext.LexPad.TryGetValue(Name, out Found))
-                    return Found;
+                int Index;
+                if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index))
+                    return CurContext.LexPad.Storage[Index];
                 CurContext = CurContext.Caller;
             }
             throw new InvalidOperationException("No variable " + Name + " found in the dynamic scope");
@@ -335,9 +336,10 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                if (CurContext.LexPad.ContainsKey(Name))
+                int Index;
+                if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index))
                 {
-                    CurContext.LexPad[Name] = Value;
+                    CurContext.LexPad.Storage[Index] = Value;
                     return Value;
                 }
                 CurContext = CurContext.Caller;

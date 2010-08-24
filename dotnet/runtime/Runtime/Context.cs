@@ -32,7 +32,7 @@ namespace Rakudo.Runtime
         /// Lexpad. Note that we'll in the end have something much smarter
         /// for this but it'll do for now.
         /// </summary>
-        public Dictionary<string, RakudoObject> LexPad;
+        public Lexpad LexPad;
 
         /// <summary>
         /// The capture passed as part of the current call.
@@ -62,10 +62,8 @@ namespace Rakudo.Runtime
             // context.
             StaticCodeObject.CurrentContext = this;
 
-            // Lex pad should be copy of the static one.
-            // XXX This isn't quite what we want in the long run, but it
-            // does fine for now.
-            this.LexPad = new Dictionary<string, RakudoObject>(StaticCodeObject.StaticLexPad);
+            // Lex pad should be an "instantiation" of the static one.
+            this.LexPad = StaticCodeObject.StaticLexPad.Instantiate();
 
             // Set outer context.
             var OuterBlock = StaticCodeObject.OuterBlock;

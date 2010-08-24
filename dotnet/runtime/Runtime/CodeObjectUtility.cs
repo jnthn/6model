@@ -50,9 +50,7 @@ namespace Rakudo.Runtime
             Result.OuterBlock = Outer;
 
             // Setup static lexpad.
-            Result.StaticLexPad = new Dictionary<string, RakudoObject>();
-            foreach (var Lex in LexNames)
-                Result.StaticLexPad.Add(Lex, null);
+            Result.StaticLexPad = new Lexpad(LexNames);
 
             return Result;
         }

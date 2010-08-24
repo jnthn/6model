@@ -67,7 +67,7 @@ namespace Rakudo.Runtime
                     if (CurPositional < Positionals.Length)
                     {
                         // We have an argument, just bind it.
-                        Target[Param.VariableName] = Positionals[CurPositional];
+                        Target.SetByName(Param.VariableName, Positionals[CurPositional]);
                     }
                     else
                     {
@@ -86,7 +86,7 @@ namespace Rakudo.Runtime
                     if (CurPositional < Positionals.Length)
                     {
                         // We have an argument, just bind it.
-                        Target[Param.VariableName] = Positionals[CurPositional];
+                        Target.SetByName(Param.VariableName, Positionals[CurPositional]);
                     }
                     else
                     {
@@ -117,7 +117,7 @@ namespace Rakudo.Runtime
                     if (Nameds.TryGetValue(Param.Name, out Value))
                     {
                         // We have an argument, just bind it.
-                        Target[Param.VariableName] = Value;
+                        Target.SetByName(Param.VariableName, Value);
                     }
                     else
                     {

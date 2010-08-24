@@ -26,7 +26,7 @@ namespace Rakudo.Metamodel.Representations
             /// <summary>
             /// The static lexpad.
             /// </summary>
-            public Dictionary<string, RakudoObject> StaticLexPad;
+            public Lexpad StaticLexPad;
             
             /// <summary>
             /// Our static outer block.

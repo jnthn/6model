@@ -38,9 +38,6 @@ namespace Rakudo.Runtime
         /// <param name="Capture"></param>
         public static void Bind(Context C, RakudoObject Capture)
         {
-            // The lexpad we'll bind into.
-            var Target = C.LexPad;
-
             // Make sure the object is really a low level capture (don't handle
             // otherwise yet) and grab the pieces.
             var NativeCapture = Capture as P6capture.Instance;
@@ -59,15 +56,18 @@ namespace Rakudo.Runtime
 
             // Iterate over the parameters.
             var Params = Sig.Parameters;
-            foreach (var Param in Params)
+            var NumParams = Params.Length;
+            for (int i = 0; i < NumParams; i++)
             {
+                var Param = Params[i];
+
                 // Positional required?
                 if (Param.Flags == Parameter.POS_FLAG)
                 {
                     if (CurPositional < Positionals.Length)
                     {
                         // We have an argument, just bind it.
-                        Target.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
+                        C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
                     }
                     else
                     {
@@ -86,7 +86,7 @@ namespace Rakudo.Runtime
                     if (CurPositional < Positionals.Length)
                     {
                         // We have an argument, just bind it.
-                        Target.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
+                        C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
                     }
                     else
                     {
@@ -117,7 +117,7 @@ namespace Rakudo.Runtime
                     if (Nameds.TryGetValue(Param.Name, out Value))
                     {
                         // We have an argument, just bind it.
-                        Target.Storage[Param.VariableLexpadPosition] = Value;
+                        C.LexPad.Storage[Param.VariableLexpadPosition] = Value;
                     }
                     else
                     {

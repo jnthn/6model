@@ -33,7 +33,7 @@ namespace Rakudo.Runtime.MultiDispatch
 
                 // Any candidates here?
                 int Index;
-                if (CurScope.LexPad != null && CurScope.LexPad.SlotMapping.TryGetValue(CandidateHolderName, out Index))
+                if (CurScope.LexPad.SlotMapping != null && CurScope.LexPad.SlotMapping.TryGetValue(CandidateHolderName, out Index))
                     foreach (var Candidate in (CurScope.LexPad.Storage[Index] as P6list.Instance).Storage)
                         Result.Add(Candidate as RakudoCodeRef.Instance);
             } while (CurScope != ProtoScope);

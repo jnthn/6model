@@ -1,7 +1,7 @@
 package Rakudo.Metamodel;
 
-//import Rakudo.Metamodel.RakudoObject;
-//import Rakudo.Metamodel.Representation;
+import Rakudo.Metamodel.RakudoObject;
+import Rakudo.Metamodel.Representation;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -15,12 +15,14 @@ public class SharedTable
     /// <summary>
     /// This finds a method with the given name or using a hint.
     /// </summary>
-    public Object FindMethod =
-        new Object() {
-            public Object method() {
-                return new Object();
-            }
-        }; // TODO: find out how this is used, and complete it
+//  public Object FindMethod =
+//      new IFindMethod() {
+//          public Object FindMethod() {
+//              return new Object();
+//          }
+//      };
+
+
 //      public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
 //          (TC, Obj, Name, Hint) =>
 //          {
@@ -92,7 +94,7 @@ public class SharedTable
     /// </summary>
     public long TypeCacheID () {
         long id;
-        synchronized(this) {
+        synchronized(this) {   // is locking the entire SharedTable too coarse?
             TypeCacheIDSource += 4;
             id = TypeCacheIDSource;
         }

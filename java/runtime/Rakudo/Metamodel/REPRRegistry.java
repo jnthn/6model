@@ -2,6 +2,8 @@ package Rakudo.Metamodel;
 
 import java.util.*; // ArrayList HashMap
 
+import Rakudo.Metamodel.Representation;
+
 /// <summary>
 /// This is our central registry of representations.
 /// </summary>

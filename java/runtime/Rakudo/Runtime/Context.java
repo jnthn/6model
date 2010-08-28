@@ -1,6 +1,6 @@
 package Rakudo.Runtime;
 
-import java.util.*;       // HashMap
+import java.util.HashMap;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 
@@ -44,57 +44,58 @@ public class Context
     }
 
     /// <summary>
-    /// Initializes the context.
+    /// Constructor initializes the context.
     /// </summary>
     /// <param name="StaticCodeObject"></param>
     /// <param name="Caller"></param>
-    public Context(RakudoCodeRef.Instance StaticCodeObject, Context Caller, RakudoObject Capture)
+    public Context(RakudoCodeRef.Instance staticCodeObject, Context caller, RakudoObject capture)
     {
         // Set up static code object and caller pointers.
-        this.StaticCodeObject = StaticCodeObject;
-        this.Caller = Caller;
-        this.Capture = Capture;
+        this.StaticCodeObject = staticCodeObject;
+        this.Caller = caller;
+        this.Capture = capture;
 
         // Static sub object should have this as the current
         // context.
-//      StaticCodeObject.CurrentContext = this;
+        staticCodeObject.CurrentContext = this;
 
         // Lex pad should be copy of the static one.
         // XXX This isn't quite what we want in the long run, but it
         // does fine for now.
-//      this.LexPad = new HashMap<String, RakudoObject>(StaticCodeObject.StaticLexPad);
+        this.LexPad = new HashMap<String, RakudoObject>();
+//TODO  this.LexPad = new HashMap<String, RakudoObject>(staticCodeObject.StaticLexPad);
 
         // Set outer context.
-        RakudoCodeRef.Instance OuterBlock = StaticCodeObject.OuterBlock;
-//      if (OuterBlock.CurrentContext != null)
-//      {
-//          this.Outer = OuterBlock.CurrentContext;
-//      }
-//      else
+        RakudoCodeRef.Instance outerBlock = staticCodeObject.OuterBlock;
+        if (outerBlock.CurrentContext != null)
+        {
+            this.Outer = outerBlock.CurrentContext;
+        }
+        else
         {
             // Auto-close. In this we go setting up fake contexts
             // that use the static lexpad until we find a real one.
-            Context CurContext = this;
-            while (OuterBlock != null)
+            Context curContext = this;
+            while (outerBlock != null)
             {
                 // If we found a block with a context, we're done.
-//              if (OuterBlock.CurrentContext != null)
-//              {
-//                  CurContext.Outer = OuterBlock.CurrentContext;
-//                  break;
-//              }
+                if (outerBlock.CurrentContext != null)
+                {
+                    curContext.Outer = outerBlock.CurrentContext;
+                    break;
+                }
 
                 // Build the fake context.
-                Context OuterContext = new Context();
-                OuterContext.StaticCodeObject = OuterBlock;
-//              OuterContext.LexPad = OuterBlock.StaticLexPad;
+                Context outerContext = new Context();
+                outerContext.StaticCodeObject = outerBlock;
+// TODO         outerContext.LexPad = outerBlock.StaticLexPad;
 
                 // Link it.
-                CurContext.Outer = OuterContext;
-                
+                curContext.Outer = outerContext;
+
                 // Step back one level.
-                CurContext = OuterContext;
-                OuterBlock = OuterBlock.OuterBlock;
+                curContext = outerContext;
+                outerBlock = outerBlock.OuterBlock;
             }
         }
     }

@@ -32,12 +32,11 @@ public final class RakudoCodeRef implements Representation
         private SerializationContext sc;
         public SerializationContext getSC() { return sc; }
         public void setSC( SerializationContext sc ) {;}
-/* TODO
+
         /// <summary>
         /// The code body - the thing that actually runs instructions.
         /// </summary>
-//      public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
-*/
+// TODO public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
 
         /// <summary>
         /// The static lexpad.
@@ -58,20 +57,17 @@ public final class RakudoCodeRef implements Representation
         /// The context currently using this sub.
         /// </summary>
         public Context CurrentContext;
-/*        
+
         /// <summary>
         /// Constructor.
         /// </summary>
         public Instance(SharedTable sharedTable)
         {
-            this.STable = sharedTable;
+            this.setSTable(sharedTable);
+            // this.STable = sharedTable; // the C# version is a property
         }
-*/
     }
-    public RakudoObject type_object_for(RakudoObject how){return new Instance();}
-    public RakudoObject instance_of(RakudoObject what){return new Instance();}
-    public boolean defined(RakudoObject obj){return false;}
-/* TODO
+
     /// <summary>
     /// Create a new type object.
     /// </summary>
@@ -83,15 +79,15 @@ public final class RakudoCodeRef implements Representation
         SharedTable STable = new SharedTable();
         STable.HOW = MetaPackage;
         STable.REPR = this;
-//      STable.WHAT = new Instance(STable);
+        STable.WHAT = new Instance(STable);
 
         // Also twiddle the S-Table's Invoke to invoke the contained
         // function.
-        STable.Invoke = new IRakudoObject_Invokable() {
+// TODO STable.Invoke = new IRakudoObject_Invokable() {
 //          public RakudoObject Invoke( TC, Obj, Cap ) {
 //              ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
 //          }
-        };
+//      };
 //      STable.Invoke = (TC, Obj, Cap) =>
 //          ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
 
@@ -102,10 +98,11 @@ public final class RakudoCodeRef implements Representation
     /// Creates an instance of the type with the given type object.
     /// </summary>
     /// <param name="WHAT"></param>
-    /// <returns></returns> TODO
-    public RakudoObject instance_of(RakudoObject rakudoobject)
+    /// <returns></returns>
+    public RakudoObject instance_of(RakudoObject rakudoObject)
     {
-        return new Instance(rakudoobject.STable);
+        return new Instance(rakudoObject.getSTable());
+        // return new Instance(rakudoObject.STable()); // the C# version is a property
     }
 
     /// <summary>
@@ -113,11 +110,11 @@ public final class RakudoCodeRef implements Representation
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public boolean defined(RakudoObject rakudoobject)
+    public boolean defined(RakudoObject rakudoObject)
     {
-        return ((Instance)rakudoobject).Body != null;
+        return false;
+// TODO return ((Instance)rakudoObject).Body != null;
     }
-*/
 
     public RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
     {

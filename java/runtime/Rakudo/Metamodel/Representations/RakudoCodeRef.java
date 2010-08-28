@@ -1,7 +1,7 @@
 package Rakudo.Metamodel.Representations;
 
 import java.util.HashMap;     // HashMap
-//import Rakudo.Runtime.Context;
+import Rakudo.Runtime.Context;
 //import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
 import Rakudo.Runtime.Parameter;
@@ -25,10 +25,14 @@ public final class RakudoCodeRef implements Representation
     /// </summary>
     public final class Instance implements RakudoObject
     {
+        private SharedTable st;
+        public SharedTable getSTable(){return st;}
+        public void setSTable( SharedTable st ){return;}
+
         private SerializationContext sc;
-        public SerializationContext getSC() { return new SerializationContext(); }
+        public SerializationContext getSC() { return sc; }
         public void setSC( SerializationContext sc ) {;}
-/*
+/* TODO
         /// <summary>
         /// The code body - the thing that actually runs instructions.
         /// </summary>
@@ -49,12 +53,12 @@ public final class RakudoCodeRef implements Representation
         /// Signature object.
         /// </summary>
         public Signature Sig;
-/*
+
         /// <summary>
         /// The context currently using this sub.
         /// </summary>
         public Context CurrentContext;
-        
+/*        
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -67,7 +71,7 @@ public final class RakudoCodeRef implements Representation
     public RakudoObject type_object_for(RakudoObject how){return new Instance();}
     public RakudoObject instance_of(RakudoObject what){return new Instance();}
     public boolean defined(RakudoObject obj){return false;}
-/*
+/* TODO
     /// <summary>
     /// Create a new type object.
     /// </summary>
@@ -98,7 +102,7 @@ public final class RakudoCodeRef implements Representation
     /// Creates an instance of the type with the given type object.
     /// </summary>
     /// <param name="WHAT"></param>
-    /// <returns></returns>
+    /// <returns></returns> TODO
     public RakudoObject instance_of(RakudoObject rakudoobject)
     {
         return new Instance(rakudoobject.STable);

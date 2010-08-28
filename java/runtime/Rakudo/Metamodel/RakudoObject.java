@@ -13,8 +13,8 @@ public interface RakudoObject
     /// Every object must have a way to refer to the shared table,
     /// which contains the commonalities this object has.
     /// </summary>
-//  SharedTable getSTable();
-//  void setSTable( SharedTable st );
+    SharedTable getSTable();
+    void setSTable( SharedTable st );
     // SharedTable STable { get; set; } // the C# version
 
     /// <summary>

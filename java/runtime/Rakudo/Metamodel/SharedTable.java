@@ -2,6 +2,7 @@ package Rakudo.Metamodel;
 
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
+import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -15,13 +16,12 @@ public class SharedTable
     /// <summary>
     /// This finds a method with the given name or using a hint.
     /// </summary>
-//  public Object FindMethod =
-//      new IFindMethod() {
-//          public Object FindMethod() {
-//              return new Object();
-//          }
-//      };
-
+    public IFindMethod FindMethod =
+        new IFindMethod() { // anonymous class instead of lambda-expression
+            public RakudoObject FindMethod(ThreadContext tc, RakudoObject ro, String s, int hint) {
+                return ro;
+            }
+        };
 
 //      public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
 //          (TC, Obj, Name, Hint) =>

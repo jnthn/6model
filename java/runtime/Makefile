@@ -4,7 +4,8 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Metamodel/Hints.class \
 	Rakudo/Serialization/SerializationContext.class \
 	Rakudo/Runtime/ExecutionDomain.class \
-	Rakudo/Metamodel/RakudoObject.class
+	Rakudo/Metamodel/RakudoObject.class \
+	Rakudo/Metamodel/REPRRegistry.class
 
 #	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class
 
@@ -13,8 +14,10 @@ OTHER_DEPENDENT_TARGETS = \
 	Rakudo/Runtime/Parameter.class \
 	Rakudo/Runtime/Signature.class \
 	Rakudo/Metamodel/Representation.class \
-	Rakudo/Metamodel/REPRRegistry.class \
 	Rakudo/Metamodel/Representations/RakudoCodeRef.class \
+	Rakudo/Runtime/Context.class \
+	Rakudo/Runtime/ThreadContext.class \
+	Rakudo/Metamodel/IFindMethod.class \
 	Rakudo/Metamodel/SharedTable.class
 
 all: $(ALL_BUILD_TARGETS)
@@ -30,44 +33,37 @@ Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.java
 	javac Rakudo/Runtime/ExecutionDomain.java
 
 # There is a long circular dependency from RakudoObject to SharedTable.
-# Handle it by compiling all the files involved in a single step.
+# Handle it by compiling all the interdependent files in a single step.
 # Thanks jnthn++ for the suggestion.
 Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Serialization/SerializationContext.class \
 		Rakudo/Metamodel/Representation.java \
-		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
+		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/ThreadContext.java \
+		Rakudo/Metamodel/IFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
 	javac \
 		Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Metamodel/Representation.java \
-		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
+		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/ThreadContext.java \
+		Rakudo/Metamodel/IFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
 
-Rakudo/Metamodel/Representations/RakudoCodeRef.class: Rakudo/Metamodel/Representations/RakudoCodeRef.java \
-		javac Rakudo/Runtime/ThreadContext.class
-	javac Rakudo/Metamodel/Representations/RakudoCodeRef.java
-
-Rakudo/Runtime/Context.class: Rakudo/Runtime/Context.java \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.class \
-		Rakudo/Metamodel/RakudoObject.class
-	javac Rakudo/Runtime/Context.java
-
-Rakudo/Runtime/ThreadContext.class: Rakudo/Runtime/ThreadContext.java \
-		Rakudo/Runtime/Context.class \
-		Rakudo/Metamodel/RakudoObject.class
-	javac Rakudo/Runtime/ThreadContext.java
+Rakudo/Metamodel/REPRRegistry.class: Rakudo/Metamodel/REPRRegistry.java
+	javac Rakudo/Metamodel/REPRRegistry.java
 
 # Dependency critical paths (1 2 and 3 are circular)
 # (partial diagram - less significant dependencies omitted for simplicity)
-#          
+#
 #                              Hints
 #                                |
 #                       SerializationContext   ExecutionDomain
@@ -77,17 +73,18 @@ Rakudo/Runtime/ThreadContext.class: Rakudo/Runtime/ThreadContext.java \
 #         |       Parameter      |
 #         |            |         |
 #         |       Signature  Representation
-#         |            |      |     |    |
-#         | +-+---> RakudoCodeRef   |   REPRRegistry
-#         | | |           |         |
-#         1 2 3        Context      |
-#         | | |           |         |
-#         | | +--- ThreadContext    |
-#         | |             |         |
-#         | |        IFindMethod    |
+#         |            |       |    |
+#         | +--+---> RakudoCodeRef  |
+#         | |  |           |        |
+#         1 2  3        Context     |
+#         | |  |           |        |
+#         | |  +---- ThreadContext  |
+#         | |              |        |
+#         | |         IFindMethod   |
 #         | |                 |     |
-#         +-+-------------- SharedTable
+#         +-+-------------- SharedTable        REPRRegistry
 #                                |
+#
 
 Rakudo/Metamodel/IFindMethod.class: Rakudo/Metamodel/IFindMethod.java
 		Rakudo/Metamodel/RakudoObject.class \

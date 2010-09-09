@@ -1,13 +1,13 @@
 package Rakudo.Metamodel.KnowHOW;
 
-//import java.util.*; // HashMap
 import java.util.HashMap;
 import java.util.Iterator;
+
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
-//import Rakudo.Runtime;
+import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 
 /// <summary>
 /// Contains the logic that bootstraps KnowHOW, the foundation
@@ -15,7 +15,7 @@ import Rakudo.Metamodel.Representation;
 /// Works in conjunction with KnowHOWREPR.
 /// </summary>
 public class KnowHOWBootstrapper
-//public static class KnowHOWBootstrapper
+// public static class KnowHOWBootstrapper // the C# version
 {
     /// <summary>
     /// Bootstraps the KnowHOW. This is were things "bottom out" in the
@@ -31,14 +31,11 @@ public class KnowHOWBootstrapper
         // Create our KnowHOW type object. Note we don't have a HOW
         // just yet, so pass in null.
         Representation REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-//        var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
         RakudoObject KnowHOW = REPR.type_object_for(null);
-//        var KnowHOW = REPR.type_object_for(null);
 
         // We'll set up a dictionary of our various methods to go into
         // KnowHOW's HOW, since we'll want to work with them a bit.
         HashMap KnowHOWMeths = new HashMap<String, RakudoObject>();
-//      Dictionary KnowHOWMeths = new Dictionary<String, RakudoObject>();
 /*
         KnowHOWMeths.Add("new_type", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {

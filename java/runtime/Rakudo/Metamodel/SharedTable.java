@@ -2,6 +2,7 @@ package Rakudo.Metamodel;
 
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
+import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
@@ -18,11 +19,27 @@ public class SharedTable
     /// </summary>
     public IFindMethod FindMethod =
         new IFindMethod() { // anonymous class instead of lambda-expression
-            public RakudoObject FindMethod(ThreadContext tc, RakudoObject ro, String s, int hint) {
-                return ro;
+            public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String s, int hint)
+            {
+                // See if we can find it by hint.
+                if (hint != Hints.NO_HINT && obj.getSTable().VTable != null && hint < obj.getSTable().VTable.length)
+                {
+                    // Yes, just grab it from the v-table.
+                    return obj.getSTable().VTable[hint];
+                }
+                else
+                {
+//                  // Find the find_method method.
+//                  RakudoObject HOW = obj.getSTable().HOW;
+//                  RakudoObject meth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "find_method", Hints.NO_HINT);
+//                
+//                  // Call it.
+//                  RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, Name, tc.DefaultStrBoxType) });
+//                  return meth.getSTable().Invoke.Invoke(tc, meth, cap);
+                    return null; // TODO
+                }
             }
         };
-
 //      public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
 //          (TC, Obj, Name, Hint) =>
 //          {
@@ -48,12 +65,13 @@ public class SharedTable
         /// The default invoke looks up a postcircumfix:<( )> and runs that.
         /// XXX Cache the hint where we can.
         /// </summary>
-//      public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Invoke =
-//          (TC, Obj, Cap) =>
-//          {
-//              var Invokable = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT);
-//              return Invokable.STable.Invoke(TC, Obj, Cap);
-//          };
+        public RakudoCodeRef.IFunc_Body Invoke = new RakudoCodeRef.IFunc_Body() { // create an anonymous class
+            public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap )
+            {
+                RakudoObject invokable = Obj.getSTable().FindMethod.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT);
+                return invokable.getSTable().Invoke.Invoke(TC, Obj, Cap);
+            }
+        };
 
     /// <summary>
     /// The representation object that manages object layout.

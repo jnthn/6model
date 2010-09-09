@@ -1,12 +1,12 @@
 package Rakudo.Metamodel.KnowHOW;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
-// One could be lazy and import Rakudo.Metamodel.*, but that would be
-// less informative.
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -76,13 +76,13 @@ public class KnowHOWREPR implements Representation
     /// Checks if the object is defined or not.
     /// </summary>
     /// <param name="Obj"></param>
-    /// <returns></returns>
-    public boolean defined(RakudoObject Obj)
+    /// <returns>boolean</returns>
+    public boolean defined(RakudoObject obj)
     {
-        return ((KnowHOWInstance)Obj).Methods != null;
+        return ((KnowHOWInstance)obj).Methods != null;
     }
 
-    public RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
+    public RakudoObject get_attribute(RakudoObject object, RakudoObject classHandle, String Name)
     {
         throw new UnsupportedOperationException();
     }
@@ -108,7 +108,7 @@ public class KnowHOWREPR implements Representation
     /// </summary>
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
-    /// <returns></returns>
+    /// <returns>int</returns>
     public int hint_for(RakudoObject ClassHandle, String Name)
     {
         return Hints.NO_HINT;

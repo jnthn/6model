@@ -1,13 +1,45 @@
 # Makefile for 6model/java/runtime
 
+# Dependency critical paths (1 2 and 3 are circular)
+# (partial diagram - less significant (eg implicit transitive) dependencies
+#  omitted for simplicity)
+#
+#                              Hints
+#                                |
+#                             SerializationContext   ExecutionDomain
+#                                |             |
+#        +------------> RakudoObject           |
+#        |               |       |             |
+#        |        Parameter      |             |
+#        |             |         |             |
+#        |        Signature  Representation    |
+#        |             |       |    |    |     |
+#        |  +--+---> RakudoCodeRef  |    |     |
+#        |  |  |           |        |    |     |
+#        1  2  3        Context     |    |     |
+#        |  |  |           |        |    |     |
+#        |  |  +---- ThreadContext  |    |     |
+#        |  |              |        |    |     |
+#        |  |         IFindMethod   |  REPRRegistry
+#        |  |                 |     |      | 
+#        +--+-------------- SharedTable    |    P6opaque
+#                                |         |    P6int etc
+#                           KnowHOWREPR    |     |
+#                                |         |     |
+#                            KnowHOWBootstrapper |Lexpad
+#                                              | ||
+#                                              Init
+#
+
 ALL_BUILD_TARGETS = \
 	Rakudo/Metamodel/Hints.class \
 	Rakudo/Serialization/SerializationContext.class \
 	Rakudo/Runtime/ExecutionDomain.class \
 	Rakudo/Metamodel/RakudoObject.class \
-	Rakudo/Metamodel/REPRRegistry.class
-
-#	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class
+	Rakudo/Metamodel/REPRRegistry.class \
+	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
+	Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
+	Rakudo/Metamodel/Representations/P6capture.class
 
 OTHER_DEPENDENT_TARGETS = \
 	Rakudo/Runtime/Lexpad.class \
@@ -61,42 +93,34 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 Rakudo/Metamodel/REPRRegistry.class: Rakudo/Metamodel/REPRRegistry.java
 	javac Rakudo/Metamodel/REPRRegistry.java
 
-# Dependency critical paths (1 2 and 3 are circular)
-# (partial diagram - less significant dependencies omitted for simplicity)
-#
-#                              Hints
-#                                |
-#                       SerializationContext   ExecutionDomain
-#                                |
-#         +-----------> RakudoObject
-#         |              |       |
-#         |       Parameter      |
-#         |            |         |
-#         |       Signature  Representation
-#         |            |       |    |
-#         | +--+---> RakudoCodeRef  |
-#         | |  |           |        |
-#         1 2  3        Context     |
-#         | |  |           |        |
-#         | |  +---- ThreadContext  |
-#         | |              |        |
-#         | |         IFindMethod   |
-#         | |                 |     |
-#         +-+-------------- SharedTable        REPRRegistry
-#                                |
-#
-
-Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
-	javac Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
-	# this file has 6 lambda expressions to translate, currently suffering
-	# from 55 compile time errors :(
-
 Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
 		Rakudo/Metamodel/Hints.class
 	javac Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java
 
-# System to report which files are older than their dotnet equivalents.
-# Compare the reported files manually, and refresh the java file.
+Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
+		Rakudo/Metamodel/REPRRegistry.class \
+		Rakudo/Metamodel/SharedTable.class
+	javac Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
+
+Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java
+	javac Rakudo/Metamodel/Representations/P6opaque.java
+
+Rakudo/Metamodel/Representations/P6capture.class: Rakudo/Metamodel/Representations/P6capture.java \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Metamodel/Hints.class \
+		Rakudo/Serialization/SerializationContext.class
+	javac Rakudo/Metamodel/Representations/P6capture.java
+
+Rakudo/Init.class: Rakudo/Init.java \
+		Rakudo/Metamodel/Representations/P6opaque.class
+	javac Rakudo/Init.java
+
+# System to report which java files are older than their dotnet
+# equivalents.  The dotnet files churn a lot, so it's important to check
+# by code review that the translated java files still correspond.
+# To resolve, compare the reported files, and update the java ones.
 TRANSLATED_SOURCE_FILES = \
 	Rakudo/Metamodel/Hints.java \
 	Rakudo/Serialization/SerializationContext.java \
@@ -111,12 +135,12 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Runtime/ThreadContext.java \
 	Rakudo/Metamodel/SharedTable.java
 
-# Java source code files "depend" on files in the dotnet/ directories,
+# Java source code files "depend" on files in the dotnet/* directories,
 # in the sense that they were manually translated.
-# The following definitions cause make to emit todo messages if a
-# dotnet/ file becomes newer than a java/ file.
+# The following definitions cause make to emit 'todo:' messages if a
+# dotnet file becomes newer than a java file.
 # The way to clear the error is to compare the files in question, and
-# then to refresh the java/ file to be newer than the dotnet/ one.
+# then to refresh the java file to be newer than the dotnet one.
 Rakudo/Metamodel/Hints.java: ../../dotnet/runtime/Metamodel/Representation.cs
 	@echo "todo: Rakudo/Metamodel/Hints.java is older than ../../dotnet/runtime/Metamodel/Representation.cs"
 

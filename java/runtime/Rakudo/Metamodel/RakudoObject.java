@@ -1,6 +1,6 @@
 package Rakudo.Metamodel;
 
-//import Rakudo.Metamodel.SharedTable;
+import Rakudo.Metamodel.SharedTable;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>

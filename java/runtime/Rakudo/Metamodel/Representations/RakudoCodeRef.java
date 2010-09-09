@@ -2,7 +2,7 @@ package Rakudo.Metamodel.Representations;
 
 import java.util.HashMap;     // HashMap
 import Rakudo.Runtime.Context;
-//import Rakudo.Runtime.ThreadContext;
+import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
 import Rakudo.Runtime.Parameter;
 import Rakudo.Runtime.Signature;
@@ -19,6 +19,12 @@ import Rakudo.Serialization.SerializationContext;
 /// </summary>
 public final class RakudoCodeRef implements Representation
 {
+    // Interface for the purpose of constructing anonymous classes that
+    // implement it, as the Java equivalent of a C# lambda expression.
+    // Used in for example: CodeObjectUtility
+    public interface IFunc_Body {
+        public RakudoObject Invoke(ThreadContext tc, RakudoObject ro1, RakudoObject ro2);
+    }
 
     /// <summary>
     /// This is how the boxed form of a P6str looks.
@@ -36,7 +42,8 @@ public final class RakudoCodeRef implements Representation
         /// <summary>
         /// The code body - the thing that actually runs instructions.
         /// </summary>
-// TODO public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
+        public RakudoCodeRef.IFunc_Body Body; // IFunc_Body is defined above Instance
+        // public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
 
         /// <summary>
         /// The static lexpad.
@@ -76,22 +83,25 @@ public final class RakudoCodeRef implements Representation
     public RakudoObject type_object_for(RakudoObject MetaPackage)
     {
         // Do the usual bits of setup for the type-object.
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = this;
-        STable.WHAT = new Instance(STable);
+        SharedTable sTable = new SharedTable();
+        sTable.HOW = MetaPackage;
+        sTable.REPR = this;
+        sTable.WHAT = new Instance(sTable);
 
         // Also twiddle the S-Table's Invoke to invoke the contained
         // function.
-// TODO STable.Invoke = new IRakudoObject_Invokable() {
-//          public RakudoObject Invoke( TC, Obj, Cap ) {
-//              ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
-//          }
-//      };
-//      STable.Invoke = (TC, Obj, Cap) =>
-//          ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
+        sTable.Invoke = new IFunc_Body() { // create an anonymous class
+            public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap )
+            {
+                // TODO ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
+                return null;
+            }
+        };
+        // the C# version:
+        // STable.Invoke = (TC, Obj, Cap) =>
+        //     ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
 
-        return STable.WHAT;
+        return sTable.WHAT;
     }
 
     /// <summary>

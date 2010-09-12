@@ -31,10 +31,13 @@ versatile, because the value part must be a reference type, it cannot be
 a value type.  Therefore C# Dictionary<string, int> becomes Java
 HashMap<String, Integer> which it less convenient to use.
 
-C# internal access modifier becomes Java protected or public.
+C# foreach ( <type> name in <Iterable> ) becomes Java
+for ( <type> name : <Iterable> ).
 
-C# Func<typelist> becomes a Java anonymous class that implements an
-interface.
+C# Func<typelist> (see Lambdas etc below) becomes a Java anonymous class
+that implements an interface.
+
+C# internal access modifier becomes Java protected or public.
 
 C# InvalidOperationException becomes Java UnsupportedOperationException.
 
@@ -75,16 +78,17 @@ Lambdas and References to Functions
 C# has some language features that Java currently lacks, to safely
 provide what C and C++ call pointers to functions.
 
-The C# 'Func' generic type is a parameterized type.  Variables declared
-as 'Func<paramtype [,...], rettype>' store anonymous functions that take
-certain parameters and return a certain result.  Call the function using
-the Invoke(...) method on the Func variable.
+The C# 'Func' generic type is a parameterized type.  A variable declared
+as 'Func<paramtype [,...], rettype>' is a kind of delegate that
+encapsulates an anonymous function that takes specified parameters and
+returns a specified result.  Call the function using the Invoke(...)
+method on the Func variable.
 
 The C# '=>' operator (also called Lambda) creates a reference to a block
 of code.  Store that reference in a Func variable.
 
 The C# 'delegate' type contains a collection of function pointers.  When
-the delegate is called, each function that is pointed to gets called in
+the delegate is invoked, each function that is pointed to gets called in
 an unspecified order.  Useful for multicast notification, event handlers
 and publish and subscribe architectures.
 

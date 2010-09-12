@@ -4,6 +4,7 @@ import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Runtime.ThreadContext;
+import Rakudo.Runtime.CaptureHelper;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -19,7 +20,7 @@ public class SharedTable
     /// </summary>
     public IFindMethod FindMethod =
         new IFindMethod() { // anonymous class instead of lambda-expression
-            public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String s, int hint)
+            public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
             {
                 // See if we can find it by hint.
                 if (hint != Hints.NO_HINT && obj.getSTable().VTable != null && hint < obj.getSTable().VTable.length)
@@ -29,37 +30,24 @@ public class SharedTable
                 }
                 else
                 {
-//                  // Find the find_method method.
-//                  RakudoObject HOW = obj.getSTable().HOW;
-//                  RakudoObject meth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "find_method", Hints.NO_HINT);
-//                
-//                  // Call it.
-//                  RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, Name, tc.DefaultStrBoxType) });
-//                  return meth.getSTable().Invoke.Invoke(tc, meth, cap);
-                    return null; // TODO
-                }
-            }
-        };
-//      public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
-//          (TC, Obj, Name, Hint) =>
-//          {
-//              // See if we can find it by hint.
-//              if (Hint != Hints.NO_HINT && Obj.STable.VTable != null && Hint < Obj.STable.VTable.Length)
-//              {
-//                  // Yes, just grab it from the v-table.
-//                  return Obj.STable.VTable[Hint];
-//              }
-//              else
-//              {
-//                  // Find the find_method method.
+                    // Find the find_method method.
+                    RakudoObject HOW = obj.getSTable().HOW;
+                    RakudoObject meth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "find_method", Hints.NO_HINT);
+                
+                    // Call it.
+// TODO             RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
+// TODO             return meth.getSTable().Invoke.Invoke(tc, meth, cap);
+                    return null; // TODO remove
+//                  // Find the find_method method. // the C# version
 //                  var HOW = Obj.STable.HOW;
 //                  var Meth = HOW.STable.FindMethod(TC, HOW, "find_method", Hints.NO_HINT);
 //                  
 //                  // Call it.
 //                  var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
 //                  return Meth.STable.Invoke(TC, Meth, Cap);
-//              }
-//          };
+                }
+            }
+        };
 
         /// <summary>
         /// The default invoke looks up a postcircumfix:<( )> and runs that.

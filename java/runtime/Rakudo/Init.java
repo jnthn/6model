@@ -4,8 +4,10 @@ import Rakudo.Runtime.ExecutionDomain;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Runtime.Lexpad;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
+import Rakudo.Metamodel.Representations.P6capture;
 import Rakudo.Runtime.Context;
 import Rakudo.Runtime.ThreadContext;
+import Rakudo.Runtime.CaptureHelper;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.KnowHOW.KnowHOWBootstrapper;
@@ -43,7 +45,7 @@ public class Init
         }
 
         // Cache native capture and LLCode type object.
-// TODO CaptureHelper.CaptureTypeObject = SettingContext.LexPad.GetByName("capture");
+        CaptureHelper.CaptureTypeObject = settingContext.LexPad.GetByName("capture");
 // TODO CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad.GetByName("LLCode");
 
         // Create an execution domain and a thread context for it.
@@ -67,14 +69,14 @@ public class Init
         if (!REPRS_Registered)
         {
             REPRRegistry.register_REPR("KnowHOWREPR", new KnowHOWREPR());
-            REPRRegistry.register_REPR("P6opaque", new P6opaque());
-            REPRRegistry.register_REPR("P6hash", new P6hash());
-            REPRRegistry.register_REPR("P6int", new P6int());
-            REPRRegistry.register_REPR("P6num", new P6num());
-            REPRRegistry.register_REPR("P6str", new P6str());
+// TODO     REPRRegistry.register_REPR("P6opaque", new P6opaque());
+// TODO     REPRRegistry.register_REPR("P6hash", new P6hash());
+// TODO     REPRRegistry.register_REPR("P6int", new P6int());
+// TODO     REPRRegistry.register_REPR("P6num", new P6num());
+// TODO     REPRRegistry.register_REPR("P6str", new P6str());
             REPRRegistry.register_REPR("P6capture", new P6capture());
             REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
-            REPRRegistry.register_REPR("P6list", new P6list());
+// TODO     REPRRegistry.register_REPR("P6list", new P6list());
             REPRS_Registered = true;
         }
     }
@@ -97,7 +99,7 @@ public class Init
                 REPRRegistry.get_REPR_by_name("P6int").type_object_for(null),
                 REPRRegistry.get_REPR_by_name("P6num").type_object_for(null),
                 REPRRegistry.get_REPR_by_name("P6str").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)),
+                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)),
 /* TODO
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
@@ -122,17 +124,18 @@ public class Init
     public static Context LoadSetting(String Name, RakudoObject KnowHOW)
     {
         // Load the assembly.
-        var settingAssembly = AppDomain.CurrentDomain.Load(Name);
+// TODO var settingAssembly = AppDomain.CurrentDomain.Load(Name);
 
         // Find the setting type and its LoadSetting method.
-        var Class = settingAssembly.GetType("NQPSetting");
-        var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
+// TODO var Class = settingAssembly.GetType("NQPSetting");
+// TODO var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
         
         // Run it to get the context we want.
-        Context settingContext = (Context)Method.Invoke(null, new object[] { });
+        // TODO Context settingContext = (Context)Method.Invoke(null, new object[] { });
+        Context settingContext = null; // TODO remove
 
         // Fudge a few more things in.
-        // XXX Should be able to toss all of thse but KnowHOW.
+        // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "print", "say", "capture", "LLCode" });
         settingContext.LexPad.SetByName("KnowHOW", KnowHOW);
@@ -159,7 +162,7 @@ public class Init
                 }));
 */
         settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
-        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)));
+        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)));
         
         return settingContext;
     }

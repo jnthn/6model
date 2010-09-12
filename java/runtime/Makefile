@@ -4,31 +4,33 @@
 # (partial diagram - less significant (eg implicit transitive) dependencies
 #  omitted for simplicity)
 #
-#                              Hints
-#                                |
-#                             SerializationContext   ExecutionDomain
-#                                |             |
-#        +------------> RakudoObject           |
-#        |               |       |             |
-#        |        Parameter      |             |
-#        |             |         |             |
-#        |        Signature  Representation    |
-#        |             |       |    |    |     |
-#        |  +--+---> RakudoCodeRef  |    |     |
-#        |  |  |           |        |    |     |
-#        1  2  3        Context     |    |     |
-#        |  |  |           |        |    |     |
-#        |  |  +---- ThreadContext  |    |     |
-#        |  |              |        |    |     |
-#        |  |         IFindMethod   |  REPRRegistry
-#        |  |                 |     |      | 
-#        +--+-------------- SharedTable    |    P6opaque
-#                                |         |    P6int etc
-#                           KnowHOWREPR    |     |
-#                                |         |     |
-#                            KnowHOWBootstrapper |Lexpad
-#                                              | ||
-#                                              Init
+#                                           Hints
+#                                             |
+#                                          SerializationContext
+#                                             |             |
+#        +------------------------> RakudoObject            |
+#        |                           |  |     |             |
+#        |                   Parameter Lexpad |             |
+#        |                         |    |     |             |
+#        |                 Signature    |    Representation |
+#        |                        |     |     |  |    |     |
+#        |  +--+----------------> RakudoCodeRef  |    |     |
+#        |  |  |                        |        |    |     |
+#        1  2  3   ExecutionDomain   Context     |    |     |
+#        |  |  |                |       |        |    |     |
+#        |  |  +-------------- ThreadContext     |    |     |
+#        |  |                           |        |    |     |
+#        |  |            P6capture   IFindMethod |  REPRRegistry
+#        |  |                   |            |   |      |
+#        |  |                  CaptureHelper |   |      |
+#        |  |                             |  |   |      |
+#        +--+--------------------------- SharedTable    |    P6opaque
+#                                             |         |    P6int etc
+#                                        KnowHOWREPR    |    |
+#                                             |         |    |
+#                                        KnowHOWBootstrapper |
+#                                                          | |
+#                                                          Init
 #
 
 ALL_BUILD_TARGETS = \
@@ -37,9 +39,11 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Runtime/ExecutionDomain.class \
 	Rakudo/Metamodel/RakudoObject.class \
 	Rakudo/Metamodel/REPRRegistry.class \
+	Rakudo/Metamodel/Representations/P6capture.class \
+	Rakudo/Runtime/CodeObjectUtility.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
-	Rakudo/Metamodel/Representations/P6capture.class
+	Rakudo/Init.class
 
 OTHER_DEPENDENT_TARGETS = \
 	Rakudo/Runtime/Lexpad.class \
@@ -93,13 +97,21 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 Rakudo/Metamodel/REPRRegistry.class: Rakudo/Metamodel/REPRRegistry.java
 	javac Rakudo/Metamodel/REPRRegistry.java
 
+Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtility.java \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/REPRRegistry.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/Representations/RakudoCodeRef.class
+	javac Rakudo/Runtime/CodeObjectUtility.java
+
 Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
 		Rakudo/Metamodel/Hints.class
 	javac Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java
 
 Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
 		Rakudo/Metamodel/REPRRegistry.class \
-		Rakudo/Metamodel/SharedTable.class
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Runtime/CodeObjectUtility.class
 	javac Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
 
 Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java
@@ -114,7 +126,7 @@ Rakudo/Metamodel/Representations/P6capture.class: Rakudo/Metamodel/Representatio
 	javac Rakudo/Metamodel/Representations/P6capture.java
 
 Rakudo/Init.class: Rakudo/Init.java \
-		Rakudo/Metamodel/Representations/P6opaque.class
+		Rakudo/Metamodel/Representations/P6capture.class
 	javac Rakudo/Init.java
 
 # System to report which java files are older than their dotnet
@@ -133,7 +145,9 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 	Rakudo/Runtime/Context.java \
 	Rakudo/Runtime/ThreadContext.java \
-	Rakudo/Metamodel/SharedTable.java
+	Rakudo/Metamodel/SharedTable.java \
+	Rakudo/Runtime/CodeObjectUtility.java \
+	Rakudo/Init.java
 
 # Java source code files "depend" on files in the dotnet/* directories,
 # in the sense that they were manually translated.
@@ -156,8 +170,8 @@ Rakudo/Metamodel/RakudoObject.java: ../../dotnet/runtime/Metamodel/RakudoObject.
 Rakudo/Metamodel/Representation.java: ../../dotnet/runtime/Metamodel/Representation.cs
 	@echo "todo: Rakudo/Metamodel/Representation.java is older than ../../dotnet/runtime/Metamodel/Representation.cs"
 
-#Rakudo/Runtime/Lexpad.java: ../../dotnet/runtime/Runtime/Signatures/Lexpad.cs
-#	@echo "todo: Rakudo/Runtime/Lexpad.java is older than ../../dotnet/runtime/Runtime/Signatures/Lexpad.cs"
+Rakudo/Runtime/Lexpad.java: ../../dotnet/runtime/Runtime/Lexpad.cs
+	@echo "todo: Rakudo/Runtime/Lexpad.java is older than ../../dotnet/runtime/Runtime/Signatures/Lexpad.cs"
 
 Rakudo/Runtime/Parameter.java: ../../dotnet/runtime/Runtime/Signatures/Parameter.cs
 	@echo "todo: Rakudo/Runtime/Parameter.java is older than ../../dotnet/runtime/Runtime/Signatures/Parameter.cs"
@@ -176,6 +190,15 @@ Rakudo/Runtime/ThreadContext.java: ../../dotnet/runtime/Runtime/ThreadContext.cs
 
 Rakudo/Metamodel/SharedTable.java: ../../dotnet/runtime/Metamodel/SharedTable.cs
 	@echo "todo: Rakudo/Metamodel/SharedTable.java is older than ../../dotnet/runtime/Metamodel/SharedTable.cs"
+
+Rakudo/Metamodel/Representations/P6capture.java: ../../dotnet/runtime/Metamodel/Representations/P6capture.cs
+	@echo "todo: Rakudo/Metamodel/Representations/P6capture.java is older than ../../dotnet/runtime/Metamodel/Representations/P6capture.cs"
+
+Rakudo/Runtime/CodeObjectUtility.java: ../../dotnet/runtime/Runtime/CodeObjectUtility.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Init.java: ../../dotnet/runtime/Init.cs
+	@echo "todo: $@ is older than $<"
 
 # To show java files that are older than their dotnet equivalents, run:
 # make todolist

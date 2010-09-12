@@ -8,6 +8,7 @@ import Rakudo.Metamodel.SharedTable;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
+import Rakudo.Runtime.CodeObjectUtility;
 
 /// <summary>
 /// Contains the logic that bootstraps KnowHOW, the foundation
@@ -36,7 +37,7 @@ public class KnowHOWBootstrapper
         // We'll set up a dictionary of our various methods to go into
         // KnowHOW's HOW, since we'll want to work with them a bit.
         HashMap KnowHOWMeths = new HashMap<String, RakudoObject>();
-/*
+/* TODO
         KnowHOWMeths.Add("new_type", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 // We first create a new HOW instance.
@@ -100,8 +101,8 @@ public class KnowHOWBootstrapper
         // means .HOW.HOW.HOW.HOW etc will always return that, which
         // closes the model up.
         KnowHOWREPR.KnowHOWInstance KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
-//      var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
-//      for (Iterator iter = KnowHOWMeths.entrySet.Iterator(); iter.hasNext(); )
+// TODO var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
+// TODO for (Iterator iter = KnowHOWMeths.entrySet.Iterator(); iter.hasNext(); )
 //      foreach (var Method in KnowHOWMeths)
         {
 //          RakudoMethod meth = (RakudoMethod) iter.next();

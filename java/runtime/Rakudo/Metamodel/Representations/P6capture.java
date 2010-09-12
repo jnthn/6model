@@ -15,7 +15,7 @@ public final class P6capture implements Representation
     /// <summary>
     /// This is how a Capture looks.
     /// </summary>
-    protected final class Instance implements RakudoObject
+    public final class Instance implements RakudoObject
     {
         public RakudoObject[] Positionals;
         public HashMap<String, RakudoObject> Nameds;

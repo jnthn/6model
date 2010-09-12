@@ -26,10 +26,9 @@ public class Context
     public RakudoCodeRef.Instance StaticCodeObject;
 
     /// <summary>
-    /// Lexpad. Note that we'll in the end have something much smarter
-    /// for this but it'll do for now.
+    /// Lexpad.
     /// </summary>
-    public HashMap<String, RakudoObject> LexPad;
+    public Lexpad LexPad;
 
     /// <summary>
     /// The capture passed as part of the current call.
@@ -62,8 +61,8 @@ public class Context
         // Lex pad should be copy of the static one.
         // XXX This isn't quite what we want in the long run, but it
         // does fine for now.
-        this.LexPad = new HashMap<String, RakudoObject>();
-//TODO  this.LexPad = new HashMap<String, RakudoObject>(staticCodeObject.StaticLexPad);
+// TODO this.LexPad.SlotMapping = StaticCodeObject.StaticLexPad.SlotMapping;
+// TODO this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.Clone();
 
         // Set outer context.
         RakudoCodeRef.Instance outerBlock = staticCodeObject.OuterBlock;

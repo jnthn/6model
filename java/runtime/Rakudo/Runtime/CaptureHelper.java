@@ -1,7 +1,8 @@
 package Rakudo.Runtime;
 
+import java.util.HashMap;
 import Rakudo.Metamodel.RakudoObject;
-import Rakudo.Metamodel.Representations;
+import Rakudo.Metamodel.Representations.P6capture;
 
 /// <summary>
 /// Provides helper methods for getting stuff into and out of captures,
@@ -13,7 +14,7 @@ public class CaptureHelper
     /// <summary>
     /// Cache of the native capture type object.
     /// </summary>
-    protected static RakudoObject CaptureTypeObject;
+    public static RakudoObject CaptureTypeObject;
 //  internal static RakudoObject CaptureTypeObject;
 
     /// <summary>
@@ -33,7 +34,7 @@ public class CaptureHelper
     /// <returns></returns>
     public static RakudoObject FormWith(RakudoObject[] PosArgs)
     {
-        var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(CaptureTypeObject);
         C.Positionals = PosArgs;
         return C;
     }
@@ -43,9 +44,9 @@ public class CaptureHelper
     /// </summary>
     /// <param name="Args"></param>
     /// <returns></returns>
-    public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs)
+    public static RakudoObject FormWith(RakudoObject[] PosArgs, HashMap<String, RakudoObject> NamedArgs)
     {
-        var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(CaptureTypeObject);
         C.Positionals = PosArgs;
         C.Nameds = NamedArgs;
         return C;
@@ -58,11 +59,12 @@ public class CaptureHelper
     /// <param name="Pos"></param>
     /// <returns></returns>
     public static RakudoObject GetPositional(RakudoObject Capture, int Pos)
+        throws NoSuchMethodException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
         if (NativeCapture != null)
         {
-            var Possies = NativeCapture.Positionals;
+            RakudoObject[] Possies = NativeCapture.Positionals;
             if (Possies != null && Pos < Possies.length)
                 return Possies[Pos];
             else
@@ -70,7 +72,7 @@ public class CaptureHelper
         }
         else
         {
-            throw new NotImplementedException("Can only deal with native captures at the moment");
+            throw new NoSuchMethodException("Can only deal with native captures at the moment");
         }
     }
 
@@ -80,16 +82,17 @@ public class CaptureHelper
     /// <param name="Capture"></param>
     /// <returns></returns>
     public static int NumPositionals(RakudoObject Capture)
+         throws NoSuchMethodException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance) Capture;
         if (NativeCapture != null)
         {
-            var Possies = NativeCapture.Positionals;
+            RakudoObject[] Possies = NativeCapture.Positionals;
             return Possies == null ? 0 : Possies.length;
         }
         else
         {
-            throw new NotImplementedException("Can only deal with native captures at the moment");
+            throw new NoSuchMethodException("Can only deal with native captures at the moment");
         }
     }
 
@@ -99,14 +102,16 @@ public class CaptureHelper
     /// <param name="Capture"></param>
     /// <param name="Pos"></param>
     /// <returns></returns>
-    public static RakudoObject GetNamed(RakudoObject Capture, string Name)
+    public static RakudoObject GetNamed(RakudoObject Capture, String name)
+         throws NoSuchFieldException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
         if (NativeCapture != null)
         {
-            var Nameds = NativeCapture.Nameds;
-            if (Nameds != null && Nameds.ContainsKey(Name))
-                return Nameds[Name];
+            HashMap<String,RakudoObject> Nameds = NativeCapture.Nameds;
+            if (Nameds != null && Nameds.containsKey(name))
+                return Nameds.get(name);
+                // return Nameds[name]; // the C# version
             else
                 return null;
         }
@@ -124,9 +129,10 @@ public class CaptureHelper
     /// <param name="Capture"></param>
     /// <param name="Pos"></param>
     /// <returns></returns>
-    public static string GetPositionalAsString(RakudoObject Capture, int Pos)
+    public static String GetPositionalAsString(RakudoObject Capture, int Pos)
     {
-        return Ops.unbox_str(null, GetPositional(Capture, Pos));
+        return null; // TODO
+        // return Ops.unbox_str(null, GetPositional(Capture, Pos));
     }
 
     /// <summary>

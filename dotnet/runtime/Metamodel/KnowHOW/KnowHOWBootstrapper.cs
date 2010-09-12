@@ -40,7 +40,11 @@ namespace Rakudo.Metamodel.KnowHOW
                     var HOW = KnowHOWTypeObj.STable.REPR.instance_of(KnowHOWTypeObj.STable.WHAT);
 
                     // Now create a new type object to go with it of the
-                    // desired REPR; we default to KnowHOW.
+                    // desired REPR; we default to P6opaque (note that the
+                    // KnowHOW repr only knows how to store a table of
+                    // methods and attributes, it can't be used for an
+                    // instance object that actually wants to store some
+                    // instance data).
                     var REPRName = CaptureHelper.GetNamed(Cap, "repr");
                     if (REPRName != null)
                     {
@@ -50,8 +54,8 @@ namespace Rakudo.Metamodel.KnowHOW
                     }
                     else
                     {
-                        // Just go with the KnowHOW REPR.
-                        return KnowHOWTypeObj.STable.REPR.type_object_for(HOW);
+                        // Just go with the P6opaque REPR.
+                        return REPRRegistry.get_REPR_by_name("P6opaque").type_object_for(HOW);
                     }
                 }));
             KnowHOWMeths.Add("add_attribute", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>

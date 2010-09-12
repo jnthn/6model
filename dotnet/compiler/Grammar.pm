@@ -15,7 +15,7 @@ method TOP() {
     %*HOW<role>    := 'NQPRoleHOW';
 
     # What attribute class to use with what HOW, plus a default.
-    my %*DEFAULT-METAATTR   := 'NQPAttribute';
+    my $*DEFAULT-METAATTR   := 'NQPAttribute';
     my %*HOW-METAATTR;
     %*HOW-METAATTR<knowhow> := 'KnowHOWAttribute';
 
@@ -268,10 +268,25 @@ token twigil { <[*!?]> }
 
 proto token package_declarator { <...> }
 token package_declarator:sym<module> { <sym> <package_def> }
-token package_declarator:sym<class>  {
+token package_declarator:sym<knowhow> {
     :my $*PACKAGE-SETUP := PAST::Stmts.new();
-    $<sym>=[class|grammar|knowhow|role]
-    <package_def>
+    :my $*PKGDECL := 'knowhow';
+    <sym> <package_def>
+}
+token package_declarator:sym<class> {
+    :my $*PACKAGE-SETUP := PAST::Stmts.new();
+    :my $*PKGDECL := 'class';
+    <sym> <package_def>
+}
+token package_declarator:sym<grammar> {
+    :my $*PACKAGE-SETUP := PAST::Stmts.new();
+    :my $*PKGDECL := 'grammar';
+    <sym> <package_def>
+}
+token package_declarator:sym<role> {
+    :my $*PACKAGE-SETUP := PAST::Stmts.new();
+    :my $*PKGDECL := 'role';
+    <sym> <package_def>
 }
 
 rule package_def {

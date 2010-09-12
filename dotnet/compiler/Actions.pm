@@ -341,8 +341,13 @@ method variable($/) {
     make $past;
 }
 
-method package_declarator:sym<module>($/) { make $<package_def>.ast; }
-method package_declarator:sym<class>($/) {
+method package_declarator:sym<module>($/)  { make $<package_def>.ast; }
+method package_declarator:sym<knowhow>($/) { make package($/); }
+method package_declarator:sym<grammar>($/) { make package($/); }
+method package_declarator:sym<class>($/)   { make package($/); }
+method package_declarator:sym<role>($/)    { make package($/); }
+
+sub package($/) {
     my $name := ~$<package_def><name>;
     
     # Prefix the class initialization with initial setup. Also install it
@@ -387,7 +392,7 @@ method package_declarator:sym<class>($/) {
 
     # Just evaluate anything else in the package in-line.
     my $past := $<package_def>.ast;
-    make $past;
+    return $past;
 }
 
 method package_def($/) {
@@ -427,12 +432,21 @@ method variable_declarator($/) {
         $/.CURSOR.panic("Redeclaration of symbol ", $name);
     }
     if $*SCOPE eq 'has' {
-        $BLOCK.symbol($name, :scope('attribute') );
-        unless $BLOCK<attributes> {
-            $BLOCK<attributes> :=
-                PAST::Op.new( :pasttype('list'), :named('attr') );
-        }
-        $BLOCK<attributes>.push( $name );
+        # Create and add a meta-attribute.
+        my $meta-attr-type := %*HOW-METAATTR{$*PKGDECL} || $*DEFAULT-METAATTR;
+        $*PACKAGE-SETUP.push(PAST::Op.new(
+            :pasttype('callmethod'), :name('add_attribute'),
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('get_how'),
+                PAST::Var.new( :name('type_obj'), :scope('register') )
+            ),
+            PAST::Var.new( :name('type_obj'), :scope('register') ),
+            PAST::Op.new(
+                :pasttype('callmethod'), :name('new'),
+                PAST::Var.new( :name($meta-attr-type), :scope('package') ),
+                PAST::Val.new( :value($name), :named('name') )
+            )
+        ));
         $past := PAST::Stmts.new();
     }
     else {

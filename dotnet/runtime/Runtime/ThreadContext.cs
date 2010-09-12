@@ -40,5 +40,10 @@ namespace Rakudo.Runtime
         /// The type object of the string type we box to.
         /// </summary>
         public RakudoObject DefaultStrBoxType;
+
+        /// <summary>
+        /// The default list type.
+        /// </summary>
+        public RakudoObject DefaultListType;
     }
 }

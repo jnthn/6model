@@ -54,6 +54,7 @@ namespace Rakudo
             Thread.DefaultIntBoxType = SettingContext.LexPad.GetByName("NQPInt");
             Thread.DefaultNumBoxType = SettingContext.LexPad.GetByName("NQPNum");
             Thread.DefaultStrBoxType = SettingContext.LexPad.GetByName("NQPStr");
+            Thread.DefaultListType = SettingContext.LexPad.GetByName("NQPList");
 
             return Thread;
         }
@@ -88,7 +89,7 @@ namespace Rakudo
         {
             var SettingContext = new Context();
             SettingContext.LexPad = new Lexpad(new string[]
-                { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "LLCode", "list" });
+                { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "LLCode", "list" });
             SettingContext.LexPad.Storage = new RakudoObject[]
                 {
                     KnowHOW,
@@ -96,6 +97,7 @@ namespace Rakudo
                     REPRRegistry.get_REPR_by_name("P6int").type_object_for(null, null),
                     REPRRegistry.get_REPR_by_name("P6num").type_object_for(null, null),
                     REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null),
+                    REPRRegistry.get_REPR_by_name("P6list").type_object_for(null, null),
                     REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, KnowHOW.STable.REPR.instance_of(null, KnowHOW)),
                     CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {

@@ -674,7 +674,7 @@ our multi sub dnst_for(PAST::Val $val) {
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
-    if $*COMPILING_NQP_SETTING && $*IN_LOADINIT {
+    if $*IN_LOADINIT {
         return $make_const;
     }
     else {

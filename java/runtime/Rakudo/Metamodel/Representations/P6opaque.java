@@ -6,6 +6,7 @@ import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
 /// This is a first cut implementation of the P6opaque representation.
@@ -31,14 +32,21 @@ public final class P6opaque implements Representation
     /// up by index. There's also an unallocated spill-over store for any
     /// attributes that are added through augment, or in MI cases.
     /// </summary>
-    private final  class Instance implements RakudoObject
-//  private sealed class Instance : RakudoObject
+    private final class Instance implements RakudoObject
     {
+        // RakudoObject required implementation
+        private SharedTable _SharedTable;
+        private SerializationContext _SC;
+        public SharedTable getSTable() {return _SharedTable;}
+        public void setSTable( SharedTable st ){ _SharedTable = st;}
+        public SerializationContext getSC(){return _SC;}
+        public void setSC( SerializationContext sc ){ _SC = sc;}
+
         public RakudoObject[] SlotStorage;
         public HashMap<RakudoObject, HashMap<String, RakudoObject>> SpillStorage;
-        public Instance(SharedTable STable)
+        public Instance(SharedTable sTable)
         {
-            this.STable = STable;
+            this.setSTable(sTable);
         }
     }
 
@@ -51,11 +59,11 @@ public final class P6opaque implements Representation
     public          RakudoObject type_object_for(RakudoObject MetaPackage)
 //  public override RakudoObject type_object_for(RakudoObject MetaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = new P6opaque();
-        STable.WHAT = new Instance(STable);
-        return STable.WHAT;
+        SharedTable sTable = new SharedTable();
+        sTable.HOW = MetaPackage;
+        sTable.REPR = new P6opaque();
+        sTable.WHAT = new Instance(sTable);
+        return sTable.WHAT;
     }
 
     /// <summary>
@@ -67,7 +75,7 @@ public final class P6opaque implements Representation
     public          RakudoObject instance_of(RakudoObject what)
 //  public override RakudoObject instance_of(RakudoObject WHAT)
     {
-        Instance obj = new Instance(what.STable);
+        Instance obj = new Instance(what.getSTable());
         obj.SlotStorage = new RakudoObject[Slots];
         return obj;
     }
@@ -88,8 +96,10 @@ public final class P6opaque implements Representation
     public          RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
 //  public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
     {
-        // XXX
-        throw new NoSuchMethodException("get_attribute not yet implemented");
+        // XXX TODO - no exception here because the interface does not declare one
+        System.err.println("get_attribute not yet implemented");
+        System.exit(1);
+        return null;
     }
 
     /// <summary>
@@ -104,17 +114,17 @@ public final class P6opaque implements Representation
 //  public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
     {
         Instance I = (Instance)Object;
-        if (Hint < I.SlotStorage.Length)
+        if (Hint < I.SlotStorage.length)
         {
             return I.SlotStorage[Hint];
         }
         else
         {
-            if (I.SpillStorage != null && I.SpillStorage.ContainsKey(ClassHandle))
+            if (I.SpillStorage != null && I.SpillStorage.containsKey(ClassHandle))
             {
-                var ClassStore = I.SpillStorage[ClassHandle];
-                if (ClassStore.ContainsKey(Name))
-                    return ClassStore[Name];
+                HashMap<String,RakudoObject> ClassStore = I.SpillStorage.get(ClassHandle);
+                if (ClassStore.containsKey(Name))
+                    return ClassStore.get(Name);
             }
             return null;
         }
@@ -123,15 +133,15 @@ public final class P6opaque implements Representation
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="Object"></param>
-    /// <param name="ClassHandle"></param>
+    /// <param name="Object"></par    /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Value"></param>
-    public          void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+    public void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+        // throws NoSuchMethodException
 //  public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
     {
-        // XXX
-        throw new NotImplementedException();
+        // XXX TODO
+        // throw new NoSuchMethodException();
     }
 
     /// <summary>
@@ -143,10 +153,9 @@ public final class P6opaque implements Representation
     /// <param name="Hint"></param>
     /// <param name="Value"></param>
     public          void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
-//  public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
     {
-        var I = (Instance)Object;
-        if (Hint < I.SlotStorage.Length)
+        Instance I = (Instance)Object;
+        if (Hint < I.SlotStorage.length)
         {
             I.SlotStorage[Hint] = Value;
         }
@@ -154,13 +163,13 @@ public final class P6opaque implements Representation
         {
             if (I.SpillStorage == null)
                 I.SpillStorage = new HashMap<RakudoObject, HashMap<String, RakudoObject>>();
-            if (!I.SpillStorage.ContainsKey(ClassHandle))
-                I.SpillStorage.Add(ClassHandle, new HashMap<String, RakudoObject>());
-            var ClassStore = I.SpillStorage[ClassHandle];
-            if (ClassStore.ContainsKey(Name))
-                ClassStore[Name] = Value;
-            else
-                ClassStore.Add(Name, Value);
+            if (!I.SpillStorage.containsKey(ClassHandle))
+                I.SpillStorage.put(ClassHandle, new HashMap<String, RakudoObject>());
+            HashMap<String, RakudoObject> ClassStore = I.SpillStorage.get(ClassHandle);
+//          if (ClassStore.ContainsKey(Name)) // redundant on a HashMap
+//              ClassStore.put(Name, Value);
+//          else
+                ClassStore.put(Name, Value);
         }
     }
 
@@ -171,19 +180,21 @@ public final class P6opaque implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public          int hint_for(RakudoObject ClassHandle, String Name)
+    public int hint_for(RakudoObject ClassHandle, String Name)
 //  public override int hint_for(RakudoObject ClassHandle, String Name)
     {
-        if (SlotAllocation.ContainsKey(ClassHandle) && SlotAllocation[ClassHandle].ContainsKey(Name))
-            return SlotAllocation[ClassHandle][Name];
+        if (SlotAllocation.containsKey(ClassHandle) && SlotAllocation.get(ClassHandle).containsKey(Name))
+            return SlotAllocation.get(ClassHandle).get(Name);
+            // return SlotAllocation[ClassHandle][Name];
         else
             return Hints.NO_HINT;
     }
 
-    public          void set_int(RakudoObject Object, int Value)
+    public void set_int(RakudoObject Object, int Value)
 //  public override void set_int(RakudoObject Object, int Value)
     {
-        throw new UnsupportedOperationException("This type of representation cannot box a native int");
+        System.err.println("This type of representation cannot box a native int");
+        System.exit(1);
     }
 
     public          int get_int(RakudoObject Object)

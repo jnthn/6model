@@ -12,25 +12,27 @@
 #        |                           |  |     |             |
 #        |                   Parameter Lexpad |             |
 #        |                         |    |     |             |
-#        |                 Signature    |    Representation |
-#        |                        |     |     |  |    |     |
+#        |                   Signature  |   Representation  |
+#        |                         |    |    |   |    |     |
 #        |  +--+----------------> RakudoCodeRef  |    |     |
 #        |  |  |                        |        |    |     |
 #        1  2  3   ExecutionDomain   Context     |    |     |
 #        |  |  |                |       |        |    |     |
 #        |  |  +-------------- ThreadContext     |    |     |
 #        |  |                           |        |    |     |
-#        |  |            P6capture   IFindMethod |  REPRRegistry
+#        |  |            P6capture      |        |    |     |
+#        |  |          P6int P6hash     |        |    |     |
+#        |  |            P6opaque    IFindMethod |  REPRRegistry
 #        |  |                   |            |   |      |
 #        |  |                  CaptureHelper |   |      |
 #        |  |                             |  |   |      |
-#        +--+--------------------------- SharedTable    |    P6opaque
-#                                             |         |    P6int etc
-#                                        KnowHOWREPR    |    |
-#                                             |         |    |
-#                                        KnowHOWBootstrapper |
-#                                                          | |
-#                                                          Init
+#        +--+--------------------------- SharedTable    |
+#                                             |         |
+#                                        KnowHOWREPR  CodeObjectUtility
+#                                             |         |
+#                                        KnowHOWBootstrapper
+#                                                  |
+#                                                 Init
 #
 
 ALL_BUILD_TARGETS = \
@@ -40,6 +42,9 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Metamodel/RakudoObject.class \
 	Rakudo/Metamodel/REPRRegistry.class \
 	Rakudo/Metamodel/Representations/P6capture.class \
+	Rakudo/Metamodel/Representations/P6int.class \
+	Rakudo/Metamodel/Representations/P6hash.class \
+	Rakudo/Metamodel/Representations/P6opaque.class \
 	Rakudo/Runtime/CodeObjectUtility.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
@@ -111,22 +116,59 @@ Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR
 Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
 		Rakudo/Metamodel/REPRRegistry.class \
 		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
 		Rakudo/Runtime/CodeObjectUtility.class
 	javac Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
 
-Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java
-	javac Rakudo/Metamodel/Representations/P6opaque.java
-
 Rakudo/Metamodel/Representations/P6capture.class: Rakudo/Metamodel/Representations/P6capture.java \
+		Rakudo/Metamodel/Hints.class \
 		Rakudo/Metamodel/RakudoObject.class \
 		Rakudo/Metamodel/Representation.class \
 		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Metamodel/Hints.class \
 		Rakudo/Serialization/SerializationContext.class
 	javac Rakudo/Metamodel/Representations/P6capture.java
 
+Rakudo/Metamodel/Representations/P6hash.class: Rakudo/Metamodel/Representations/P6hash.java \
+		Rakudo/Metamodel/Hints.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Serialization/SerializationContext.class
+	javac Rakudo/Metamodel/Representations/P6hash.java
+
+Rakudo/Metamodel/Representations/P6int.class: Rakudo/Metamodel/Representations/P6int.java \
+		Rakudo/Metamodel/Hints.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Serialization/SerializationContext.class
+	javac Rakudo/Metamodel/Representations/P6int.java
+
+Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java \
+		Rakudo/Metamodel/Hints.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Serialization/SerializationContext.class
+	javac Rakudo/Metamodel/Representations/P6opaque.java
+
 Rakudo/Init.class: Rakudo/Init.java \
-		Rakudo/Metamodel/Representations/P6capture.class
+		Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
+		Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representations/RakudoCodeRef.class \
+		Rakudo/Metamodel/Representations/P6capture.class \
+		Rakudo/Metamodel/Representations/P6hash.class \
+		Rakudo/Metamodel/Representations/P6int.class \
+		Rakudo/Metamodel/Representations/P6opaque.class \
+		Rakudo/Metamodel/REPRRegistry.class \
+		Rakudo/Runtime/CaptureHelper.class \
+		Rakudo/Runtime/Context.class \
+		Rakudo/Runtime/ExecutionDomain.class \
+		Rakudo/Runtime/Lexpad.class \
+		Rakudo/Runtime/ThreadContext.class
 	javac Rakudo/Init.java
 
 # System to report which java files are older than their dotnet
@@ -142,6 +184,10 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Runtime/Lexpad.java \
 	Rakudo/Runtime/Parameter.java \
 	Rakudo/Runtime/Signature.java \
+	Rakudo/Metamodel/Representations/P6capture.java \
+	Rakudo/Metamodel/Representations/P6hash.java \
+	Rakudo/Metamodel/Representations/P6int.java \
+	Rakudo/Metamodel/Representations/P6opaque.java \
 	Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 	Rakudo/Runtime/Context.java \
 	Rakudo/Runtime/ThreadContext.java \
@@ -179,6 +225,18 @@ Rakudo/Runtime/Parameter.java: ../../dotnet/runtime/Runtime/Signatures/Parameter
 Rakudo/Runtime/Signature.java: ../../dotnet/runtime/Runtime/Signatures/Signature.cs
 	@echo "todo: Rakudo/Runtime/Signature.java is older than ../../dotnet/runtime/Metamodel/Signatures/Signature.cs"
 
+Rakudo/Metamodel/Representations/P6capture.java: ../../dotnet/runtime/Metamodel/Representations/P6capture.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/Representations/P6hash.java: ../../dotnet/runtime/Metamodel/Representations/P6hash.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/Representations/P6int.java: ../../dotnet/runtime/Metamodel/Representations/P6int.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/Representations/P6opaque.java: ../../dotnet/runtime/Metamodel/Representations/P6opaque.cs
+	@echo "todo: $@ is older than $<"
+
 Rakudo/Metamodel/Representations/RakudoCodeRef.java: ../../dotnet/runtime/Metamodel/Representations/RakudoCodeRef.cs
 	@echo "todo: $@ is older than $<"
 
@@ -191,10 +249,10 @@ Rakudo/Runtime/ThreadContext.java: ../../dotnet/runtime/Runtime/ThreadContext.cs
 Rakudo/Metamodel/SharedTable.java: ../../dotnet/runtime/Metamodel/SharedTable.cs
 	@echo "todo: Rakudo/Metamodel/SharedTable.java is older than ../../dotnet/runtime/Metamodel/SharedTable.cs"
 
-Rakudo/Metamodel/Representations/P6capture.java: ../../dotnet/runtime/Metamodel/Representations/P6capture.cs
-	@echo "todo: Rakudo/Metamodel/Representations/P6capture.java is older than ../../dotnet/runtime/Metamodel/Representations/P6capture.cs"
-
 Rakudo/Runtime/CodeObjectUtility.java: ../../dotnet/runtime/Runtime/CodeObjectUtility.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java: ../../dotnet/runtime/Metamodel/KnowHOW/KnowHOWBootstrapper.cs
 	@echo "todo: $@ is older than $<"
 
 Rakudo/Init.java: ../../dotnet/runtime/Init.cs

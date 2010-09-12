@@ -24,11 +24,7 @@ public final class CodeObjectUtility
     /// supports forwarding to the native code.
     /// </summary>
     /// <param name="Code"></param>
-    public static RakudoObject WrapNativeMethod
-    (
-        RakudoCodeRef.IFunc_Body code
-        // Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> code
-    )
+    public static RakudoObject WrapNativeMethod(RakudoCodeRef.IFunc_Body code)
     {
         Representation repr = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
         RakudoObject wrapper = repr.type_object_for(null);
@@ -44,7 +40,6 @@ public final class CodeObjectUtility
     public static RakudoCodeRef.Instance BuildStaticBlockInfo
     (
         RakudoCodeRef.IFunc_Body code,
-        // Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> code,
         RakudoCodeRef.Instance outer,
         String[] lexNames
     )

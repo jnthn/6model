@@ -60,7 +60,7 @@ public class KnowHOWBootstrapper
                 }
             }));
 */
-/*
+/* TODO
         KnowHOWMeths.Add("add_attribute", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
@@ -69,7 +69,7 @@ public class KnowHOWBootstrapper
                 return CaptureHelper.Nil();
             }));
 */
-/*
+/* TODO
         KnowHOWMeths.Add("add_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
@@ -79,7 +79,7 @@ public class KnowHOWBootstrapper
                 return CaptureHelper.Nil();
             }));
 */
-/*
+/* TODO
         KnowHOWMeths.Add("find_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
         {
             var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
@@ -90,7 +90,7 @@ public class KnowHOWBootstrapper
                 throw new InvalidOperationException("No such method " + Name);
         }));
 */
-/*
+/* TODO
         KnowHOWMeths.Add("compose", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 var Obj = CaptureHelper.GetPositional(Cap, 1);
@@ -101,7 +101,6 @@ public class KnowHOWBootstrapper
         // means .HOW.HOW.HOW.HOW etc will always return that, which
         // closes the model up.
         KnowHOWREPR.KnowHOWInstance KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
-// TODO var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
 // TODO for (Iterator iter = KnowHOWMeths.entrySet.Iterator(); iter.hasNext(); )
 //      foreach (var Method in KnowHOWMeths)
         {
@@ -112,13 +111,13 @@ public class KnowHOWBootstrapper
         // We need to clone the STable.
         SharedTable STableCopy = new SharedTable();
         STableCopy.HOW = KnowHOWHOW;
-//      STableCopy.WHAT = KnowHOW.STable.WHAT;
-//      STableCopy.REPR = KnowHOW.STable.REPR;
-//      KnowHOWHOW.STable = STableCopy;
+        STableCopy.WHAT = KnowHOW.getSTable().WHAT;
+        STableCopy.REPR = KnowHOW.getSTable().REPR;
+        KnowHOWHOW.setSTable(STableCopy);
 
         // And put a fake FindMethod in there that just looks in the
         // dictionary.
-/*
+/* TODO
         KnowHOWHOW.STable.FindMethod = (TC, Obj, Name, Hint) =>
             {
                 var MTable = ((KnowHOWREPR.KnowHOWInstance)Obj).Methods;

@@ -21,15 +21,26 @@ interfaces is start with an uppercase letter.  Local variables begin in
 lowercase.
 
 
-C# to Java translation guidelines (sorted alphabetically, case insensitive)
----------------------------------------------------------------------------
+6model specific translations
+----------------------------
+
+The RakudoObject interface defines properties STable and SC (meaning
+SharedTable and SerializationContext).  Java does not have properties,
+these become private data members _STable and _SC, and get accessor
+methods getSTable(), setSTable, getSC() and setSC().
+
+
+C# to Java translation guidelines (in case insensitive alphabetical order)
+--------------------------------------------------------------------------
 
 C# bool becomes Java boolean.
 
 C# Dictionary becomes Java HashMap.  The HashMap is not quite as
 versatile, because the value part must be a reference type, it cannot be
 a value type.  Therefore C# Dictionary<string, int> becomes Java
-HashMap<String, Integer> which it less convenient to use.
+HashMap<String, Integer> which it less convenient to use.  Also C#
+myHash[key] becomes Java myHash.get(key).
+See http://www.tutorialspoint.com/java/java_hashmap_class.htm
 
 C# foreach ( <type> name in <Iterable> ) becomes Java
 for ( <type> name : <Iterable> ).
@@ -72,6 +83,8 @@ The * is a form of programmer laziness which just shifts the problem on
 to the next person or compiler who reads the program.  We need clarity
 here, not golf.
 
+C# var becomes Java <typename> because Java does not do implicit typing.
+You have to work out the type yourself and declare it :-(
 
 Lambdas and References to Functions
 -----------------------------------
@@ -98,6 +111,9 @@ implementation replaces the Func declaration with an IFunc_XXX interface
 declaration that defines a suitably typed Invoke method, and replaces
 the => with an anonymous class definition that implements that
 interface.
+
+See: http://msdn.microsoft.com/en-us/library/bb549151.aspx and
+http://dotnetperls.com/func
 
 Created by: Martin Berends (mberends in #perl6 on irc.freenode.net)
 

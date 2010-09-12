@@ -1,16 +1,20 @@
 package Rakudo;
 
-import Rakudo.Runtime.ExecutionDomain;
+import Rakudo.Metamodel.KnowHOW.KnowHOWBootstrapper;
+import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.RakudoObject;
-import Rakudo.Runtime.Lexpad;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Metamodel.Representations.P6capture;
-import Rakudo.Runtime.Context;
-import Rakudo.Runtime.ThreadContext;
-import Rakudo.Runtime.CaptureHelper;
+import Rakudo.Metamodel.Representations.P6hash;
+import Rakudo.Metamodel.Representations.P6int;
+import Rakudo.Metamodel.Representations.P6opaque;
 import Rakudo.Metamodel.REPRRegistry;
-import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
-import Rakudo.Metamodel.KnowHOW.KnowHOWBootstrapper;
+import Rakudo.Runtime.CaptureHelper;
+import Rakudo.Runtime.CodeObjectUtility;
+import Rakudo.Runtime.Context;
+import Rakudo.Runtime.ExecutionDomain;
+import Rakudo.Runtime.Lexpad;
+import Rakudo.Runtime.ThreadContext;
 
 /// <summary>
 /// Does initialization of the Rakudo library.
@@ -46,17 +50,17 @@ public class Init
 
         // Cache native capture and LLCode type object.
         CaptureHelper.CaptureTypeObject = settingContext.LexPad.GetByName("capture");
-// TODO CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad.GetByName("LLCode");
+        CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)settingContext.LexPad.GetByName("LLCode");
 
         // Create an execution domain and a thread context for it.
         ExecutionDomain execDom = new ExecutionDomain();
         ThreadContext   thread  = new ThreadContext();
         thread.Domain = execDom;
         thread.CurrentContext = settingContext;
-// TODO thread.DefaultBoolBoxType = settingContext.LexPad.GetByName("NQPInt");
-// TODO thread.DefaultIntBoxType  = settingContext.LexPad.GetByName("NQPInt");
-// TODO thread.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
-// TODO thread.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
+        thread.DefaultBoolBoxType = settingContext.LexPad.GetByName("NQPInt");
+        thread.DefaultIntBoxType  = settingContext.LexPad.GetByName("NQPInt");
+        thread.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
+        thread.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
 
         return thread;
     }
@@ -69,9 +73,9 @@ public class Init
         if (!REPRS_Registered)
         {
             REPRRegistry.register_REPR("KnowHOWREPR", new KnowHOWREPR());
-// TODO     REPRRegistry.register_REPR("P6opaque", new P6opaque());
-// TODO     REPRRegistry.register_REPR("P6hash", new P6hash());
-// TODO     REPRRegistry.register_REPR("P6int", new P6int());
+            REPRRegistry.register_REPR("P6opaque", new P6opaque());
+            REPRRegistry.register_REPR("P6hash", new P6hash());
+            REPRRegistry.register_REPR("P6int", new P6int());
 // TODO     REPRRegistry.register_REPR("P6num", new P6num());
 // TODO     REPRRegistry.register_REPR("P6str", new P6str());
             REPRRegistry.register_REPR("P6capture", new P6capture());

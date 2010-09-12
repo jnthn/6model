@@ -48,6 +48,12 @@ knowhow NQPNum is repr('P6num') {
 }
 
 knowhow NQPList is repr('P6list') {
+    method elems() {
+        nqp::lllist_elems(self)
+    }
+    method at_pos($idx) {
+        nqp::lllist_get_at_pos(self, $idx.Int)
+    }
 }
 
 knowhow NQPArray is repr('P6list') {

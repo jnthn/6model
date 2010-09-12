@@ -279,7 +279,7 @@ namespace Rakudo.Metamodel.Representations
                     var Attr = AttrAtPosMeth.STable.Invoke(TC, AttrAtPosMeth, CaptureHelper.FormWith(
                         new RakudoObject[] { Attributes, Ops.box_int(TC, i, TC.DefaultIntBoxType) }));
                     var NameMeth = Attr.STable.FindMethod(TC, Attr, "name", Hints.NO_HINT);
-                    var Name = Ops.unbox_str(TC, Attr.STable.Invoke(TC, NameMeth, CaptureHelper.FormWith(
+                    var Name = Ops.unbox_str(TC, NameMeth.STable.Invoke(TC, NameMeth, CaptureHelper.FormWith(
                         new RakudoObject[] { Attr })));
 
                     // Allocate a slot.

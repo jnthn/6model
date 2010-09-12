@@ -1,0 +1,83 @@
+/* This file contains a PMC that represents an S-Table. S-Tables (short for
+ * Shared Table) contains the commonalities shared between a (HOW, REPR)
+ * pairing (for example, (HOW for the class Dog, P6Opaque). An STable is
+ * fairly dumb semantically and the PMC is really just a "holder" and makes
+ * sure we mark things as needed in GC. */
+
+/* This is a source of type cache IDs (see notes below about them). 
+ * The lowest one is 4. This is to make the lower two bits available for
+ * defined/undefined flags for the multi dispatch cache, which is the
+ * main reason these IDs exist at all. */
+static INTVAL TypeCacheIDSource = 0;
+static INTVAL get_next_type_cache_id() {
+    /* XXX The C# original is doing:
+     *     return Interlocked.Add(ref TypeCacheIDSource, 4);
+     * But we don't yet have an abstraction layer for an atomic addition
+     * so this is not yet threadsafe. */
+    TypeCacheIDSource += 4;
+    return TypeCacheIDSource;
+}
+
+pmclass STable auto_attrs group rakudoobject {
+    /* The representation. */
+    ATTR PMC *REPR;
+
+    /* The meta-object. */
+    ATTR PMC *HOW;
+
+    /* The type-object. */
+    ATTR PMC *WHAT;
+
+    /* The serialization context that this STable lives in, if any. */
+    ATTR PMC *SC;
+
+    /* The computed v-table for static dispatch. */
+    ATTR PMC **VTable;
+
+    /* The length of the v-table. */
+    ATTR INTVAL VTableLength;
+
+    /* An ID solely for use in caches that last a VM instance. Thus it
+     * should never, ever be serialized and you should NEVER make a
+     * type directory based upon this ID. Otherwise you'll create memory
+     * leaks for anonymous types, and other such screwups. */
+    ATTR INTVAL TypeCacheID;
+
+    /* Initializes the STable's type cache ID; leaves the rest to be
+     * filled out. Also flag as needing custom mark. */
+    VTABLE void init() {
+        INTVAL new_id = get_next_type_cache_id();
+        SETATTR_STable_TypeCacheID(interp, SELF, new_id);
+        PObj_custom_mark_SET(SELF);
+    }
+
+    /* This marks the various things that we reference. 
+    VTABLE void mark() {
+        PMC *REPR, *HOW, *WHAT, *SC, **VTable;
+        INTVAL VTableLength, i;
+
+        GETATTR_STable_REPR(interp, SELF, REPR);
+        if (!PMC_IS_NULL(REPR))
+            Parrot_gc_mark_PMC_alive(interp, REPR);
+
+        GETATTR_STable_HOW(interp, SELF, HOW);
+        if (!PMC_IS_NULL(HOW))
+            Parrot_gc_mark_PMC_alive(interp, HOW);
+        
+        GETATTR_STable_WHAT(interp, SELF, WHAT);
+        if (!PMC_IS_NULL(WHAT))
+            Parrot_gc_mark_PMC_alive(interp, WHAT);
+
+        GETATTR_STable_SC(interp, SELF, SC);
+        if (!PMC_IS_NULL(SC))
+            Parrot_gc_mark_PMC_alive(interp, SC);
+
+        GETATTR_STable_VTable(interp, SELF, VTable);
+        GETATTR_STable_VTableLength(interp, SELF, VTableLength);
+        for (i = 0; i < VTableLength; i++) {
+            PMC *entry = VTable[i];
+            if (!PMC_IS_NULL(entry))
+                Parrot_gc_mark_PMC_alive(interp, entry);
+        }
+    }
+}

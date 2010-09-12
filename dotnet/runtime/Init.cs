@@ -92,15 +92,15 @@ namespace Rakudo
             SettingContext.LexPad.Storage = new RakudoObject[]
                 {
                     KnowHOW,
-                    REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null),
-                    REPRRegistry.get_REPR_by_name("P6int").type_object_for(null),
-                    REPRRegistry.get_REPR_by_name("P6num").type_object_for(null),
-                    REPRRegistry.get_REPR_by_name("P6str").type_object_for(null),
-                    REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)),
+                    REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null),
+                    REPRRegistry.get_REPR_by_name("P6int").type_object_for(null, null),
+                    REPRRegistry.get_REPR_by_name("P6num").type_object_for(null, null),
+                    REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null),
+                    REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, KnowHOW.STable.REPR.instance_of(null, KnowHOW)),
                     CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {
                             var NQPList = Ops.get_lex(TC, "NQPList");
-                            var List = NQPList.STable.REPR.instance_of(NQPList) as P6list.Instance;
+                            var List = NQPList.STable.REPR.instance_of(TC, NQPList) as P6list.Instance;
                             var NativeCapture = C as P6capture.Instance;
                             foreach (var Obj in NativeCapture.Positionals)
                                 List.Storage.Add(Obj);
@@ -151,8 +151,8 @@ namespace Rakudo
                         Console.WriteLine(Ops.unbox_str(null, StrVal));
                         return CaptureHelper.Nil();
                     }));
-            SettingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
-            SettingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.STable.REPR.instance_of(KnowHOW)));
+            SettingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null));
+            SettingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, KnowHOW.STable.REPR.instance_of(null, KnowHOW)));
             
             return SettingContext;
         }

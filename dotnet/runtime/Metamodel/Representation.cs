@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rakudo.Runtime;
 
 namespace Rakudo.Metamodel
 {
@@ -17,21 +18,21 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public abstract RakudoObject type_object_for(RakudoObject HOW);
+        public abstract RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW);
 
         /// <summary>
         /// Creates a new instance based on the type object.
         /// </summary>
         /// <param name="WHAT"></param>
         /// <returns></returns>
-        public abstract RakudoObject instance_of(RakudoObject WHAT);
+        public abstract RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT);
 
         /// <summary>
         /// Checks if a given object is defined.
         /// </summary>
         /// <param name="Obj"></param>
         /// <returns></returns>
-        public abstract bool defined(RakudoObject Obj);
+        public abstract bool defined(ThreadContext TC, RakudoObject Obj);
 
         /// <summary>
         /// Gets the current value for an attribute.
@@ -39,7 +40,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public abstract RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name);
+        public abstract RakudoObject get_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name);
 
         /// <summary>
         /// Gets the current value for an attribute, obtained using the
@@ -49,7 +50,7 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public abstract RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint);
+        public abstract RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint);
 
         /// <summary>
         /// Binds the given value to the specified attribute.
@@ -57,7 +58,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <param name="Value"></param>
-        public abstract void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value);
+        public abstract void bind_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value);
 
         /// <summary>
         /// Binds the given value to the specified attribute, using the
@@ -67,7 +68,7 @@ namespace Rakudo.Metamodel
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <param name="Value"></param>
-        public abstract void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value);
+        public abstract void bind_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value);
 
         /// <summary>
         /// Gets the hint for the given attribute ID.
@@ -75,7 +76,7 @@ namespace Rakudo.Metamodel
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public abstract int hint_for(RakudoObject ClassHandle, string Name);
+        public abstract int hint_for(ThreadContext TC, RakudoObject ClassHandle, string Name);
 
         /// <summary>
         /// Used with boxing. Sets an integer value, for representations that
@@ -83,7 +84,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract void set_int(RakudoObject Object, int Value);
+        public abstract void set_int(ThreadContext TC, RakudoObject Object, int Value);
 
         /// <summary>
         /// Used with boxing. Gets an integer value, for representations that
@@ -91,7 +92,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract int get_int(RakudoObject Object);
+        public abstract int get_int(ThreadContext TC, RakudoObject Object);
 
         /// <summary>
         /// Used with boxing. Sets a floating point value, for representations that
@@ -99,7 +100,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract void set_num(RakudoObject Object, double Value);
+        public abstract void set_num(ThreadContext TC, RakudoObject Object, double Value);
 
         /// <summary>
         /// Used with boxing. Gets a floating point value, for representations that
@@ -107,7 +108,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract double get_num(RakudoObject Object);
+        public abstract double get_num(ThreadContext TC, RakudoObject Object);
 
         /// <summary>
         /// Used with boxing. Sets a string value, for representations that
@@ -115,7 +116,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract void set_str(RakudoObject Object, string Value);
+        public abstract void set_str(ThreadContext TC, RakudoObject Object, string Value);
 
         /// <summary>
         /// Used with boxing. Gets a string value, for representations that
@@ -123,7 +124,7 @@ namespace Rakudo.Metamodel
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="Value"></param>
-        public abstract string get_str(RakudoObject Object);
+        public abstract string get_str(ThreadContext TC, RakudoObject Object);
     }
 
     public static class Hints

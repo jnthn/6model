@@ -44,7 +44,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public override RakudoObject type_object_for(RakudoObject MetaPackage)
+        public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
             var STable = new SharedTable();
             STable.HOW = MetaPackage;
@@ -60,10 +60,10 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="HOW"></param>
         /// <returns></returns>
-        public override RakudoObject instance_of(RakudoObject WHAT)
+        public override RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
             if (SlotAllocation == null)
-                ComputeSlotAllocation(null, WHAT);
+                ComputeSlotAllocation(TC, WHAT);
             var Object = new Instance(WHAT.STable);
             Object.SlotStorage = new RakudoObject[Slots];
             return Object;
@@ -76,7 +76,7 @@ namespace Rakudo.Metamodel.Representations
         /// </summary>
         /// <param name="Object"></param>
         /// <returns></returns>
-        public override bool defined(RakudoObject Object)
+        public override bool defined(ThreadContext TC, RakudoObject Object)
         {
             return ((Instance)Object).SlotStorage != null;
         }
@@ -88,7 +88,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public override RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name)
+        public override RakudoObject get_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
             var I = (Instance)Object;
 
@@ -118,7 +118,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <returns></returns>
-        public override RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
+        public override RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
             var I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
@@ -144,7 +144,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <param name="Value"></param>
-        public override void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
+        public override void bind_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             var I = (Instance)Object;
 
@@ -178,14 +178,14 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
         /// <param name="Value"></param>
-        public override void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
+        public override void bind_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
             var I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
             {
                 I.SlotStorage[Hint] = Value;
             }
-            else if ((Hint = hint_for(ClassHandle, Name)) != Hints.NO_HINT && Hint < I.SlotStorage.Length)
+            else if ((Hint = hint_for(TC, ClassHandle, Name)) != Hints.NO_HINT && Hint < I.SlotStorage.Length)
             {
                 I.SlotStorage[Hint] = Value;
             }
@@ -210,7 +210,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="ClassHandle"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public override int hint_for(RakudoObject ClassHandle, string Name)
+        public override int hint_for(ThreadContext TC, RakudoObject ClassHandle, string Name)
         {
             if (SlotAllocation.ContainsKey(ClassHandle) && SlotAllocation[ClassHandle].ContainsKey(Name))
                 return SlotAllocation[ClassHandle][Name];
@@ -218,32 +218,32 @@ namespace Rakudo.Metamodel.Representations
                 return Hints.NO_HINT;
         }
 
-        public override void set_int(RakudoObject Object, int Value)
+        public override void set_int(ThreadContext TC, RakudoObject Object, int Value)
         {
             throw new InvalidOperationException("This type of representation cannot box a native int");
         }
 
-        public override int get_int(RakudoObject Object)
+        public override int get_int(ThreadContext TC, RakudoObject Object)
         {
             throw new InvalidOperationException("This type of representation cannot unbox to a native int");
         }
 
-        public override void set_num(RakudoObject Object, double Value)
+        public override void set_num(ThreadContext TC, RakudoObject Object, double Value)
         {
             throw new InvalidOperationException("This type of representation cannot box a native num");
         }
 
-        public override double get_num(RakudoObject Object)
+        public override double get_num(ThreadContext TC, RakudoObject Object)
         {
             throw new InvalidOperationException("This type of representation cannot unbox to a native num");
         }
 
-        public override void set_str(RakudoObject Object, string Value)
+        public override void set_str(ThreadContext TC, RakudoObject Object, string Value)
         {
             throw new InvalidOperationException("This type of representation cannot box a native string");
         }
 
-        public override string get_str(RakudoObject Object)
+        public override string get_str(ThreadContext TC, RakudoObject Object)
         {
             throw new InvalidOperationException("This type of representation cannot unbox to a native string");
         }

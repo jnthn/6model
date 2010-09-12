@@ -89,7 +89,7 @@ method compile(PAST::Node $node) {
             DNST::MethodCall.new(
                 :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'),
                 DNST::Literal.new( :value('NQPStr'), :escape(1) ),
-                'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null)'
+                'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null)'
             ),
 
             # We do the loadinit calls before building the constants, as we

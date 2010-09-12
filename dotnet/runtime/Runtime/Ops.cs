@@ -21,7 +21,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, string REPRName)
         {
-            return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(HOW);
+            return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(TC, HOW);
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
-            return WHAT.STable.REPR.instance_of(WHAT);
+            return WHAT.STable.REPR.instance_of(TC, WHAT);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static bool repr_defined(ThreadContext TC, RakudoObject Obj)
         {
-            return Obj.STable.REPR.defined(Obj);
+            return Obj.STable.REPR.defined(TC, Obj);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject get_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name)
         {
-            return Object.STable.REPR.get_attribute(Object, Class, Name);
+            return Object.STable.REPR.get_attribute(TC, Object, Class, Name);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject get_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint)
         {
-            return Object.STable.REPR.get_attribute_with_hint(Object, Class, Name, Hint);
+            return Object.STable.REPR.get_attribute_with_hint(TC, Object, Class, Name, Hint);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Rakudo.Runtime
         /// <param name="Hint"></param>
         public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
         {
-            Object.STable.REPR.bind_attribute(Object, Class, Name, Value);
+            Object.STable.REPR.bind_attribute(TC, Object, Class, Name, Value);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace Rakudo.Runtime
         /// <param name="Hint"></param>
         public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
         {
-            Object.STable.REPR.bind_attribute_with_hint(Object, Class, Name, Hint, Value);
+            Object.STable.REPR.bind_attribute_with_hint(TC, Object, Class, Name, Hint, Value);
         }
 
         /// <summary>
@@ -156,8 +156,8 @@ namespace Rakudo.Runtime
         public static RakudoObject box_int(ThreadContext TC, int Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
-            var Result = REPR.instance_of(To);
-            REPR.set_int(Result, Value);
+            var Result = REPR.instance_of(TC, To);
+            REPR.set_int(TC, Result, Value);
             return Result;
         }
 
@@ -169,8 +169,8 @@ namespace Rakudo.Runtime
         public static RakudoObject box_num(ThreadContext TC, double Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
-            var Result = REPR.instance_of(To);
-            REPR.set_num(Result, Value);
+            var Result = REPR.instance_of(TC, To);
+            REPR.set_num(TC, Result, Value);
             return Result;
         }
 
@@ -182,8 +182,8 @@ namespace Rakudo.Runtime
         public static RakudoObject box_str(ThreadContext TC, string Value, RakudoObject To)
         {
             var REPR = To.STable.REPR;
-            var Result = REPR.instance_of(To);
-            REPR.set_str(Result, Value);
+            var Result = REPR.instance_of(TC, To);
+            REPR.set_str(TC, Result, Value);
             return Result;
         }
 
@@ -194,7 +194,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static int unbox_int(ThreadContext TC, RakudoObject Boxed)
         {
-            return Boxed.STable.REPR.get_int(Boxed);
+            return Boxed.STable.REPR.get_int(TC, Boxed);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static double unbox_num(ThreadContext TC, RakudoObject Boxed)
         {
-            return Boxed.STable.REPR.get_num(Boxed);
+            return Boxed.STable.REPR.get_num(TC, Boxed);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static string unbox_str(ThreadContext TC, RakudoObject Boxed)
         {
-            return Boxed.STable.REPR.get_str(Boxed);
+            return Boxed.STable.REPR.get_str(TC, Boxed);
         }
 
         /// <summary>

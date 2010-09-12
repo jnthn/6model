@@ -28,7 +28,7 @@ namespace Rakudo.Metamodel.KnowHOW
             // Create our KnowHOW type object. Note we don't have a HOW
             // just yet, so pass in null.
             var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-            var KnowHOW = REPR.type_object_for(null);
+            var KnowHOW = REPR.type_object_for(null, null);
 
             // We'll set up a dictionary of our various methods to go into
             // KnowHOW's HOW, since we'll want to work with them a bit.
@@ -37,7 +37,7 @@ namespace Rakudo.Metamodel.KnowHOW
                 {
                     // We first create a new HOW instance.
                     var KnowHOWTypeObj = CaptureHelper.GetPositional(Cap, 0);
-                    var HOW = KnowHOWTypeObj.STable.REPR.instance_of(KnowHOWTypeObj.STable.WHAT);
+                    var HOW = KnowHOWTypeObj.STable.REPR.instance_of(TC, KnowHOWTypeObj.STable.WHAT);
 
                     // Now create a new type object to go with it of the
                     // desired REPR; we default to P6opaque (note that the
@@ -50,12 +50,12 @@ namespace Rakudo.Metamodel.KnowHOW
                     {
                         // Look up the REPR.
                         var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(null, REPRName));
-                        return REPRToUse.type_object_for(HOW);
+                        return REPRToUse.type_object_for(null, HOW);
                     }
                     else
                     {
                         // Just go with the P6opaque REPR.
-                        return REPRRegistry.get_REPR_by_name("P6opaque").type_object_for(HOW);
+                        return REPRRegistry.get_REPR_by_name("P6opaque").type_object_for(TC, HOW);
                     }
                 }));
             KnowHOWMeths.Add("add_attribute", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
@@ -94,7 +94,7 @@ namespace Rakudo.Metamodel.KnowHOW
             // We create a KnowHOW instance that can describe itself. This
             // means .HOW.HOW.HOW.HOW etc will always return that, which
             // closes the model up.
-            var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
+            var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(null, KnowHOW);
             foreach (var Method in KnowHOWMeths)
                 KnowHOWHOW.Methods.Add(Method.Key, Method.Value);
 

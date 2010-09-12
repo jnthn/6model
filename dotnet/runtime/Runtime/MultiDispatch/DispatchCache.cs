@@ -203,7 +203,7 @@ namespace Rakudo.Runtime.MultiDispatch
             for (int i = 0; i < Positionals.Length; i++)
             {
                 var STable = Positionals[i].STable;
-                Result[i] = STable.TypeCacheID | (STable.REPR.defined(Positionals[i]) ? 1L : 0L);
+                Result[i] = STable.TypeCacheID | (STable.REPR.defined(null, Positionals[i]) ? 1L : 0L);
             }
             return Result;
         }

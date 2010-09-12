@@ -24,7 +24,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith()
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             return C;
         }
 
@@ -35,7 +35,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs)
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             C.Positionals = PosArgs;
             return C;
         }
@@ -47,7 +47,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs)
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(CaptureTypeObject);
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             C.Positionals = PosArgs;
             C.Nameds = NamedArgs;
             return C;

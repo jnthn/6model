@@ -53,6 +53,18 @@ knowhow NQPList is repr('P6list') {
 knowhow NQPArray is repr('P6list') {
 }
 
+# This is a little bit of a cheat. We only really need to keep
+# hold of a name for the most basic attribute class, so we just
+# use the string representation.
+knowhow KnowHOWAttribute is repr('P6str') {
+    method new(:$name) {
+        nqp::box_str(nqp::unbox_str($name), KnowHOWAttribute)
+    }
+    method name() {
+        nqp::box_str(nqp::unbox_str(self), NQPStr)
+    }
+}
+
 ## XXX Need coercive Any fallbacks too.
 
 proto sub &infix:<==>($x, $y) {

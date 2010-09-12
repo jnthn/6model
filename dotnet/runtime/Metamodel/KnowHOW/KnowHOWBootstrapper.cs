@@ -90,6 +90,29 @@ namespace Rakudo.Metamodel.KnowHOW
                     var Obj = CaptureHelper.GetPositional(Cap, 1);
                     return Obj;
                 }));
+            KnowHOWMeths.Add("attributes", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
+            {
+                // Safe to just return a P6list instance that points at
+                // the same thing we hold internally, since a list is
+                // immutable.
+                var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                ((P6list.Instance)Result).Storage = HOW.Attributes;
+                return Result;
+            }));
+            KnowHOWMeths.Add("methods", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
+            {
+                // Return the methods list.
+                var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                ((P6list.Instance)Result).Storage.AddRange(HOW.Methods.Values);
+                return Result;
+            }));
+            KnowHOWMeths.Add("parents", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
+            {
+                // A pure prototype never has any parents, so return an empty list.
+                return TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+            }));
 
             // We create a KnowHOW instance that can describe itself. This
             // means .HOW.HOW.HOW.HOW etc will always return that, which

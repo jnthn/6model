@@ -52,6 +52,7 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Init.class
 
 OTHER_DEPENDENT_TARGETS = \
+	Rakudo/Runtime/CaptureHelper.class \
 	Rakudo/Runtime/Lexpad.class \
 	Rakudo/Runtime/Parameter.class \
 	Rakudo/Runtime/Signature.class \
@@ -80,6 +81,7 @@ Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.java
 Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Serialization/SerializationContext.class \
 		Rakudo/Metamodel/Representation.java \
+		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
@@ -91,6 +93,7 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 	javac \
 		Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Metamodel/Representation.java \
+		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
@@ -191,6 +194,7 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Runtime/ExecutionDomain.java \
 	Rakudo/Metamodel/RakudoObject.java \
 	Rakudo/Metamodel/Representation.java \
+	Rakudo/Runtime/CaptureHelper.java \
 	Rakudo/Runtime/Lexpad.java \
 	Rakudo/Runtime/Parameter.java \
 	Rakudo/Runtime/Signature.java \
@@ -227,6 +231,9 @@ Rakudo/Metamodel/RakudoObject.java: ../../dotnet/runtime/Metamodel/RakudoObject.
 
 Rakudo/Metamodel/Representation.java: ../../dotnet/runtime/Metamodel/Representation.cs
 	@echo "todo: Rakudo/Metamodel/Representation.java is older than ../../dotnet/runtime/Metamodel/Representation.cs"
+
+Rakudo/Runtime/CaptureHelper.java: ../../dotnet/runtime/Runtime/CaptureHelper.cs
+	@echo "todo: Rakudo/Runtime/CaptureHelper.java is older than ../../dotnet/runtime/Runtime/Signatures/CaptureHelper.cs"
 
 Rakudo/Runtime/Lexpad.java: ../../dotnet/runtime/Runtime/Lexpad.cs
 	@echo "todo: Rakudo/Runtime/Lexpad.java is older than ../../dotnet/runtime/Runtime/Signatures/Lexpad.cs"

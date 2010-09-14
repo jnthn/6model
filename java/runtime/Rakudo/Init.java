@@ -146,28 +146,33 @@ public class Init
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "print", "say", "capture", "LLCode" });
         settingContext.LexPad.SetByName("KnowHOW", KnowHOW);
-/* TODO
-        settingContext.LexPad.SetByName("print",
-            CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                {
-                    var Value = CaptureHelper.GetPositional(C, 0);
-                    var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                    var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                    Console.Write(Ops.unbox_str(null, StrVal));
-                    return CaptureHelper.Nil();
-                }));
-*/
-/* TODO
-        settingContext.LexPad.SetByName("say",
-            CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                {
-                    var Value = CaptureHelper.GetPositional(C, 0);
-                    var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                    var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                    Console.WriteLine(Ops.unbox_str(null, StrVal));
-                    return CaptureHelper.Nil();
-                }));
-*/
+
+        RakudoCodeRef.IFunc_Body funcPrint = new RakudoCodeRef.IFunc_Body()
+        { // create an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
+            {
+                RakudoObject value = CaptureHelper.GetPositional(capture, 0);
+                RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
+                RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth, capture);
+                System.out.print(Ops.unbox_str(null, strVal));
+                return CaptureHelper.Nil();
+            }
+        };
+        settingContext.LexPad.SetByName("print", CodeObjectUtility.WrapNativeMethod(funcPrint));
+
+        RakudoCodeRef.IFunc_Body funcSay = new RakudoCodeRef.IFunc_Body()
+        { // create an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
+            {
+                RakudoObject value = CaptureHelper.GetPositional(capture, 0);
+                RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
+                RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth, capture);
+                System.out.println(Ops.unbox_str(null, strVal));
+                return CaptureHelper.Nil();
+            }
+        };
+        settingContext.LexPad.SetByName("say", CodeObjectUtility.WrapNativeMethod(funcSay));
+
         settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
         settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)));
         

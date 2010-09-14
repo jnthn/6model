@@ -37,6 +37,8 @@ C# abstract class becomes Java interface.
 
 C# bool becomes Java boolean.
 
+C# Console.Write becomes Java System.out.print.
+
 C# const becomes Java static final.
 
 C# Dictionary becomes Java HashMap.  The HashMap is not quite as

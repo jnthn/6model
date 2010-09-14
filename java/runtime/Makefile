@@ -42,8 +42,9 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Metamodel/RakudoObject.class \
 	Rakudo/Metamodel/REPRRegistry.class \
 	Rakudo/Metamodel/Representations/P6capture.class \
-	Rakudo/Metamodel/Representations/P6int.class \
 	Rakudo/Metamodel/Representations/P6hash.class \
+	Rakudo/Metamodel/Representations/P6int.class \
+	Rakudo/Metamodel/Representations/P6list.class \
 	Rakudo/Metamodel/Representations/P6opaque.class \
 	Rakudo/Runtime/CodeObjectUtility.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
@@ -146,6 +147,14 @@ Rakudo/Metamodel/Representations/P6int.class: Rakudo/Metamodel/Representations/P
 		Rakudo/Serialization/SerializationContext.class
 	javac Rakudo/Metamodel/Representations/P6int.java
 
+Rakudo/Metamodel/Representations/P6list.class: Rakudo/Metamodel/Representations/P6list.java \
+		Rakudo/Metamodel/Hints.class \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/SharedTable.class \
+		Rakudo/Serialization/SerializationContext.class
+	javac Rakudo/Metamodel/Representations/P6list.java
+
 Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java \
 		Rakudo/Metamodel/Hints.class \
 		Rakudo/Metamodel/RakudoObject.class \
@@ -162,6 +171,7 @@ Rakudo/Init.class: Rakudo/Init.java \
 		Rakudo/Metamodel/Representations/P6capture.class \
 		Rakudo/Metamodel/Representations/P6hash.class \
 		Rakudo/Metamodel/Representations/P6int.class \
+		Rakudo/Metamodel/Representations/P6list.class \
 		Rakudo/Metamodel/Representations/P6opaque.class \
 		Rakudo/Metamodel/REPRRegistry.class \
 		Rakudo/Runtime/CaptureHelper.class \
@@ -187,6 +197,7 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Metamodel/Representations/P6capture.java \
 	Rakudo/Metamodel/Representations/P6hash.java \
 	Rakudo/Metamodel/Representations/P6int.java \
+	Rakudo/Metamodel/Representations/P6list.java \
 	Rakudo/Metamodel/Representations/P6opaque.java \
 	Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 	Rakudo/Runtime/Context.java \
@@ -233,6 +244,9 @@ Rakudo/Metamodel/Representations/P6hash.java: ../../dotnet/runtime/Metamodel/Rep
 	@echo "todo: $@ is older than $<"
 
 Rakudo/Metamodel/Representations/P6int.java: ../../dotnet/runtime/Metamodel/Representations/P6int.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/Representations/P6list.java: ../../dotnet/runtime/Metamodel/Representations/P6list.cs
 	@echo "todo: $@ is older than $<"
 
 Rakudo/Metamodel/Representations/P6opaque.java: ../../dotnet/runtime/Metamodel/Representations/P6opaque.cs

@@ -20,9 +20,9 @@
 #        |  |  |                |       |        |    |     |
 #        |  |  +-------------- ThreadContext     |    |     |
 #        |  |                           |        |    |     |
-#        |  |            P6capture      |        |    |     |
-#        |  |          P6int P6hash     |        |    |     |
-#        |  |            P6opaque    IFindMethod |  REPRRegistry
+#        |  |        P6capture    Ops   |        |    |     |
+#        |  |        P6int P6hash  |    |        |    |     |
+#        |  |               P6opaque IFindMethod |  REPRRegistry
 #        |  |                   |            |   |      |
 #        |  |                  CaptureHelper |   |      |
 #        |  |                             |  |   |      |
@@ -203,6 +203,7 @@ TRANSLATED_SOURCE_FILES = \
 # then to refresh the java file to be newer than the dotnet one.
 Rakudo/Metamodel/Hints.java: ../../dotnet/runtime/Metamodel/Representation.cs
 	@echo "todo: Rakudo/Metamodel/Hints.java is older than ../../dotnet/runtime/Metamodel/Representation.cs"
+	# There is no Hints.cs file, the Hints class is in Representation.cs.
 
 Rakudo/Serialization/SerializationContext.java: ../../dotnet/runtime/Serialization/SerializationContext.cs
 	@echo "todo: Rakudo/Serialization/SerializationContext.java is older than ../../dotnet/runtime/Serialization/SerializationContext.cs"

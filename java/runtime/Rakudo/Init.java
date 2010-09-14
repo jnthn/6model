@@ -99,11 +99,11 @@ public class Init
         settingContext.LexPad.Storage = new RakudoObject[]
             {
                 KnowHOW,
-                REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6int").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6num").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6str").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)),
+                REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6int").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6num").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6str").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)),
 /* TODO
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
@@ -165,8 +165,8 @@ public class Init
                     return CaptureHelper.Nil();
                 }));
 */
-        settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
-        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)));
+        settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
+        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)));
         
         return settingContext;
     }

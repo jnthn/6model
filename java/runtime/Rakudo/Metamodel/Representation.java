@@ -1,6 +1,7 @@
 package Rakudo.Metamodel;
 
 import Rakudo.Metamodel.RakudoObject;
+import Rakudo.Runtime.ThreadContext;
 
 /// <summary>
 /// All representations should implement this API.
@@ -14,21 +15,21 @@ public interface Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    RakudoObject type_object_for(RakudoObject how);
+    RakudoObject type_object_for(ThreadContext tc, RakudoObject how);
 
     /// <summary>
     /// Creates a new instance based on the type object.
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    RakudoObject instance_of(RakudoObject what);
+    RakudoObject instance_of(ThreadContext tc, RakudoObject what);
 
     /// <summary>
     /// Checks if a given object is defined.
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    boolean defined(RakudoObject obj);
+    boolean defined(ThreadContext tc, RakudoObject obj);
 
     /// <summary>
     /// Gets the current value for an attribute.
@@ -36,7 +37,7 @@ public interface Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    RakudoObject get_attribute(RakudoObject object, RakudoObject classHandle, String name);
+    RakudoObject get_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name);
 
     /// <summary>
     /// Gets the current value for an attribute, obtained using the
@@ -46,7 +47,7 @@ public interface Representation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
-    RakudoObject get_attribute_with_hint(RakudoObject object, RakudoObject classHandle, String name, int hint);
+    RakudoObject get_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint);
 
     /// <summary>
     /// Binds the given value to the specified attribute.
@@ -54,7 +55,7 @@ public interface Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Value"></param>
-    void bind_attribute(RakudoObject object, RakudoObject classHandle, String name, RakudoObject value);
+    void bind_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value);
 
     /// <summary>
     /// Binds the given value to the specified attribute, using the
@@ -64,7 +65,7 @@ public interface Representation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <param name="Value"></param>
-    void bind_attribute_with_hint(RakudoObject object, RakudoObject classHandle, String name, int hint, RakudoObject Value);
+    void bind_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint, RakudoObject Value);
 
     /// <summary>
     /// Gets the hint for the given attribute ID.
@@ -72,6 +73,19 @@ public interface Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    int hint_for(RakudoObject classHandle, String name);
+    int hint_for(ThreadContext tc, RakudoObject classHandle, String name);
+
+    void set_int(ThreadContext tc, RakudoObject classHandle, int Value);
+
+    int get_int(ThreadContext tc, RakudoObject classHandle);
+
+    void set_num(ThreadContext tc, RakudoObject classHandle, double Value);
+
+    double get_num(ThreadContext tc, RakudoObject classHandle);
+
+    void set_str(ThreadContext tc, RakudoObject classHandle, String Value);
+
+    String get_str(ThreadContext tc, RakudoObject classHandle);
+
 }
 

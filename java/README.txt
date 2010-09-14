@@ -33,7 +33,11 @@ methods getSTable(), setSTable, getSC() and setSC().
 C# to Java translation guidelines (in case insensitive alphabetical order)
 --------------------------------------------------------------------------
 
+C# abstract class becomes Java interface.
+
 C# bool becomes Java boolean.
+
+C# const becomes Java static final.
 
 C# Dictionary becomes Java HashMap.  The HashMap is not quite as
 versatile, because the value part must be a reference type, it cannot be
@@ -72,7 +76,11 @@ NoSuchMethodException.
 
 C# override does not become anything in Java (just delete it).
 
+C# out parameters become... 
+
 C# sealed class becomes Java final class.  Effect is not quite the same.
+
+C# static becomes Java final.
 
 C# string becomes Java String.
 

@@ -5,6 +5,7 @@ import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -46,7 +47,7 @@ public final class P6hash implements Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
     {
         SharedTable STable = new SharedTable();
         STable.HOW = MetaPackage;
@@ -61,7 +62,7 @@ public final class P6hash implements Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public RakudoObject instance_of(RakudoObject WHAT)
+    public RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
         Instance Object = new Instance(WHAT.getSTable());
         Object.Storage = new HashMap<RakudoObject, HashMap<String, RakudoObject>>();
@@ -75,7 +76,7 @@ public final class P6hash implements Representation
     /// </summary>
     /// <param name="Object"></param>
     /// <returns></returns>
-    public boolean defined(RakudoObject Object)
+    public boolean defined(ThreadContext tc, RakudoObject Object)
     {
         return ((Instance)Object).Storage != null;
     }
@@ -86,7 +87,7 @@ public final class P6hash implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public RakudoObject get_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name)
+    public RakudoObject get_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name)
     {
         // If no storage ever allocated, trivially no value. Otherwise,
         // return what we find.
@@ -105,9 +106,9 @@ public final class P6hash implements Representation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
-    public RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
+    public RakudoObject get_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
     {
-        return get_attribute(Object, ClassHandle, Name);
+        return get_attribute(tc, Object, ClassHandle, Name);
     }
 
     /// <summary>
@@ -117,7 +118,7 @@ public final class P6hash implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Value"></param>
-    public void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+    public void bind_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
     {
         // If no storage at all, allocate some.
         Instance I = (Instance)Object;
@@ -143,9 +144,9 @@ public final class P6hash implements Representation
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <param name="Value"></param>
-    public void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
+    public void bind_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
     {
-        bind_attribute(Object, ClassHandle, Name, Value);
+        bind_attribute(tc, Object, ClassHandle, Name, Value);
     }
 
     /// <summary>
@@ -154,37 +155,37 @@ public final class P6hash implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public int hint_for(RakudoObject ClassHandle, String Name)
+    public int hint_for(ThreadContext tc, RakudoObject ClassHandle, String Name)
     {
         return Hints.NO_HINT;
     }
 
-    public void set_int(RakudoObject Object, int Value)
+    public void set_int(ThreadContext tc, RakudoObject Object, int Value)
     {
         throw new UnsupportedOperationException("This type of representation cannot box a native int");
     }
 
-    public int get_int(RakudoObject Object)
+    public int get_int(ThreadContext tc, RakudoObject Object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native int");
     }
 
-    public void set_num(RakudoObject Object, double Value)
+    public void set_num(ThreadContext tc, RakudoObject Object, double Value)
     {
         throw new UnsupportedOperationException("This type of representation cannot box a native num");
     }
 
-    public double get_num(RakudoObject Object)
+    public double get_num(ThreadContext tc, RakudoObject Object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native num");
     }
 
-    public void set_str(RakudoObject Object, String Value)
+    public void set_str(ThreadContext tc, RakudoObject Object, String Value)
     {
         throw new UnsupportedOperationException("This type of representation cannot box a native string");
     }
 
-    public String get_str(RakudoObject Object)
+    public String get_str(ThreadContext tc, RakudoObject Object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native string");
     }

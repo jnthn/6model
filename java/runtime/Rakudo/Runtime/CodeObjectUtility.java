@@ -27,7 +27,7 @@ public final class CodeObjectUtility
     public static RakudoObject WrapNativeMethod(RakudoCodeRef.IFunc_Body code)
     {
         Representation repr = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-        RakudoObject wrapper = repr.type_object_for(null);
+        RakudoObject wrapper = repr.type_object_for(null,null);
         wrapper.getSTable().Invoke = code;
         return wrapper;
     }
@@ -45,7 +45,7 @@ public final class CodeObjectUtility
     )
     {
         // Create code wrapper object.
-        RakudoCodeRef.Instance result = (RakudoCodeRef.Instance)LLCodeTypeObject.getSTable().REPR.instance_of(LLCodeTypeObject);
+        RakudoCodeRef.Instance result = (RakudoCodeRef.Instance)LLCodeTypeObject.getSTable().REPR.instance_of(null,LLCodeTypeObject);
         
         // Put body, outer and signature in place.
         result.Body = code;

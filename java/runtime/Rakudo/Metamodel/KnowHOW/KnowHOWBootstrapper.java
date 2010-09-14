@@ -3,11 +3,11 @@ package Rakudo.Metamodel.KnowHOW;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import Rakudo.Metamodel.REPRRegistry;
-import Rakudo.Metamodel.SharedTable;
+import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
-import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
+import Rakudo.Metamodel.REPRRegistry;
+import Rakudo.Metamodel.SharedTable;
 import Rakudo.Runtime.CodeObjectUtility;
 
 /// <summary>
@@ -32,7 +32,7 @@ public class KnowHOWBootstrapper
         // Create our KnowHOW type object. Note we don't have a HOW
         // just yet, so pass in null.
         Representation REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-        RakudoObject KnowHOW = REPR.type_object_for(null);
+        RakudoObject KnowHOW = REPR.type_object_for(null,null);
 
         // We'll set up a dictionary of our various methods to go into
         // KnowHOW's HOW, since we'll want to work with them a bit.
@@ -100,7 +100,7 @@ public class KnowHOWBootstrapper
         // We create a KnowHOW instance that can describe itself. This
         // means .HOW.HOW.HOW.HOW etc will always return that, which
         // closes the model up.
-        KnowHOWREPR.KnowHOWInstance KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(KnowHOW);
+        KnowHOWREPR.KnowHOWInstance KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(null,KnowHOW);
 // TODO for (Iterator iter = KnowHOWMeths.entrySet.Iterator(); iter.hasNext(); )
 //      foreach (var Method in KnowHOWMeths)
         {

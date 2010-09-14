@@ -7,6 +7,7 @@ import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -48,7 +49,7 @@ public class KnowHOWREPR implements Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(RakudoObject HOW)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject HOW)
     {
         SharedTable STable = new SharedTable();
         // var STable = new SharedTable();
@@ -63,7 +64,7 @@ public class KnowHOWREPR implements Representation
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    public RakudoObject instance_of(RakudoObject WHAT)
+    public RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
         KnowHOWInstance Object = new KnowHOWInstance(WHAT.getSTable());
         // var Object = new KnowHOWInstance(WHAT.STable);
@@ -77,27 +78,57 @@ public class KnowHOWREPR implements Representation
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns>boolean</returns>
-    public boolean defined(RakudoObject obj)
+    public boolean defined(ThreadContext tc, RakudoObject obj)
     {
         return ((KnowHOWInstance)obj).Methods != null;
     }
 
-    public RakudoObject get_attribute(RakudoObject object, RakudoObject classHandle, String Name)
+    public RakudoObject get_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String Name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public RakudoObject get_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
+    public RakudoObject get_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
     {
         throw new UnsupportedOperationException();
     }
 
-    public void bind_attribute(RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+    public String get_str(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }
 
-    public void bind_attribute_with_hint(RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
+    public void set_str(ThreadContext tc, RakudoObject object, String s)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public double get_num(ThreadContext tc, RakudoObject object)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void set_num(ThreadContext tc, RakudoObject object, double d)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public int get_int(ThreadContext tc, RakudoObject object)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void set_int(ThreadContext tc, RakudoObject object, int i)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void bind_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void bind_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
     {
         throw new UnsupportedOperationException();
     }
@@ -109,7 +140,7 @@ public class KnowHOWREPR implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns>int</returns>
-    public int hint_for(RakudoObject ClassHandle, String Name)
+    public int hint_for(ThreadContext tc, RakudoObject ClassHandle, String Name)
     {
         return Hints.NO_HINT;
     }

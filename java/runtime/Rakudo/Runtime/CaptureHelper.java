@@ -23,7 +23,7 @@ public class CaptureHelper
     /// <returns></returns>
     public static RakudoObject FormWith()
     {
-        P6capture.Instance c = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(CaptureTypeObject);
+        P6capture.Instance c = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
         return c;
     }
 
@@ -34,7 +34,7 @@ public class CaptureHelper
     /// <returns></returns>
     public static RakudoObject FormWith(RakudoObject[] PosArgs)
     {
-        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(CaptureTypeObject);
+        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
         C.Positionals = PosArgs;
         return C;
     }
@@ -46,7 +46,7 @@ public class CaptureHelper
     /// <returns></returns>
     public static RakudoObject FormWith(RakudoObject[] PosArgs, HashMap<String, RakudoObject> NamedArgs)
     {
-        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(CaptureTypeObject);
+        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
         C.Positionals = PosArgs;
         C.Nameds = NamedArgs;
         return C;
@@ -59,7 +59,6 @@ public class CaptureHelper
     /// <param name="Pos"></param>
     /// <returns></returns>
     public static RakudoObject GetPositional(RakudoObject Capture, int Pos)
-        throws NoSuchMethodException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
         if (NativeCapture != null)
@@ -72,9 +71,12 @@ public class CaptureHelper
         }
         else
         {
-            throw new NoSuchMethodException("Can only deal with native captures at the moment");
+//          throw new NoSuchMethodException("Can only deal with native captures at the moment");
+            System.err.println("Can only deal with native captures at the moment");
+            System.exit(1);
+            return null;
         }
-    }
+    };
 
     /// <summary>
     /// Number of positionals.
@@ -131,8 +133,7 @@ public class CaptureHelper
     /// <returns></returns>
     public static String GetPositionalAsString(RakudoObject Capture, int Pos)
     {
-        return null; // TODO
-        // return Ops.unbox_str(null, GetPositional(Capture, Pos));
+        return Ops.unbox_str(null, GetPositional(Capture, Pos));
     }
 
     /// <summary>

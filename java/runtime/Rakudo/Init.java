@@ -7,6 +7,7 @@ import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Metamodel.Representations.P6capture;
 import Rakudo.Metamodel.Representations.P6hash;
 import Rakudo.Metamodel.Representations.P6int;
+import Rakudo.Metamodel.Representations.P6list;
 import Rakudo.Metamodel.Representations.P6opaque;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Runtime.CaptureHelper;
@@ -14,6 +15,7 @@ import Rakudo.Runtime.CodeObjectUtility;
 import Rakudo.Runtime.Context;
 import Rakudo.Runtime.ExecutionDomain;
 import Rakudo.Runtime.Lexpad;
+import Rakudo.Runtime.Ops;
 import Rakudo.Runtime.ThreadContext;
 
 /// <summary>
@@ -80,7 +82,7 @@ public class Init
 // TODO     REPRRegistry.register_REPR("P6str", new P6str());
             REPRRegistry.register_REPR("P6capture", new P6capture());
             REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
-// TODO     REPRRegistry.register_REPR("P6list", new P6list());
+            REPRRegistry.register_REPR("P6list", new P6list());
             REPRS_Registered = true;
         }
     }
@@ -96,25 +98,26 @@ public class Init
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
             { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "LLCode", "list" });
+        RakudoCodeRef.IFunc_Body funcBody = new RakudoCodeRef.IFunc_Body()
+        { // create an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
+                RakudoObject nqpList = Ops.get_lex(tc, "NQPList");
+                P6list.Instance list = (P6list.Instance)nqpList.getSTable().REPR.instance_of(tc, nqpList);
+                P6capture.Instance NativeCapture = (P6capture.Instance)capture;
+                for (RakudoObject obj : NativeCapture.Positionals)
+                    list.Storage.add(obj);
+                return list;
+            }
+        };
         settingContext.LexPad.Storage = new RakudoObject[]
             {
                 KnowHOW,
-                REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6int").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6num").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("P6str").type_object_for(null),
-                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)),
-/* TODO
-                CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                    {
-                        var NQPList = Ops.get_lex(TC, "NQPList");
-                        var List = NQPList.STable.REPR.instance_of(NQPList) as P6list.Instance;
-                        var NativeCapture = C as P6capture.Instance;
-                        foreach (var Obj in NativeCapture.Positionals)
-                            List.Storage.Add(Obj);
-                        return List;
-                    })
-*/
+                REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6int").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6num").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6str").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)),
+                CodeObjectUtility.WrapNativeMethod(funcBody)
             };
         return settingContext;
     }
@@ -143,30 +146,35 @@ public class Init
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "print", "say", "capture", "LLCode" });
         settingContext.LexPad.SetByName("KnowHOW", KnowHOW);
-/* TODO
-        settingContext.LexPad.SetByName("print",
-            CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                {
-                    var Value = CaptureHelper.GetPositional(C, 0);
-                    var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                    var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                    Console.Write(Ops.unbox_str(null, StrVal));
-                    return CaptureHelper.Nil();
-                }));
-*/
-/* TODO
-        settingContext.LexPad.SetByName("say",
-            CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
-                {
-                    var Value = CaptureHelper.GetPositional(C, 0);
-                    var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                    var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                    Console.WriteLine(Ops.unbox_str(null, StrVal));
-                    return CaptureHelper.Nil();
-                }));
-*/
-        settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null));
-        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(KnowHOW.getSTable().REPR.instance_of(KnowHOW)));
+
+        RakudoCodeRef.IFunc_Body funcPrint = new RakudoCodeRef.IFunc_Body()
+        { // create an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
+            {
+                RakudoObject value = CaptureHelper.GetPositional(capture, 0);
+                RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
+                RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth, capture);
+                System.out.print(Ops.unbox_str(null, strVal));
+                return CaptureHelper.Nil();
+            }
+        };
+        settingContext.LexPad.SetByName("print", CodeObjectUtility.WrapNativeMethod(funcPrint));
+
+        RakudoCodeRef.IFunc_Body funcSay = new RakudoCodeRef.IFunc_Body()
+        { // create an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
+            {
+                RakudoObject value = CaptureHelper.GetPositional(capture, 0);
+                RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
+                RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth, capture);
+                System.out.println(Ops.unbox_str(null, strVal));
+                return CaptureHelper.Nil();
+            }
+        };
+        settingContext.LexPad.SetByName("say", CodeObjectUtility.WrapNativeMethod(funcSay));
+
+        settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
+        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)));
         
         return settingContext;
     }

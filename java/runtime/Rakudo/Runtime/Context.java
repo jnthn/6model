@@ -61,8 +61,8 @@ public class Context
         // Lex pad should be copy of the static one.
         // XXX This isn't quite what we want in the long run, but it
         // does fine for now.
-// TODO this.LexPad.SlotMapping = StaticCodeObject.StaticLexPad.SlotMapping;
-// TODO this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.Clone();
+        this.LexPad.SlotMapping = StaticCodeObject.StaticLexPad.SlotMapping;
+        this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.clone();
 
         // Set outer context.
         RakudoCodeRef.Instance outerBlock = staticCodeObject.OuterBlock;
@@ -87,7 +87,7 @@ public class Context
                 // Build the fake context.
                 Context outerContext = new Context();
                 outerContext.StaticCodeObject = outerBlock;
-// TODO         outerContext.LexPad = outerBlock.StaticLexPad;
+                outerContext.LexPad = outerBlock.StaticLexPad;
 
                 // Link it.
                 curContext.Outer = outerContext;

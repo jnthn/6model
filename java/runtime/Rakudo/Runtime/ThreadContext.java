@@ -2,6 +2,7 @@ package Rakudo.Runtime;
 
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Runtime.Context;
+import Rakudo.Runtime.ThreadContext;
 
 /// <summary>
 /// We have one of these per thread that we are running.
@@ -37,5 +38,10 @@ public class ThreadContext
     /// The type object of the string type we box to.
     /// </summary>
     public RakudoObject DefaultStrBoxType;
+
+    /// <summary>
+    /// The default list type.
+    /// </summary>
+    public RakudoObject DefaultListType;
 }
 

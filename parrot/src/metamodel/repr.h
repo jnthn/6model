@@ -61,5 +61,5 @@ typedef struct {
     STRING * (*get_str) (PARROT_INTERP, PMC *self, PMC *Object);
 
     /* This Parrot-specific addition to the API is used to mark an object. */
-    void * (*gc_mark) (PARROT_INTERP, PMC *self, PMC *Object);
+    void (*gc_mark) (PARROT_INTERP, PMC *self, PMC *Object);
 } Rakudo_Metamodel_Representation;

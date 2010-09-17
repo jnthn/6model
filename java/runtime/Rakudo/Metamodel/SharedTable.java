@@ -1,5 +1,6 @@
 package Rakudo.Metamodel;
 
+import Rakudo.Metamodel.IFindMethod;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
@@ -33,7 +34,7 @@ public class SharedTable
                     // Find the find_method method.
                     RakudoObject HOW = obj.getSTable().HOW;
                     RakudoObject meth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "find_method", Hints.NO_HINT);
-                
+
                     // Call it.
 // TODO             RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
 // TODO             return meth.getSTable().Invoke.Invoke(tc, meth, cap);

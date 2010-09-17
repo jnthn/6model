@@ -35,9 +35,7 @@ public class KnowHOWREPR implements Representation
         public void setSC( SerializationContext sc ) { SC = sc; }
 
         public ArrayList<RakudoObject> Attributes;
-        // public List<IRakudoObject> Attributes; // the C# version
         public HashMap<String, RakudoObject> Methods;
-        // public Dictionary<string, IRakudoObject> Methods;
         public KnowHOWInstance(SharedTable STable)
         {
             this.STable = STable;

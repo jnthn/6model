@@ -8,14 +8,12 @@ import Rakudo.Metamodel.Representations.P6capture;
 /// Provides helper methods for getting stuff into and out of captures,
 /// both native ones and user-level ones.
 /// </summary>
-public class CaptureHelper
-//public static class CaptureHelper
+public class CaptureHelper   // the C# version has a static class
 {
     /// <summary>
     /// Cache of the native capture type object.
     /// </summary>
-    public static RakudoObject CaptureTypeObject;
-//  internal static RakudoObject CaptureTypeObject;
+    public static RakudoObject CaptureTypeObject;  // the C# version has internal
 
     /// <summary>
     /// Empty capture former.
@@ -84,7 +82,6 @@ public class CaptureHelper
     /// <param name="Capture"></param>
     /// <returns></returns>
     public static int NumPositionals(RakudoObject Capture)
-         throws NoSuchMethodException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance) Capture;
         if (NativeCapture != null)
@@ -94,7 +91,10 @@ public class CaptureHelper
         }
         else
         {
-            throw new NoSuchMethodException("Can only deal with native captures at the moment");
+            // throw new NoSuchMethodException("Can only deal with native captures at the moment");
+            System.err.println("Can only deal with native captures at the moment");
+            System.exit(1);
+            return 0;
         }
     }
 
@@ -105,7 +105,7 @@ public class CaptureHelper
     /// <param name="Pos"></param>
     /// <returns></returns>
     public static RakudoObject GetNamed(RakudoObject Capture, String name)
-         throws NoSuchFieldException
+         // throws NoSuchFieldException
     {
         P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
         if (NativeCapture != null)
@@ -119,7 +119,10 @@ public class CaptureHelper
         }
         else
         {
-            throw new NoSuchFieldException("Can only deal with native captures at the moment");
+            // throw new NoSuchFieldException("Can only deal with native captures at the moment");
+            System.err.println("Can only deal with native captures at the moment");
+            System.exit(1);
+            return null;
         }
     }
 

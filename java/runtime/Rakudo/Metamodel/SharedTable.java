@@ -4,8 +4,9 @@ import Rakudo.Metamodel.IFindMethod;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
-import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.CaptureHelper;
+import Rakudo.Runtime.Ops;
+import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
@@ -36,16 +37,8 @@ public class SharedTable
                     RakudoObject meth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "find_method", Hints.NO_HINT);
 
                     // Call it.
-// TODO             RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
-// TODO             return meth.getSTable().Invoke.Invoke(tc, meth, cap);
-                    return null; // TODO remove
-//                  // Find the find_method method. // the C# version
-//                  var HOW = Obj.STable.HOW;
-//                  var Meth = HOW.STable.FindMethod(TC, HOW, "find_method", Hints.NO_HINT);
-//                  
-//                  // Call it.
-//                  var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
-//                  return Meth.STable.Invoke(TC, Meth, Cap);
+                    RakudoObject cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
+                    return meth.getSTable().Invoke.Invoke(tc, meth, cap);
                 }
             }
         };

@@ -9,8 +9,7 @@ import Rakudo.Metamodel.Representations.RakudoCodeRef;
 /// This contains various utility methods that let us wrap up .Net
 /// methods into static method info.
 /// </summary>
-public final class CodeObjectUtility // TODO: add static in here, somehow
-// public static class CodeObjectUtility // the C# version
+public final class CodeObjectUtility
 {
     /// <summary>
     /// Cache of the low level code type object.

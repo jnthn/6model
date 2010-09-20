@@ -23,16 +23,8 @@ public final class P6hash implements Representation
     /// consider concurrency in accesses to the Dictionary. But
     /// this is OK for a prototype. -- jnthn
     /// </summary>
-    private final class Instance implements RakudoObject
+    private final class Instance extends RakudoObject
     {
-        // RakudoObject required implementation
-        private SharedTable _SharedTable;
-        private SerializationContext _SC;
-        public SharedTable getSTable() {return _SharedTable;}
-        public void setSTable( SharedTable st ){ _SharedTable = st;}
-        public SerializationContext getSC(){return _SC;}
-        public void setSC( SerializationContext sc ){ _SC = sc;}
-
         public HashMap<RakudoObject, HashMap<String, RakudoObject>> Storage;
         public Instance(SharedTable STable)
         {

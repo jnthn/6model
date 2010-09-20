@@ -16,25 +16,17 @@ import Rakudo.Serialization.SerializationContext;
 /// </summary>
 public class P6list implements Representation
 {
-    public class Instance implements RakudoObject
+    public class Instance extends RakudoObject
     {
-        // RakudoObject required implementation
-        private SharedTable _SharedTable;
-        private SerializationContext _SC;
-        public SharedTable getSTable() {return _SharedTable;}
-        public void setSTable( SharedTable st ){ _SharedTable = st;}
-        public SerializationContext getSC(){return _SC;}
-        public void setSC( SerializationContext sc ){ _SC = sc;}
-
         /// <summary>
         /// Just use a .Net List at the moment, but an array would
         /// be more efficient in the long run (though give us more
         /// stuff to implement ourselves).
         /// </summary>
         public ArrayList<RakudoObject> Storage;
-        public Instance(SharedTable STable)
+        public Instance(SharedTable sharedTable)
         {
-            this.setSTable(STable);
+            this.setSTable(sharedTable);
         }
     }
 
@@ -43,13 +35,13 @@ public class P6list implements Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public  RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = this;
-        STable.WHAT = new Instance(STable);
-        return STable.WHAT;
+        SharedTable sharedTable = new SharedTable();
+        sharedTable.HOW = metaPackage;
+        sharedTable.REPR = this;
+        sharedTable.WHAT = new Instance(sharedTable);
+        return sharedTable.WHAT;
     }
 
     /// <summary>
@@ -57,11 +49,11 @@ public class P6list implements Representation
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    public  RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
+    public  RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
-        Instance Object = new Instance(WHAT.getSTable());
-        Object.Storage = new ArrayList<RakudoObject>();
-        return Object;
+        Instance object = new Instance(WHAT.getSTable());
+        object.Storage = new ArrayList<RakudoObject>();
+        return object;
     }
 
     /// <summary>
@@ -69,62 +61,62 @@ public class P6list implements Representation
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public boolean defined(ThreadContext TC, RakudoObject Obj)
+    public boolean defined(ThreadContext tc, RakudoObject object)
     {
-        return ((Instance)Obj).Storage != null;
+        return ((Instance)object).Storage != null;
     }
 
-    public  RakudoObject get_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, String Name)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public  RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
+    public  RakudoObject get_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void bind_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
+    public  RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, int hint)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void bind_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
+    public  void bind_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  int hint_for(ThreadContext TC, RakudoObject ClassHandle, String Name)
+    public  void bind_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint, RakudoObject value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_int(ThreadContext TC, RakudoObject Object, int Value)
+    public  int hint_for(ThreadContext tc, RakudoObject classHandle, String name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  int get_int(ThreadContext TC, RakudoObject Object)
+    public  void set_int(ThreadContext tc, RakudoObject object, int value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_num(ThreadContext TC, RakudoObject Object, double Value)
+    public  int get_int(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  double get_num(ThreadContext TC, RakudoObject Object)
+    public  void set_num(ThreadContext tc, RakudoObject object, double value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_str(ThreadContext TC, RakudoObject Object, String Value)
+    public  double get_num(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  String get_str(ThreadContext TC, RakudoObject Object)
+    public  void set_str(ThreadContext tc, RakudoObject object, String value)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public  String get_str(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }

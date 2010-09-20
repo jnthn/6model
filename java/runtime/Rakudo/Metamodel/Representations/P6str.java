@@ -1,25 +1,23 @@
 package Rakudo.Metamodel.Representations;
 
-import java.util.HashMap;
+import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
-import Rakudo.Metamodel.Hints;
 import Rakudo.Runtime.ThreadContext;
-import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
-/// A representation that we use (for now) for native captures.
+/// A representation that we use (for now) for dealing with
+/// Strings.
 /// </summary>
-public final class P6capture implements Representation
+public final class P6str implements Representation
 {
     /// <summary>
-    /// This is how a Capture looks.
+    /// This is how the boxed form of a P6str looks.
     /// </summary>
-    public final class Instance extends RakudoObject
+    public final class Instance extends RakudoObject // internal in the C# version
     {
-        public RakudoObject[] Positionals;
-        public HashMap<String, RakudoObject> Nameds;
+        public String Value;
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);
@@ -31,13 +29,13 @@ public final class P6capture implements Representation
     /// </summary>
     /// <param name="MetaPackage"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = this;
-        STable.WHAT = new Instance(STable);
-        return STable.WHAT;
+        SharedTable sharedTable = new SharedTable();
+        sharedTable.HOW = metaPackage;
+        sharedTable.REPR = this;
+        sharedTable.WHAT = new Instance(sharedTable);
+        return sharedTable.WHAT;
     }
 
     /// <summary>
@@ -47,7 +45,9 @@ public final class P6capture implements Representation
     /// <returns></returns>
     public RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
-        return new Instance(WHAT.getSTable());
+        Instance object = new Instance(WHAT.getSTable());
+        object.Value = "";
+        return object;
     }
 
     /// <summary>
@@ -55,30 +55,29 @@ public final class P6capture implements Representation
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public boolean defined(ThreadContext tc, RakudoObject O)
+    public boolean defined(ThreadContext tc, RakudoObject Obj)
     {
-        Instance Obj = (Instance)O;
-        return Obj.Positionals != null || Obj.Nameds != null;
+        return ((Instance)Obj).Value != null;
     }
 
     public RakudoObject get_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name)
     {
-        throw new UnsupportedOperationException("Native captures cannot store additional attributes.");
+        throw new UnsupportedOperationException("Boxed native types cannot store additional attributes.");
     }
 
     public RakudoObject get_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint)
     {
-        throw new UnsupportedOperationException("Native captures cannot store additional attributes.");
+        throw new UnsupportedOperationException("Boxed native types cannot store additional attributes.");
     }
 
     public void bind_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
     {
-        throw new UnsupportedOperationException("Native captures cannot store additional attributes.");
+        throw new UnsupportedOperationException("Boxed native types cannot store additional attributes.");
     }
 
     public void bind_attribute_with_hint(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, int Hint, RakudoObject Value)
     {
-        throw new UnsupportedOperationException("Native captures cannot store additional attributes.");
+        throw new UnsupportedOperationException("Boxed native types cannot store additional attributes.");
     }
 
     public int hint_for(ThreadContext tc, RakudoObject ClassHandle, String Name)
@@ -108,12 +107,12 @@ public final class P6capture implements Representation
 
     public void set_str(ThreadContext tc, RakudoObject Object, String Value)
     {
-        throw new UnsupportedOperationException("This type of representation cannot box a native string");
+        ((Instance)Object).Value = Value;
     }
 
     public String get_str(ThreadContext tc, RakudoObject Object)
     {
-        throw new UnsupportedOperationException("This type of representation cannot unbox to a native string");
+        return ((Instance)Object).Value;
     }
 }
 

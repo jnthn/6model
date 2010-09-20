@@ -34,16 +34,8 @@ public final class P6opaque implements Representation
     /// up by index. There's also an unallocated spill-over store for any
     /// attributes that are added through augment, or in MI cases.
     /// </summary>
-    private final class Instance implements RakudoObject
+    private final class Instance extends RakudoObject
     {
-        // RakudoObject required implementation
-        private SharedTable _SharedTable;
-        private SerializationContext _SC;
-        public SharedTable getSTable() {return _SharedTable;}
-        public void setSTable( SharedTable st ){ _SharedTable = st;}
-        public SerializationContext getSC(){return _SC;}
-        public void setSC( SerializationContext sc ){ _SC = sc;}
-
         public RakudoObject[] SlotStorage;
         public HashMap<RakudoObject, HashMap<String, RakudoObject>> SpillStorage;
         public Instance(SharedTable sTable)
@@ -107,13 +99,13 @@ public final class P6opaque implements Representation
 
         // Try the slot allocation first.
         if (SlotAllocation != null && SlotAllocation.containsKey(classHandle)) {
-// TODO if (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
+        // (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
             HashMap<String, Integer> classAllocation;
             classAllocation = SlotAllocation.get(classHandle);
             if (classAllocation.containsKey(name)) {
+            // (classAllocation.TryGetValue(name, out position))
                 int position;
                 position = classAllocation.get(name);
-// TODO     if (classAllocation.TryGetValue(name, out position))
                 return I.SlotStorage[position];
             }
         }
@@ -167,10 +159,10 @@ public final class P6opaque implements Representation
 
         // Try the slot allocation first.
         if (SlotAllocation != null && SlotAllocation.containsKey(classHandle)) {
-// TODO if (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
+        // (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
             HashMap<String, Integer> classAllocation = SlotAllocation.get(classHandle);
             if (classAllocation.containsKey(name))
-// TODO     if (classAllocation.TryGetValue(name, out position))
+            // (classAllocation.TryGetValue(name, out position))
             {
                 int position;
                 position = classAllocation.get(name);
@@ -269,7 +261,7 @@ public final class P6opaque implements Representation
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native String");
     }
-    private void ComputeSlotAllocation(ThreadContext TC, RakudoObject WHAT)
+    private void ComputeSlotAllocation(ThreadContext tc, RakudoObject WHAT)
     {
         RakudoObject HOW = WHAT.getSTable().HOW;
 
@@ -282,24 +274,23 @@ public final class P6opaque implements Representation
         while (currentClass != null)
         {
             // Get attributes and iterate over them.
-            RakudoObject AttributesMeth = HOW.getSTable().FindMethod.FindMethod(TC, HOW, "attributes", Hints.NO_HINT);
+            RakudoObject AttributesMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
             HashMap<String, RakudoObject> localBoxInt1 = new HashMap<String, RakudoObject>();
-            localBoxInt1.put("local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType));
-            RakudoObject Attributes = AttributesMeth.getSTable().Invoke.Invoke(TC, AttributesMeth, CaptureHelper.FormWith(
+            localBoxInt1.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
+            RakudoObject Attributes = AttributesMeth.getSTable().Invoke.Invoke(tc, AttributesMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, WHAT },
-//              new HashMap<String, RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
-                localBoxInt1));
-            RakudoObject AttributesElemsMeth = Attributes.getSTable().FindMethod.FindMethod(TC, Attributes, "elems", Hints.NO_HINT);
-            int AttributesElems = Ops.unbox_int(TC, AttributesElemsMeth.getSTable().Invoke.Invoke(TC, AttributesElemsMeth,
+                localBoxInt1)); // new HashMap<String, RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
+            RakudoObject AttributesElemsMeth = Attributes.getSTable().FindMethod.FindMethod(tc, Attributes, "elems", Hints.NO_HINT);
+            int AttributesElems = Ops.unbox_int(tc, AttributesElemsMeth.getSTable().Invoke.Invoke(tc, AttributesElemsMeth,
                 CaptureHelper.FormWith(new RakudoObject[] { Attributes })));
-            RakudoObject AttrAtPosMeth = Attributes.getSTable().FindMethod.FindMethod(TC, Attributes, "at_pos", Hints.NO_HINT);
+            RakudoObject AttrAtPosMeth = Attributes.getSTable().FindMethod.FindMethod(tc, Attributes, "at_pos", Hints.NO_HINT);
             for (int i = 0; i < AttributesElems; i++)
             {
                 // Get the attribute, then get its name.
-                RakudoObject attr = AttrAtPosMeth.getSTable().Invoke.Invoke(TC, AttrAtPosMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { Attributes, Ops.box_int(TC, i, TC.DefaultIntBoxType) }));
-                RakudoObject nameMeth = attr.getSTable().FindMethod.FindMethod(TC, attr, "name", Hints.NO_HINT);
-                String Name = Ops.unbox_str(TC, attr.getSTable().Invoke.Invoke(TC, nameMeth, CaptureHelper.FormWith(
+                RakudoObject attr = AttrAtPosMeth.getSTable().Invoke.Invoke(tc, AttrAtPosMeth, CaptureHelper.FormWith(
+                    new RakudoObject[] { Attributes, Ops.box_int(tc, i, tc.DefaultIntBoxType) }));
+                RakudoObject nameMeth = attr.getSTable().FindMethod.FindMethod(tc, attr, "name", Hints.NO_HINT);
+                String Name = Ops.unbox_str(tc, attr.getSTable().Invoke.Invoke(tc, nameMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { attr })));
 
                 // Allocate a slot.
@@ -310,17 +301,15 @@ public final class P6opaque implements Representation
             }
 
             // Find the next parent(s).
-            RakudoObject ParentsMeth = HOW.getSTable().FindMethod.FindMethod(TC, HOW, "parents", Hints.NO_HINT);
+            RakudoObject ParentsMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "parents", Hints.NO_HINT);
             HashMap<String,RakudoObject> localBoxInt2 = new HashMap<String,RakudoObject>();
-            localBoxInt2.put("local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType));
-            RakudoObject Parents = ParentsMeth.getSTable().Invoke.Invoke(TC, ParentsMeth, CaptureHelper.FormWith(
+            localBoxInt2.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
+            RakudoObject Parents = ParentsMeth.getSTable().Invoke.Invoke(tc, ParentsMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, WHAT },
-//              new HashMap<String,RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
-                localBoxInt2));
-
+                localBoxInt2)); // new HashMap<String,RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
             // Check how many parents we have.
-            RakudoObject ParentElemsMeth = Parents.getSTable().FindMethod.FindMethod(TC, Parents, "elems", Hints.NO_HINT);
-            int ParentElems = Ops.unbox_int(TC, ParentElemsMeth.getSTable().Invoke.Invoke(TC, ParentElemsMeth,
+            RakudoObject ParentElemsMeth = Parents.getSTable().FindMethod.FindMethod(tc, Parents, "elems", Hints.NO_HINT);
+            int ParentElems = Ops.unbox_int(tc, ParentElemsMeth.getSTable().Invoke.Invoke(tc, ParentElemsMeth,
                 CaptureHelper.FormWith(new RakudoObject[] { Parents })));
             if (ParentElems == 0)
             {
@@ -336,9 +325,9 @@ public final class P6opaque implements Representation
             else
             {
                 // Just one. Get next parent.
-                RakudoObject AtPosMeth = Parents.getSTable().FindMethod.FindMethod(TC, Parents, "at_pos", Hints.NO_HINT);
-                currentClass = AtPosMeth.getSTable().Invoke.Invoke(TC, AtPosMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { Parents, Ops.box_int(TC, 0, TC.DefaultIntBoxType) }));
+                RakudoObject AtPosMeth = Parents.getSTable().FindMethod.FindMethod(tc, Parents, "at_pos", Hints.NO_HINT);
+                currentClass = AtPosMeth.getSTable().Invoke.Invoke(tc, AtPosMeth, CaptureHelper.FormWith(
+                    new RakudoObject[] { Parents, Ops.box_int(tc, 0, tc.DefaultIntBoxType) }));
             }
         }
     }

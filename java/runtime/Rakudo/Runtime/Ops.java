@@ -1,10 +1,15 @@
 package Rakudo.Runtime;
 
+import java.util.ArrayList;
+
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
+import Rakudo.Metamodel.Representations.P6list;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Runtime.MultiDispatch.LexicalCandidateFinder;
+import Rakudo.Runtime.MultiDispatch.MultiDispatcher;
 
 /// <summary>
 /// This class implements the various vm::op options that are
@@ -100,10 +105,9 @@ public class Ops
     /// <param name="Object"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public static RakudoObject find_method(ThreadContext TC, RakudoObject Object, String Name)
+    public static RakudoObject find_method(ThreadContext tc, RakudoObject object, String name)
     {
-// TODO return Object.getSTable().FindMethod.FindMethod.Invoke.Invoke(TC, Object, Name, Hints.NO_HINT);
-        return null;
+        return object.getSTable().FindMethod.FindMethod(tc, object, name, Hints.NO_HINT);
     }
 
     /// <summary>
@@ -113,10 +117,9 @@ public class Ops
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
-    public static RakudoObject find_method_with_hint(ThreadContext TC, RakudoObject Object, String Name, int Hint)
+    public static RakudoObject find_method_with_hint(ThreadContext tc, RakudoObject object, String name, int hint)
     {
-// TODO return Object.getSTable().FindMethod(TC, Object, Name, Hint);
-        return null;
+        return object.getSTable().FindMethod.FindMethod(tc, object, name, hint);
     }
 
     /// <summary>
@@ -125,9 +128,9 @@ public class Ops
     /// <param name="Invokee"></param>
     /// <param name="Capture"></param>
     /// <returns></returns>
-    public static RakudoObject invoke(ThreadContext TC, RakudoObject Invokee, RakudoObject Capture)
+    public static RakudoObject invoke(ThreadContext tc, RakudoObject invokee, RakudoObject capture)
     {
-        return Invokee.getSTable().Invoke.Invoke(TC, Invokee, Capture);
+        return invokee.getSTable().Invoke.Invoke(tc, invokee, capture);
     }
 
     /// <summary>
@@ -135,9 +138,9 @@ public class Ops
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public static RakudoObject get_how(ThreadContext TC, RakudoObject Obj)
+    public static RakudoObject get_how(ThreadContext tc, RakudoObject object)
     {
-        return Obj.getSTable().HOW;
+        return object.getSTable().HOW;
     }
 
     /// <summary>
@@ -145,9 +148,9 @@ public class Ops
     /// </summary>
     /// <param name="Obj"></param>
     /// <returns></returns>
-    public static RakudoObject get_what(ThreadContext TC, RakudoObject Obj)
+    public static RakudoObject get_what(ThreadContext tc, RakudoObject object)
     {
-        return Obj.getSTable().WHAT;
+        return object.getSTable().WHAT;
     }
 
     /// <summary>
@@ -155,12 +158,12 @@ public class Ops
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
-    public static RakudoObject box_int(ThreadContext TC, int Value, RakudoObject To)
+    public static RakudoObject box_int(ThreadContext tc, int value, RakudoObject to)
     {
-        Representation REPR = To.getSTable().REPR;
-        RakudoObject Result = REPR.instance_of(TC, To);
-        REPR.set_int(TC, Result, Value);
-        return Result;
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_int(tc, result, value);
+        return result;
     }
 
     /// <summary>
@@ -168,12 +171,12 @@ public class Ops
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
-    public static RakudoObject box_num(ThreadContext TC, double Value, RakudoObject To)
+    public static RakudoObject box_num(ThreadContext tc, double value, RakudoObject to)
     {
-        Representation REPR = To.getSTable().REPR;
-        RakudoObject Result = REPR.instance_of(TC, To);
-        REPR.set_num(TC, Result, Value);
-        return Result;
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_num(tc, result, value);
+        return result;
     }
 
     /// <summary>
@@ -181,12 +184,12 @@ public class Ops
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
-    public static RakudoObject box_str(ThreadContext TC, String Value, RakudoObject To)
+    public static RakudoObject box_str(ThreadContext tc, String value, RakudoObject to)
     {
-        Representation REPR = To.getSTable().REPR;
-        RakudoObject Result = REPR.instance_of(TC, To);
-        REPR.set_str(TC, Result, Value);
-        return Result;
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_str(tc, result, value);
+        return result;
     }
 
     /// <summary>
@@ -194,9 +197,9 @@ public class Ops
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
-    public static int unbox_int(ThreadContext TC, RakudoObject Boxed)
+    public static int unbox_int(ThreadContext tc, RakudoObject boxed)
     {
-        return Boxed.getSTable().REPR.get_int(TC, Boxed);
+        return boxed.getSTable().REPR.get_int(tc, boxed);
     }
 
     /// <summary>
@@ -204,9 +207,9 @@ public class Ops
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
-    public static double unbox_num(ThreadContext TC, RakudoObject Boxed)
+    public static double unbox_num(ThreadContext tc, RakudoObject boxed)
     {
-        return Boxed.getSTable().REPR.get_num(TC, Boxed);
+        return boxed.getSTable().REPR.get_num(tc, boxed);
     }
 
     /// <summary>
@@ -214,9 +217,9 @@ public class Ops
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
-    public static String unbox_str(ThreadContext TC, RakudoObject Boxed)
+    public static String unbox_str(ThreadContext tc, RakudoObject boxed)
     {
-        return Boxed.getSTable().REPR.get_str(TC, Boxed);
+        return boxed.getSTable().REPR.get_str(tc, boxed);
     }
 
     /// <summary>
@@ -225,10 +228,10 @@ public class Ops
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
-    public static RakudoObject coerce_int_to_str(ThreadContext TC, RakudoObject Int, RakudoObject TargetType)
+    public static RakudoObject coerce_int_to_str(ThreadContext tc, RakudoObject intObject, RakudoObject targetType)
     {
-        int Value = Ops.unbox_int(TC, Int);
-        return Ops.box_str(TC, Integer.toString(Value), TargetType);
+        int value = Ops.unbox_int(tc, intObject);
+        return Ops.box_str(tc, Integer.toString(value), targetType);
     }
 
     /// <summary>
@@ -237,10 +240,10 @@ public class Ops
     /// <param name="Num"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
-    public static RakudoObject coerce_num_to_str(ThreadContext TC, RakudoObject Num, RakudoObject TargetType)
+    public static RakudoObject coerce_num_to_str(ThreadContext tc, RakudoObject numObject, RakudoObject targetType)
     {
-        double Value = Ops.unbox_num(TC, Num);
-        return Ops.box_str(TC, Double.toString(Value), TargetType);
+        double value = Ops.unbox_num(tc, numObject);
+        return Ops.box_str(tc, Double.toString(value), targetType);
     }
 
     /// <summary>
@@ -249,10 +252,10 @@ public class Ops
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
-    public static RakudoObject coerce_int_to_num(ThreadContext TC, RakudoObject Int, RakudoObject TargetType)
+    public static RakudoObject coerce_int_to_num(ThreadContext tc, RakudoObject intObject, RakudoObject targetType)
     {
-        int Value = Ops.unbox_int(TC, Int);
-        return Ops.box_num(TC, (double)Value, TargetType);
+        int value = Ops.unbox_int(tc, intObject);
+        return Ops.box_num(tc, (double)value, targetType);
     }
 
     /// <summary>
@@ -261,10 +264,10 @@ public class Ops
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
-    public static RakudoObject coerce_num_to_int(ThreadContext TC, RakudoObject Num, RakudoObject TargetType)
+    public static RakudoObject coerce_num_to_int(ThreadContext tc, RakudoObject numObject, RakudoObject targetType)
     {
-        double Value = Ops.unbox_num(TC, Num);
-        return Ops.box_int(TC, (int)Value, TargetType);
+        double value = Ops.unbox_num(tc, numObject);
+        return Ops.box_int(tc, (int)value, targetType);
     }
 
     /// <summary>
@@ -273,20 +276,19 @@ public class Ops
     /// <param name="i"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static RakudoObject get_lex(ThreadContext TC, String Name)
+    public static RakudoObject get_lex(ThreadContext tc, String name)
     {
-        Context CurContext = TC.CurrentContext;
-        while (CurContext != null)
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
         {
             // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
-            if (CurContext.LexPad.SlotMapping.containsKey(Name)) {
-                int Index;
-                Index = CurContext.LexPad.SlotMapping.get(Name);
-                return CurContext.LexPad.Storage[Index];
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
             }
-            CurContext = CurContext.Outer;
+            curContext = curContext.Outer;
         }
-        throw new UnsupportedOperationException("No variable " + Name + " found in the lexical scope");
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
     }
 
     /// <summary>
@@ -295,22 +297,21 @@ public class Ops
     /// <param name="i"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static RakudoObject bind_lex(ThreadContext TC, String Name, RakudoObject Value)
+    public static RakudoObject bind_lex(ThreadContext tc, String name, RakudoObject value)
     {
-        Context CurContext = TC.CurrentContext;
-        while (CurContext != null)
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
         {
             // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
-            if (CurContext.LexPad.SlotMapping.containsKey(Name))
+            if (curContext.LexPad.SlotMapping.containsKey(name))
             {
-                int Index;
-                Index = CurContext.LexPad.SlotMapping.get(Name);
-                CurContext.LexPad.Storage[Index] = Value;
-                return Value;
+                int index = curContext.LexPad.SlotMapping.get(name);
+                curContext.LexPad.Storage[index] = value;
+                return value;
             }
-            CurContext = CurContext.Outer;
+            curContext = curContext.Outer;
         }
-        throw new UnsupportedOperationException("No variable " + Name + " found in the lexical scope");
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
     }
 
     /// <summary>
@@ -319,20 +320,19 @@ public class Ops
     /// <param name="C"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public static RakudoObject get_dynamic(ThreadContext TC, String Name)
+    public static RakudoObject get_dynamic(ThreadContext tc, String name)
     {
-        Context CurContext = TC.CurrentContext;
-        while (CurContext != null)
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
         {
             // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
-            if (CurContext.LexPad.SlotMapping.containsKey(Name)) {
-                int Index;
-                Index = CurContext.LexPad.SlotMapping.get(Name);
-                return CurContext.LexPad.Storage[Index];
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
             }
-            CurContext = CurContext.Caller;
+            curContext = curContext.Caller;
         }
-        throw new UnsupportedOperationException("No variable " + Name + " found in the dynamic scope");
+        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
     }
 
     /// <summary>
@@ -341,22 +341,21 @@ public class Ops
     /// <param name="C"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public static RakudoObject bind_dynamic(ThreadContext TC, String Name, RakudoObject Value)
+    public static RakudoObject bind_dynamic(ThreadContext tc, String name, RakudoObject value)
     {
-        Context CurContext = TC.CurrentContext;
-        while (CurContext != null)
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
         {
             // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
-            if (CurContext.LexPad.SlotMapping.containsKey(Name))
+            if (curContext.LexPad.SlotMapping.containsKey(name))
             {
-                int Index;
-                Index = CurContext.LexPad.SlotMapping.get(Name);
-                CurContext.LexPad.Storage[Index] = Value;
-                return Value;
+                int index = curContext.LexPad.SlotMapping.get(name);
+                curContext.LexPad.Storage[index] = value;
+                return value;
             }
-            CurContext = CurContext.Caller;
+            curContext = curContext.Caller;
         }
-        throw new UnsupportedOperationException("No variable " + Name + " found in the dynamic scope");
+        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
     }
 
     /// <summary>
@@ -366,11 +365,11 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject equal_nums(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject equal_nums(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC,
-            (Ops.unbox_num(TC, x) == Ops.unbox_num(TC, y) ? 1 : 0),
-            TC.DefaultBoolBoxType);
+        return Ops.box_int(tc,
+            (Ops.unbox_num(tc, x) == Ops.unbox_num(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
     }
 
     /// <summary>
@@ -380,11 +379,11 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject equal_ints(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject equal_ints(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC,
-            (Ops.unbox_int(TC, x) == Ops.unbox_int(TC, y) ? 1 : 0),
-            TC.DefaultBoolBoxType);
+        return Ops.box_int(tc,
+            (Ops.unbox_int(tc, x) == Ops.unbox_int(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
     }
 
     /// <summary>
@@ -394,11 +393,11 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject equal_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject equal_strs(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC,
-            (Ops.unbox_str(TC, x) == Ops.unbox_str(TC, y) ? 1 : 0),
-            TC.DefaultBoolBoxType);
+        return Ops.box_int(tc,
+            (Ops.unbox_str(tc, x) == Ops.unbox_str(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
     }
 
     /// <summary>
@@ -407,9 +406,9 @@ public class Ops
     /// <param name="x"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject logical_not_int(ThreadContext TC, RakudoObject x)
+    public static RakudoObject logical_not_int(ThreadContext tc, RakudoObject x)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) == 0 ? 1 : 0, TC.DefaultBoolBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) == 0 ? 1 : 0, tc.DefaultBoolBoxType);
     }
 
     /// <summary>
@@ -419,9 +418,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject add_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject add_int(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) + Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) + Ops.unbox_int(tc, y), tc.DefaultIntBoxType);
     }
 
     /// <summary>
@@ -431,9 +430,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject sub_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject sub_int(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) - Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) - Ops.unbox_int(tc, y), tc.DefaultIntBoxType);
     }
 
     /// <summary>
@@ -443,9 +442,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject mul_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject mul_int(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) * Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) * Ops.unbox_int(tc, y), tc.DefaultIntBoxType);
     }
 
     /// <summary>
@@ -455,9 +454,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject div_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject div_int(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) / Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) / Ops.unbox_int(tc, y), tc.DefaultIntBoxType);
     }
 
     /// <summary>
@@ -467,9 +466,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject mod_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject mod_int(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_int(TC, Ops.unbox_int(TC, x) % Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        return Ops.box_int(tc, Ops.unbox_int(tc, x) % Ops.unbox_int(tc, y), tc.DefaultIntBoxType);
     }
 
     /// <summary>
@@ -479,9 +478,9 @@ public class Ops
     /// <param name="y"></param>
     /// <param name="ResultType"></param>
     /// <returns></returns>
-    public static RakudoObject concat(ThreadContext TC, RakudoObject x, RakudoObject y)
+    public static RakudoObject concat(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
-        return Ops.box_str(TC, Ops.unbox_str(TC, x) + Ops.unbox_str(TC, y), TC.DefaultStrBoxType);
+        return Ops.box_str(tc, Ops.unbox_str(tc, x) + Ops.unbox_str(tc, y), tc.DefaultStrBoxType);
     }
 
     /// <summary>
@@ -490,17 +489,93 @@ public class Ops
     /// </summary>
     /// <param name="TC"></param>
     /// <returns></returns>
-    public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext TC, RakudoObject Name)
+    public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext tc, RakudoObject name)
     {
-/* TODO
-        var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
-            MultiDispatch.LexicalCandidateFinder.FindCandidates(
-                TC.CurrentContext.Caller,
-                TC.CurrentContext.Outer,
-                "!" + Ops.unbox_str(TC, Name) + "-candidates"),
-            TC.CurrentContext.Capture);
-        return Candidate.getSTable().Invoke(TC, Candidate, TC.CurrentContext.Capture);
-*/
-        return null; // TODO remove
+        RakudoObject candidate = MultiDispatcher.FindBestCandidate(
+            LexicalCandidateFinder.FindCandidates(
+                tc.CurrentContext.Caller,
+                tc.CurrentContext.Outer,
+                "!" + Ops.unbox_str(tc, name) + "-candidates"),
+            tc.CurrentContext.Capture);
+        return candidate.getSTable().Invoke.Invoke(tc, candidate, tc.CurrentContext.Capture);
+    }
+
+    /// <summary>
+    /// Gets a value at a given positional index from a low level list
+    /// (something that uses the P6list representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLList"></param>
+    /// <param name="Index"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_get_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject index)
+    {
+// TODO correct syntax
+//      if (lowlevelList.typeof(P6list.Instance))
+        if ( true )
+        {
+            return ((P6list.Instance)lowlevelList).Storage.get(Ops.unbox_int(tc, index));
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use lllist_get_at_pos if representation is not P6list");
+        }
+    }
+
+    /// <summary>
+    /// Binds a value at a given positional index from a low level list
+    /// (something that uses the P6list representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLList"></param>
+    /// <param name="Index"></param>
+    /// <returns></returns>
+    public static void lllist_bind_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject indexObj, RakudoObject value)
+    {
+// TODO correct syntax
+//      if (LLList is P6list.Instance)
+        if ( true )
+        {
+            ArrayList<RakudoObject> storage = ((P6list.Instance)lowlevelList).Storage;
+            Integer index = Ops.unbox_int(tc, indexObj);
+            if (index < storage.size())
+            {
+                storage.set(index,value);
+            }
+            else
+            {
+                // XXX Need some more efficient resizable array approach...
+                // Also this is no way thread safe.
+                while (index > storage.size())
+                    storage.add(null);
+                storage.add(value);
+            }
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use lllist_bind_at_pos if representation is not P6list");
+        }
+    }
+
+    /// <summary>
+    /// Binds a value at a given positional index from a low level list
+    /// (something that uses the P6list representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLList"></param>
+    /// <param name="Index"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_elems(ThreadContext tc, RakudoObject lowlevelList)
+    {
+// TODO correct syntax
+//      if (LLList is P6list.Instance)
+        if ( true )
+        {
+            return Ops.box_int(tc, ((P6list.Instance)lowlevelList).Storage.size(), tc.DefaultIntBoxType);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use lllist_elems if representation is not P6list");
+        }
     }
 }

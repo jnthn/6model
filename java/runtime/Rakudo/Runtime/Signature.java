@@ -11,22 +11,24 @@ public class Signature
     /// Creates a new Signature object instance.
     /// </summary>
     /// <param name="Parameters"></param>
-    public Signature(Parameter[] Parameters)
+    public Signature(Parameter[] parameters)
     {
         // Set parameters array in place.
-        this.Parameters = Parameters;
+        this.Parameters = parameters;
 
         // Build and cache number of positionals.
-        for (int i = 0; i < Parameters.length; i++)
-            if (Parameters[i].Flags == Parameter.POS_FLAG)
+        for (int i = 0; i < parameters.length; i++)
+        {
+            if (parameters[i].Flags == Parameter.POS_FLAG)
             {
                 NumRequiredPositionals++;
                 NumPositionals++;
             }
             else if (Parameters[i].Flags == Parameter.OPTIONAL_FLAG)
                 NumPositionals++;
-            else
+            else // XXX rewrite as a switch?
                 break;
+        }
     }
 
 
@@ -39,22 +41,19 @@ public class Signature
     /// The total number of positionals.
     /// </summary>
     /// <returns></returns>
-    int NumPositionals;
-//  internal int NumPositionals;
+    public int NumPositionals; // internal in the C# version
 
     /// <summary>
     /// The number of required positionals.
     /// </summary>
     /// <returns></returns>
-    int NumRequiredPositionals;
-//  internal int NumRequiredPositionals;
+    public int NumRequiredPositionals; // internal in the C# version
 
     /// <summary>
     /// Do we have a slurpy positional parameter?
     /// </summary>
     /// <returns></returns>
-    boolean HasSlurpyPositional()
-//  internal boolean HasSlurpyPositional()
+    public boolean HasSlurpyPositional() // internal in the C# version
     {
         for (int i = 0; i < Parameters.length; i++)
             if (Parameters[i].Flags == Parameter.POS_SLURPY_FLAG)

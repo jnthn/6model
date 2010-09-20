@@ -100,7 +100,7 @@ public class SharedTable
         }
         return id;
     }
-    //public long TypeCacheID = Interlocked.Increment(ref TypeIDSource);
+    // public long TypeCacheID = Interlocked.Increment(ref TypeIDSource); // the C# version
 
     /// <summary>
     /// Source of type IDs. The lowest one is 4. This is to make the lower

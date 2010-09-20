@@ -21,24 +21,13 @@ public class KnowHOWREPR implements Representation
     /// representation. We use .Net data types for out attribute
     /// and method store.
     /// </summary>
-    public class KnowHOWInstance implements RakudoObject
-    // internal class KnowHOWInstance implements IRakudoObject // the C# version
+    public class KnowHOWInstance extends RakudoObject
     {
-        // public SharedTable STable { get; set; } // the C# version
-        private SharedTable STable;
-        public SharedTable getSTable() { return STable; }
-        public void setSTable(SharedTable st) { STable = st; }
-
-        // public Serialization.SerializationContext SC { get; set; } # the C# version
-        private SerializationContext SC;
-        public SerializationContext getSC() { return SC; }
-        public void setSC( SerializationContext sc ) { SC = sc; }
-
         public ArrayList<RakudoObject> Attributes;
         public HashMap<String, RakudoObject> Methods;
-        public KnowHOWInstance(SharedTable STable)
+        public KnowHOWInstance(SharedTable sharedTable)
         {
-            this.STable = STable;
+            this.setSTable(sharedTable);
         }
     }
 
@@ -50,7 +39,6 @@ public class KnowHOWREPR implements Representation
     public RakudoObject type_object_for(ThreadContext tc, RakudoObject HOW)
     {
         SharedTable STable = new SharedTable();
-        // var STable = new SharedTable();
         STable.HOW = HOW;
         STable.REPR = this;
         STable.WHAT = new KnowHOWInstance(STable);
@@ -65,7 +53,6 @@ public class KnowHOWREPR implements Representation
     public RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
         KnowHOWInstance Object = new KnowHOWInstance(WHAT.getSTable());
-        // var Object = new KnowHOWInstance(WHAT.STable);
         Object.Methods = new HashMap<String, RakudoObject>();
         Object.Attributes = new ArrayList<RakudoObject>();
         return Object;

@@ -16,16 +16,8 @@ public final class P6int implements Representation
     /// <summary>
     /// This is how the boxed form of a P6int looks like.
     /// </summary>
-    public final class Instance implements RakudoObject
+    public final class Instance extends RakudoObject
     {
-        // RakudoObject required implementation
-        private SharedTable _SharedTable;
-        private SerializationContext _SC;
-        public SharedTable getSTable() {return _SharedTable;}
-        public void setSTable( SharedTable st ){ _SharedTable = st;}
-        public SerializationContext getSC(){return _SC;}
-        public void setSC( SerializationContext sc ){ _SC = sc;}
-
         public int Value;
         public boolean Undefined;
         public Instance(SharedTable STable)

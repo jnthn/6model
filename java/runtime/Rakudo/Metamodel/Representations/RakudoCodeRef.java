@@ -1,6 +1,6 @@
 package Rakudo.Metamodel.Representations;
 
-import java.util.HashMap;     // HashMap
+import java.util.HashMap;
 import Rakudo.Runtime.Context;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
@@ -29,16 +29,8 @@ public final class RakudoCodeRef implements Representation
     /// <summary>
     /// This is how the boxed form of a P6str looks.
     /// </summary>
-    public final class Instance implements RakudoObject
+    public final class Instance extends RakudoObject
     {
-        private SharedTable st;
-        public SharedTable getSTable(){return st;}
-        public void setSTable( SharedTable st ){return;}
-
-        private SerializationContext sc;
-        public SerializationContext getSC() { return sc; }
-        public void setSC( SerializationContext sc ) {;}
-
         /// <summary>
         /// The code body - the thing that actually runs instructions.
         /// </summary>
@@ -71,7 +63,6 @@ public final class RakudoCodeRef implements Representation
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);
-            // this.STable = sharedTable; // the C# version is a property
         }
     }
 
@@ -93,14 +84,9 @@ public final class RakudoCodeRef implements Representation
         sTable.Invoke = new IFunc_Body() { // create an anonymous class
             public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap )
             {
-                // TODO ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
-                return null; // TODO remove
+                return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);
             }
         };
-        // the C# version:
-        // STable.Invoke = (TC, Obj, Cap) =>
-        //     ((RakudoCodeRef.Instance)Obj).Body(TC, Obj, Cap);
-
         return sTable.WHAT;
     }
 
@@ -112,7 +98,6 @@ public final class RakudoCodeRef implements Representation
     public RakudoObject instance_of(ThreadContext tc, RakudoObject rakudoObject)
     {
         return new Instance(rakudoObject.getSTable());
-        // return new Instance(rakudoObject.STable()); // the C# version is a property
     }
 
     /// <summary>
@@ -122,8 +107,7 @@ public final class RakudoCodeRef implements Representation
     /// <returns></returns>
     public boolean defined(ThreadContext tc, RakudoObject rakudoObject)
     {
-        return false;
-// TODO return ((Instance)rakudoObject).Body != null;
+        return ((Instance)rakudoObject).Body != null;
     }
 
     public RakudoObject get_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name)

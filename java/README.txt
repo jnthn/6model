@@ -6,19 +6,27 @@ of the C# files in the dotnet tree.  C# is the "Microsoft Java" and this
 subproject shows how close they are.
 
 
+Status
+------
+
+The Metamodel is fully translated.  The setting loader (in Init.java)
+needs to be rewritten in terms of ClassLoader.  The compiler needs to be
+translated.
+
+
 Source formatting guidelines
 ----------------------------
 
 For clarity, or where there is doubt about the correctness of a
 translation, include the original line afterwards in a comment.
 
-Add horizontal spacing to maximize correlation of text in consecutive
+Use horizontal spacing to maximize correlation of text in consecutive
 lines.
 
-With apologies to jnthn++, a case convention for the initial letter of
-names is being gradually phased in.  Class names, class member names and
-interfaces is start with an uppercase letter.  Local variables begin in
-lowercase.
+With apologies to jnthn++, a widely used case convention for the initial
+letter of names is being gradually phased in.  Class names, class member
+names and interfaces start with an uppercase letter.  Local variables
+begin in lowercase.
 
 
 6model specific translations
@@ -26,8 +34,8 @@ lowercase.
 
 The RakudoObject interface defines properties STable and SC (meaning
 SharedTable and SerializationContext).  Java does not have properties,
-these become private data members _STable and _SC, and get accessor
-methods getSTable(), setSTable, getSC() and setSC().
+these become private data members and get accessor methods getSTable(),
+setSTable(), getSC() and setSC().
 
 
 C# to Java translation guidelines (in case insensitive alphabetical order)
@@ -35,11 +43,15 @@ C# to Java translation guidelines (in case insensitive alphabetical order)
 
 C# abstract class becomes Java interface.
 
+C# Add(item) (to a List) becomes Java add(item) (to an ArrayList).
+
 C# bool becomes Java boolean.
 
 C# Console.Write becomes Java System.out.print.
 
 C# const becomes Java static final.
+
+C# Count (of a List) becomes Java size() (of an ArrayList).
 
 C# Dictionary becomes Java HashMap.  The HashMap is not quite as
 versatile, because the value part must be a reference type, it cannot be
@@ -67,7 +79,9 @@ C# Length (of an array) becomes Java length (of an array).
 
 C# Length (of a List) becomes Java size() (of an ArrayList).
 
-C# List becomes Java ArrayList.
+C# List (in System.Collections.Generic) becomes Java ArrayList (in java.util).
+
+C# Min(a,b) (in System.Math) becomes Java min(a,b) in java.lang.Math.
 
 C# namespace yada { ... } becomes Java package yada; ... .
 Also the Java package hierarchy must match the file system directory
@@ -124,6 +138,19 @@ interface.
 
 See: http://msdn.microsoft.com/en-us/library/bb549151.aspx and
 http://dotnetperls.com/func
+
+
+See Also
+--------
+
+IKVM (http://sourceforge.net/apps/mediawiki/ikvm/index.php?title=FAQ)
+runs Java code on Mono and .NET CLR.
+
+Compare Java and C#: http://discuss.joelonsoftware.com/default.asp?joel.3.456095.37
+
+Compare JVM and CLR: http://benjismith.net/index.php/2006/06/23/biz-idea-08-dotjnet-bytecode-translator/
+
+Compare JVM and CLR code security: http://onjava.com/pub/a/onjava/2003/11/26/javavsdotnet.html?page=2&x-maxdepth=0
 
 Created by: Martin Berends (mberends in #perl6 on irc.freenode.net)
 

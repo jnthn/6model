@@ -24,9 +24,9 @@ public class Ops
     /// <param name="HOW"></param>
     /// <param name="REPRName"></param>
     /// <returns></returns>
-    public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, String REPRName)
+    public static RakudoObject type_object_for(ThreadContext tc, RakudoObject HOW, String REPRName)
     {
-        return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(TC, HOW);
+        return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(tc, HOW);
     }
 
     /// <summary>
@@ -34,76 +34,76 @@ public class Ops
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    public static RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
+    public static RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
-        return WHAT.getSTable().REPR.instance_of(TC, WHAT);
+        return WHAT.getSTable().REPR.instance_of(tc, WHAT);
     }
 
     /// <summary>
     /// Checks if the representation considers the object defined.
     /// </summary>
-    /// <param name="Obj"></param>
+    /// <param name="obj"></param>
     /// <returns></returns>
-    public static boolean repr_defined(ThreadContext TC, RakudoObject Obj)
+    public static boolean repr_defined(ThreadContext tc, RakudoObject obj)
     {
-        return Obj.getSTable().REPR.defined(TC, Obj);
+        return obj.getSTable().REPR.defined(tc, obj);
     }
 
     /// <summary>
     /// Gets the value of an attribute.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="Class"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
-    public static RakudoObject get_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, String Name)
+    public static RakudoObject get_attr(ThreadContext tc, RakudoObject object, RakudoObject Class, String name)
     {
-        return Object.getSTable().REPR.get_attribute(TC, Object, Class, Name);
+        return object.getSTable().REPR.get_attribute(tc, object, Class, name);
     }
 
     /// <summary>
     /// Gets the value of an attribute, using the given hint.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="Class"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
-    public static RakudoObject get_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, String Name, int Hint)
+    public static RakudoObject get_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint)
     {
-        return Object.getSTable().REPR.get_attribute_with_hint(TC, Object, Class, Name, Hint);
+        return object.getSTable().REPR.get_attribute_with_hint(tc, object, Class, name, Hint);
     }
 
     /// <summary>
     /// Binds the value of an attribute to the given value.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="Class"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <param name="Hint"></param>
-    public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, String Name, RakudoObject Value)
+    public static void bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject Value)
     {
-        Object.getSTable().REPR.bind_attribute(TC, Object, Class, Name, Value);
+        object.getSTable().REPR.bind_attribute(tc, object, Class, name, Value);
     }
 
     /// <summary>
     /// Binds the value of an attribute to the given value, using the
     /// given hint.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="Class"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <param name="Hint"></param>
-    public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, String Name, int Hint, RakudoObject Value)
+    public static void bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint, RakudoObject Value)
     {
-        Object.getSTable().REPR.bind_attribute_with_hint(TC, Object, Class, Name, Hint, Value);
+        object.getSTable().REPR.bind_attribute_with_hint(tc, object, Class, name, Hint, Value);
     }
 
     /// <summary>
     /// Finds a method to call by name.
     /// </summary>
-    /// <param name="Object"></param>
-    /// <param name="Name"></param>
+    /// <param name="object"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
     public static RakudoObject find_method(ThreadContext tc, RakudoObject object, String name)
     {
@@ -113,8 +113,8 @@ public class Ops
     /// <summary>
     /// Finds a method to call, using the hint if available.
     /// </summary>
-    /// <param name="Object"></param>
-    /// <param name="Name"></param>
+    /// <param name="object"></param>
+    /// <param name="name"></param>
     /// <param name="Hint"></param>
     /// <returns></returns>
     public static RakudoObject find_method_with_hint(ThreadContext tc, RakudoObject object, String name, int hint)
@@ -136,7 +136,7 @@ public class Ops
     /// <summary>
     /// Gets the HOW (higher order workings, e.g. meta-package).
     /// </summary>
-    /// <param name="Obj"></param>
+    /// <param name="obj"></param>
     /// <returns></returns>
     public static RakudoObject get_how(ThreadContext tc, RakudoObject object)
     {
@@ -146,7 +146,7 @@ public class Ops
     /// <summary>
     /// Gets the WHAT (type object).
     /// </summary>
-    /// <param name="Obj"></param>
+    /// <param name="obj"></param>
     /// <returns></returns>
     public static RakudoObject get_what(ThreadContext tc, RakudoObject object)
     {
@@ -281,7 +281,7 @@ public class Ops
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
+            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name)) {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
@@ -302,7 +302,7 @@ public class Ops
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
+            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
                 int index = curContext.LexPad.SlotMapping.get(name);
@@ -318,14 +318,14 @@ public class Ops
     /// Looks up a variable in the dynamic scope.
     /// </summary>
     /// <param name="C"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
     public static RakudoObject get_dynamic(ThreadContext tc, String name)
     {
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
+            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name)) {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
@@ -339,14 +339,14 @@ public class Ops
     /// Binds the given value to a variable in the dynamic scope.
     /// </summary>
     /// <param name="C"></param>
-    /// <param name="Name"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
     public static RakudoObject bind_dynamic(ThreadContext tc, String name, RakudoObject value)
     {
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index)) // the C# version
+            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
                 int index = curContext.LexPad.SlotMapping.get(name);
@@ -487,7 +487,7 @@ public class Ops
     /// Entry point to multi-dispatch over the candidates in the inner
     /// dispatcher.
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <returns></returns>
     public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext tc, RakudoObject name)
     {
@@ -504,15 +504,13 @@ public class Ops
     /// Gets a value at a given positional index from a low level list
     /// (something that uses the P6list representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLList"></param>
     /// <param name="Index"></param>
     /// <returns></returns>
     public static RakudoObject lllist_get_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject index)
     {
-// TODO correct syntax
-//      if (lowlevelList.typeof(P6list.Instance))
-        if ( true )
+        if (lowlevelList instanceof P6list.Instance)
         {
             return ((P6list.Instance)lowlevelList).Storage.get(Ops.unbox_int(tc, index));
         }
@@ -526,15 +524,13 @@ public class Ops
     /// Binds a value at a given positional index from a low level list
     /// (something that uses the P6list representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLList"></param>
     /// <param name="Index"></param>
     /// <returns></returns>
     public static void lllist_bind_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject indexObj, RakudoObject value)
     {
-// TODO correct syntax
-//      if (LLList is P6list.Instance)
-        if ( true )
+        if (lowlevelList instanceof P6list.Instance)
         {
             ArrayList<RakudoObject> storage = ((P6list.Instance)lowlevelList).Storage;
             Integer index = Ops.unbox_int(tc, indexObj);
@@ -561,15 +557,13 @@ public class Ops
     /// Binds a value at a given positional index from a low level list
     /// (something that uses the P6list representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLList"></param>
     /// <param name="Index"></param>
     /// <returns></returns>
     public static RakudoObject lllist_elems(ThreadContext tc, RakudoObject lowlevelList)
     {
-// TODO correct syntax
-//      if (LLList is P6list.Instance)
-        if ( true )
+        if (lowlevelList instanceof P6list.Instance)
         {
             return Ops.box_int(tc, ((P6list.Instance)lowlevelList).Storage.size(), tc.DefaultIntBoxType);
         }

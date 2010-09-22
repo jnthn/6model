@@ -1,5 +1,9 @@
 package Rakudo;
 
+import java.lang.Class;
+import java.lang.ClassLoader;
+import java.lang.reflect.Method;
+
 import Rakudo.Metamodel.KnowHOW.KnowHOWBootstrapper;
 import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.RakudoObject;
@@ -35,38 +39,31 @@ public class Init
     /// Handles the various bits of initialization that are needed.
     /// Probably needs some don't-dupe-this work.
     /// </summary>
-    public static ThreadContext Initialize(String SettingName)
+    public static ThreadContext Initialize(String settingName)
     {
         // Bootstrap the meta-model.
         RegisterRepresentations();
-        RakudoObject KnowHOW = KnowHOWBootstrapper.Bootstrap();
+        RakudoObject knowHOW = KnowHOWBootstrapper.Bootstrap();
 
-        // See if we're to load a setting or use the fake bootstrapping one.
-        Context settingContext;
-        if (SettingName == null)
-        {
-            settingContext = BootstrapSetting(KnowHOW);
-        }
-        else
-        {
-            settingContext = LoadSetting(SettingName, KnowHOW);
-        }
+        // Either load a named setting or use the fake bootstrapping one.
+        Context settingContext =
+            (settingName != null) ? LoadSetting(settingName, knowHOW)
+                                  : BootstrapSetting(knowHOW);
 
         // Cache native capture and LLCode type object.
         CaptureHelper.CaptureTypeObject = settingContext.LexPad.GetByName("capture");
         CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)settingContext.LexPad.GetByName("LLCode");
 
         // Create an execution domain and a thread context for it.
-        ExecutionDomain execDom = new ExecutionDomain();
-        ThreadContext   thread  = new ThreadContext();
-        thread.Domain = execDom;
-        thread.CurrentContext = settingContext;
-        thread.DefaultBoolBoxType = settingContext.LexPad.GetByName("NQPInt");
-        thread.DefaultIntBoxType  = settingContext.LexPad.GetByName("NQPInt");
-        thread.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
-        thread.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
-
-        return thread;
+        ExecutionDomain executionDomain  = new ExecutionDomain();
+        ThreadContext threadContext      = new ThreadContext();
+        threadContext.Domain             = executionDomain;
+        threadContext.CurrentContext     = settingContext;
+        threadContext.DefaultBoolBoxType = settingContext.LexPad.GetByName("NQPInt");
+        threadContext.DefaultIntBoxType  = settingContext.LexPad.GetByName("NQPInt");
+        threadContext.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
+        threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
+        return threadContext;
     }
     
     /// <summary>
@@ -130,24 +127,57 @@ public class Init
     /// <param name="Name"></param>
     /// <param name="KnowHOW"></param>
     /// <returns></returns>
-    public static Context LoadSetting(String Name, RakudoObject KnowHOW)
+    public static Context LoadSetting(String name, RakudoObject knowHOW)
     {
         // Load the assembly.
 // TODO var settingAssembly = AppDomain.CurrentDomain.Load(Name);
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        Class<?> classNQPSetting; // grrr, a wildcard type :-(
+        try {
+            classNQPSetting = loader.loadClass(name);
+        }
+        catch (ClassNotFoundException ex) {
+            classNQPSetting = null;
+            System.err.println("Class " + name + " not found: " + ex.getMessage());
+            System.exit(1);
+        }
 
         // Find the setting type and its LoadSetting method.
-// TODO var Class = settingAssembly.GetType("NQPSetting");
-// TODO var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
-        
+        // var Class = settingAssembly.GetType("NQPSetting");
+        // var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
+        String s = new String();
+        Class stringClass = s.getClass();
+        Method methodLoadSetting;
+        try {
+            methodLoadSetting = classNQPSetting.getMethod("LoadSetting", stringClass);
+        }
+        catch ( NoSuchMethodException  ex) {
+            methodLoadSetting = null;
+            System.err.println("Method LoadSetting not found: " + ex.getMessage());
+            System.exit(1);
+        }
+
         // Run it to get the context we want.
-        // TODO Context settingContext = (Context)Method.Invoke(null, new object[] { });
-        Context settingContext = null; // TODO remove
+        // TODO Context settingContext = (Context)Method.Invoke(null, new Object[] { });
+        Context settingContext = null;
+        try {
+            settingContext = (Context)methodLoadSetting.invoke( null, s );
+        }
+        catch (IllegalAccessException ex) {
+            System.err.println("Illegal access: " + ex.getMessage());
+            System.exit(1);
+        }
+        catch (java.lang.reflect.InvocationTargetException ex) {
+            System.err.println("Invocation target exception: " + ex.getMessage());
+            System.exit(1);
+        }
+
 
         // Fudge a few more things in.
         // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "print", "say", "capture", "LLCode" });
-        settingContext.LexPad.SetByName("KnowHOW", KnowHOW);
+        settingContext.LexPad.SetByName("KnowHOW", knowHOW);
 
         RakudoCodeRef.IFunc_Body funcPrint = new RakudoCodeRef.IFunc_Body()
         { // create an anonymous class
@@ -176,7 +206,7 @@ public class Init
         settingContext.LexPad.SetByName("say", CodeObjectUtility.WrapNativeMethod(funcSay));
 
         settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
-        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)));
+        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, knowHOW.getSTable().REPR.instance_of(null, knowHOW)));
         
         return settingContext;
     }

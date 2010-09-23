@@ -1,9 +1,5 @@
 package Rakudo;
 
-import java.lang.Class;
-import java.lang.ClassLoader;
-import java.lang.reflect.Method;
-
 import Rakudo.Metamodel.KnowHOW.KnowHOWBootstrapper;
 import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.RakudoObject;
@@ -130,7 +126,7 @@ public class Init
     public static Context LoadSetting(String name, RakudoObject knowHOW)
     {
         // Load the assembly.
-// TODO var settingAssembly = AppDomain.CurrentDomain.Load(Name);
+        // var settingAssembly = AppDomain.CurrentDomain.Load(Name);
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         Class<?> classNQPSetting; // grrr, a wildcard type :-(
         try {
@@ -147,7 +143,7 @@ public class Init
         // var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
         String s = new String();
         Class stringClass = s.getClass();
-        Method methodLoadSetting;
+        java.lang.reflect.Method methodLoadSetting;
         try {
             methodLoadSetting = classNQPSetting.getMethod("LoadSetting", stringClass);
         }
@@ -158,7 +154,7 @@ public class Init
         }
 
         // Run it to get the context we want.
-        // TODO Context settingContext = (Context)Method.Invoke(null, new Object[] { });
+        // Context settingContext = (Context)Method.Invoke(null, new Object[] { });
         Context settingContext = null;
         try {
             settingContext = (Context)methodLoadSetting.invoke( null, s );
@@ -172,21 +168,21 @@ public class Init
             System.exit(1);
         }
 
-
         // Fudge a few more things in.
         // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "print", "say", "capture", "LLCode" });
+
         settingContext.LexPad.SetByName("KnowHOW", knowHOW);
 
         RakudoCodeRef.IFunc_Body funcPrint = new RakudoCodeRef.IFunc_Body()
         { // create an anonymous class
-            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject objSelf, RakudoObject objCapture)
             {
-                RakudoObject value = CaptureHelper.GetPositional(capture, 0);
-                RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
-                RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth, capture);
-                System.out.print(Ops.unbox_str(null, strVal));
+                RakudoObject objParam = CaptureHelper.GetPositional(objCapture, 0);
+                RakudoObject objMethodStr = objSelf.getSTable().FindMethod.FindMethod(tc, objParam, "Str", 0);
+                RakudoObject objParamStr = objMethodStr.getSTable().Invoke.Invoke(tc, objMethodStr, objCapture);
+                System.out.print(Ops.unbox_str(null, objParamStr));
                 return CaptureHelper.Nil();
             }
         };
@@ -204,10 +200,9 @@ public class Init
             }
         };
         settingContext.LexPad.SetByName("say", CodeObjectUtility.WrapNativeMethod(funcSay));
-
         settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
         settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, knowHOW.getSTable().REPR.instance_of(null, knowHOW)));
-        
+
         return settingContext;
     }
 }

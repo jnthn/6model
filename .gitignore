@@ -1,3 +1,9 @@
 *.pir
 *.class
 *~
+*.dll
+*.dll.mdb
+*.jar
+gen_*
+dotnet/compiler/x.*
+java/compiler/x.*

@@ -6,32 +6,32 @@
 #
 #                                           Hints
 #                                             |
-#                                          SerializationContext
-#                                             |             |
-#        +------------------------> RakudoObject            |
-#        |                           |  |     |             |
-#        |                   Parameter Lexpad |             |
-#        |                         |    |     |             |
-#        |                   Signature  |   Representation  |
-#        |                         |    |    |   |    |     |
-#        |  +--+----------------> RakudoCodeRef  |    |     |
-#        |  |  |                        |        |    |     |
-#        1  2  3   ExecutionDomain   Context     |    |     |
-#        |  |  |                |       |        |    |     |
-#        |  |  +-------------- ThreadContext     |    |     |
-#        |  |                           |        |    |     |
-#        |  |          P6capture        |        |    |     |
-#        |  |             |             |        |    |     |
-#        |  |     MultiDispatcher       |        |    |     |
-#        |  |             |             |        |    |     |
-#        |  |  +-------> Ops  P6hash    |        |    |     |
-#        |  |  |          |   P6int     |        |    |     |
-#        |  |  4         P6opaque    IFindMethod |  REPRRegistry
-#        |  |  |                |            |   |      |
-#        |  |  |               CaptureHelper |   |      |
-#        |  |  |                          |  |   |      |
-#        +--+--+------------------------ SharedTable    |
-#                                             |         |
+#                                            SerializationContext
+#                                             |                |
+#        +------------------------> RakudoObject               |
+#        |                           |  |     |                |
+#        |                   Parameter Lexpad |                |
+#        |                         |    |     |                |
+#        |                   Signature  |   Representation     |
+#        |                         |    |    |      |    |     |
+#        |  +--+----------------> RakudoCodeRef     |    |     |
+#        |  |  |                           |        |    |     |
+#        1  2  3         ExecutionDomain  Context   |    |     |
+#        |  |  |                      |      |      |    |     |
+#        |  |  +--------------------- ThreadContext |    |     |
+#        |  |                                    |  |    |     |
+#        |  |              P6capture             |  |    |     |
+#        |  |               |     |              |  |    |     |
+#        |  |  MultiDispatcher  SignatureBinder  |  |    |     |
+#        |  |             |                      |  |    |     |
+#        |  |  +-------> Ops  P6hash             |  |    |     |
+#        |  |  |          |   P6int              |  |    |     |
+#        |  |  4         P6opaque       IFindMethod |  REPRRegistry
+#        |  |  |                |             |     |      |
+#        |  |  |               CaptureHelper  |     |      |
+#        |  |  |                          |   |     |      |
+#        +--+--+------------------------- SharedTable      |
+#                                             |            |
 #                                        KnowHOWREPR  CodeObjectUtility
 #                                             |         |
 #                                        KnowHOWBootstrapper
@@ -55,6 +55,7 @@ ALL_BUILD_TARGETS = \
 	Rakudo/Metamodel/Representations/P6str.class \
 	Rakudo/Metamodel/Representations/P6opaque.class \
 	Rakudo/Runtime/CodeObjectUtility.class \
+	Rakudo/Runtime/SignatureBinder.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
 	Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
 	Rakudo/Init.class
@@ -75,9 +76,16 @@ OTHER_DEPENDENT_TARGETS = \
 	Rakudo/Metamodel/IFindMethod.class \
 	Rakudo/Metamodel/SharedTable.class
 
-all: $(ALL_BUILD_TARGETS)
+INNER_CLASSES = \
+	Rakudo/Metamodel/Representations/RakudoCodeRef$$Instance.class
 
-# compiles ok: (listed in dependency order)
+all: RakudoRuntime.jar
+
+RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
+	jar cf RakudoRuntime.jar $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) '$(INNER_CLASSES)'
+# For troubleshooting, use `jar cvf RakudoRuntime.jar` instead.
+# Use `jar tf RakudoRuntime.jar` to tell what was done, or `jar tvf` instead.
+
 Rakudo/Metamodel/Hints.class: Rakudo/Metamodel/Hints.java
 	javac Rakudo/Metamodel/Hints.java
 
@@ -125,13 +133,6 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 
 Rakudo/Metamodel/REPRRegistry.class: Rakudo/Metamodel/REPRRegistry.java
 	javac Rakudo/Metamodel/REPRRegistry.java
-
-Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtility.java \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/REPRRegistry.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.class
-	javac Rakudo/Runtime/CodeObjectUtility.java
 
 Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
 		Rakudo/Metamodel/Hints.class
@@ -202,6 +203,19 @@ Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representation
 		Rakudo/Runtime/ThreadContext.class \
 		Rakudo/Serialization/SerializationContext.class
 	javac Rakudo/Metamodel/Representations/P6opaque.java
+
+Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtility.java \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/REPRRegistry.class \
+		Rakudo/Metamodel/Representation.class \
+		Rakudo/Metamodel/Representations/RakudoCodeRef.class
+	javac Rakudo/Runtime/CodeObjectUtility.java
+
+Rakudo/Runtime/SignatureBinder.class: Rakudo/Runtime/SignatureBinder.java \
+		Rakudo/Metamodel/RakudoObject.class \
+		Rakudo/Metamodel/Representations/P6capture.class \
+		Rakudo/Runtime/Context.class
+	javac Rakudo/Runtime/SignatureBinder.java
 
 Rakudo/Init.class: Rakudo/Init.java \
 		Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
@@ -331,6 +345,9 @@ Rakudo/Runtime/Parameter.java: ../../dotnet/runtime/Runtime/Signatures/Parameter
 Rakudo/Runtime/Signature.java: ../../dotnet/runtime/Runtime/Signatures/Signature.cs
 	@echo "todo: Rakudo/Runtime/Signature.java is older than ../../dotnet/runtime/Metamodel/Signatures/Signature.cs"
 
+Rakudo/Runtime/SignatureBinder.java: ../../dotnet/runtime/Runtime/Signatures/SignatureBinder.cs
+	@echo "todo: $@ is older than $<"
+
 Rakudo/Runtime/ThreadContext.java: ../../dotnet/runtime/Runtime/ThreadContext.cs
 	@echo "todo: Rakudo/Runtime/ThreadContext.java is older than ../../dotnet/runtime/Runtime/ThreadContext.cs"
 
@@ -342,7 +359,8 @@ Rakudo/Serialization/SerializationContext.java: ../../dotnet/runtime/Serializati
 todolist: $(TRANSLATED_SOURCE_FILES)
 
 clean:
-	perl -MExtUtils::Command -e rm_f $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS)
+	perl -MExtUtils::Command -e rm_f RakudoRuntime.jar \
+		$(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS)
 
 help:
 	@echo "In 6model/java/runtime you can make the following:"

@@ -76,10 +76,10 @@ namespace Rakudo.Runtime
         /// <param name="Object"></param>
         /// <param name="Class"></param>
         /// <param name="Name"></param>
-        /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
+        public static RakudoObject bind_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute(TC, Object, Class, Name, Value);
+            return Value;
         }
 
         /// <summary>
@@ -90,9 +90,10 @@ namespace Rakudo.Runtime
         /// <param name="Class"></param>
         /// <param name="Name"></param>
         /// <param name="Hint"></param>
-        public static void bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
+        public static RakudoObject bind_attr_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, int Hint, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute_with_hint(TC, Object, Class, Name, Hint, Value);
+            return Value;
         }
 
         /// <summary>

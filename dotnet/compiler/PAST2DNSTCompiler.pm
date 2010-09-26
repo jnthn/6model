@@ -757,6 +757,25 @@ our multi sub dnst_for(PAST::Var $var) {
             return $var.name;
         }
     }
+    elsif $scope eq 'attribute' {
+        # Need to get hold of $?CLASS (always lookup) and self.
+        my $class;
+        my $self;
+        {
+            my $*BIND_CONTEXT := 0;
+            $class := emit_lexical_lookup('$?CLASS');
+            $self := emit_lexical_lookup('self');
+        }
+
+        # Emit attribute lookup/bind.
+        return DNST::MethodCall.new(
+            :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
+            'TC',
+            $self,
+            $class,
+            DNST::Literal.new( :value($var.name), :escape(1) )
+        );
+    }
     else {
         pir::die("Don't know how to compile variable scope " ~ $var.scope);
     }

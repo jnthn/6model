@@ -302,6 +302,7 @@ namespace Rakudo.Metamodel.Representations
                 if (ParentElems == 0)
                 {
                     // We're done. \o/
+                    Slots = CurrentSlot;
                     break;
                 }
                 else if (ParentElems > 1)

@@ -6,4 +6,6 @@
 *.jar
 gen_*
 dotnet/compiler/x.*
+dotnet/compiler/NQPSetting.cs
 java/compiler/x.*
+dotnet/runtime/obj/*

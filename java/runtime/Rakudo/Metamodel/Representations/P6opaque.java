@@ -68,7 +68,7 @@ public final class P6opaque implements Representation
     public RakudoObject instance_of(ThreadContext tc, RakudoObject what)
     {
         if (SlotAllocation == null)
-            ComputeSlotAllocation(null, what);
+            ComputeSlotAllocation(tc, what);
         Instance object = new Instance(what.getSTable());
         object.SlotStorage = new RakudoObject[Slots];
         return object;
@@ -79,7 +79,7 @@ public final class P6opaque implements Representation
     /// this a type object", which in trun means "did we allocate
     /// any storage".
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <returns></returns>
     public boolean defined(ThreadContext tc, RakudoObject object)
     {
@@ -89,7 +89,7 @@ public final class P6opaque implements Representation
     /// <summary>
     /// Gets an attribute.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
@@ -123,7 +123,7 @@ public final class P6opaque implements Representation
     /// <summary>
     /// Gets the attribute, using the hint if possible.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
@@ -150,7 +150,7 @@ public final class P6opaque implements Representation
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="Object"></par    /// <param name="ClassHandle"></param>
+    /// <param name="object"></par    /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Value"></param>
     public void bind_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
@@ -186,7 +186,7 @@ public final class P6opaque implements Representation
     /// <summary>
     /// Bind the attribute, using the hint if possible.
     /// </summary>
-    /// <param name="Object"></param>
+    /// <param name="object"></param>
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <param name="Hint"></param>
@@ -231,33 +231,32 @@ public final class P6opaque implements Representation
             return Hints.NO_HINT;
     }
 
-    public void set_int(ThreadContext tc, RakudoObject Object, int Value)
+    public void set_int(ThreadContext tc, RakudoObject object, int Value)
     {
-        System.err.println("This type of representation cannot box a native int");
-        System.exit(1);
+        throw new UnsupportedOperationException("This type of representation cannot box a native int");
     }
 
-    public int get_int(ThreadContext tc, RakudoObject Object)
+    public int get_int(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native int");
     }
 
-    public void set_num(ThreadContext tc, RakudoObject Object, double Value)
+    public void set_num(ThreadContext tc, RakudoObject object, double Value)
     {
         throw new UnsupportedOperationException("This type of representation cannot box a native num");
     }
 
-    public double get_num(ThreadContext tc, RakudoObject Object)
+    public double get_num(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native num");
     }
 
-    public void set_str(ThreadContext tc, RakudoObject Object, String Value)
+    public void set_str(ThreadContext tc, RakudoObject object, String Value)
     {
         throw new UnsupportedOperationException("This type of representation cannot box a native String");
     }
 
-    public          String get_str(ThreadContext tc, RakudoObject Object)
+    public String get_str(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException("This type of representation cannot unbox to a native String");
     }
@@ -314,6 +313,7 @@ public final class P6opaque implements Representation
             if (ParentElems == 0)
             {
                 // We're done. \o/
+                Slots = CurrentSlot;
                 break;
             }
             else if (ParentElems > 1)

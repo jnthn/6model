@@ -81,9 +81,10 @@ public class Ops
     /// <param name="Class"></param>
     /// <param name="name"></param>
     /// <param name="Hint"></param>
-    public static void bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject Value)
+    public static RakudoObject bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject value)
     {
-        object.getSTable().REPR.bind_attribute(tc, object, Class, name, Value);
+        object.getSTable().REPR.bind_attribute(tc, object, Class, name, value);
+        return value;
     }
 
     /// <summary>
@@ -94,9 +95,10 @@ public class Ops
     /// <param name="Class"></param>
     /// <param name="name"></param>
     /// <param name="Hint"></param>
-    public static void bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint, RakudoObject Value)
+    public static RakudoObject bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint, RakudoObject value)
     {
-        object.getSTable().REPR.bind_attribute_with_hint(tc, object, Class, name, Hint, Value);
+        object.getSTable().REPR.bind_attribute_with_hint(tc, object, Class, name, Hint, value);
+        return value;
     }
 
     /// <summary>

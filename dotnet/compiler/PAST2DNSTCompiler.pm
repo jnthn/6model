@@ -461,7 +461,7 @@ our multi sub dnst_for(PAST::Op $op) {
         my $callee := DNST::Temp.new(
             :name(get_unique_id('callee')), :type('var'),
             DNST::MethodCall.new(
-                :on($inv.name), :name('STable.FindMethod'),
+                :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
                 'TC',
                 $inv.name,
                 DNST::Literal.new( :value($op.name), :escape(1) ),
@@ -471,7 +471,7 @@ our multi sub dnst_for(PAST::Op $op) {
         
         # How is capture formed?
         my $capture := DNST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith')
+            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
         );
         my $pos_part := DNST::ArrayLiteral.new(
             :type('RakudoObject'),
@@ -495,7 +495,7 @@ our multi sub dnst_for(PAST::Op $op) {
         return DNST::Stmts.new(
             $inv,
             DNST::MethodCall.new(
-                :name('STable.Invoke'),
+                :name('STable.Invoke'), :type('RakudoObject'),
                 $callee,
                 'TC',
                 $callee.name,
@@ -522,7 +522,7 @@ our multi sub dnst_for(PAST::Op $op) {
 
         # How is capture formed?
         my $capture := DNST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith')
+            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject'),
         );
         my $pos_part := DNST::ArrayLiteral.new( :type('RakudoObject') );
         my $named_part := DNST::DictionaryLiteral.new(
@@ -541,7 +541,7 @@ our multi sub dnst_for(PAST::Op $op) {
 
         # Emit call.
         return DNST::MethodCall.new(
-            :name('STable.Invoke'),
+            :name('STable.Invoke'), :type('RakudoObject'),
             $callee,
             'TC',
             $callee.name,
@@ -578,7 +578,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'if' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), 'TC',
+                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
@@ -595,7 +595,7 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'unless' {
         my $result := DNST::If.new(
             DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), 'TC',
+                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
                 dnst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     (@($op))[0]
@@ -630,7 +630,7 @@ our multi sub dnst_for(PAST::Op $op) {
             $cond,
             DNST::If.new(
                 DNST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'),
+                    :on('Ops'), :name('unbox_int'), :type('int'),
                     'TC', $cond_result
                 ),
                 $body,
@@ -681,7 +681,7 @@ our multi sub dnst_for(PAST::Val $val) {
     
     # Add to constants table.
     my $make_const := DNST::MethodCall.new(
-        :on('Ops'), :name('box_' ~ $primitive),
+        :on('Ops'), :name('box_' ~ $primitive), :type('RakudoObject'),
         'TC',
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
@@ -782,6 +782,7 @@ our multi sub dnst_for(PAST::Var $var) {
         # Emit attribute lookup/bind.
         return DNST::MethodCall.new(
             :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
+            :type('RakudoObject'),
             'TC',
             $self,
             $class,
@@ -822,6 +823,7 @@ our multi sub dnst_for($any) {
 sub emit_lexical_lookup($name) {
     return DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
+        :type('RakudoObject'),
         'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );
@@ -831,6 +833,7 @@ sub emit_lexical_lookup($name) {
 sub emit_dynamic_lookup($name) {
     return DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
+        :type('RakudoObject'),
         'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );

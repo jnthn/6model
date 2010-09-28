@@ -174,6 +174,7 @@ class DNST::MethodCall is DNST::Node {
     has $!on;
     has $!name;
     has $!void;
+    has $!type;
     
     method on($set?) {
         if $set { $!on := $set }
@@ -190,11 +191,17 @@ class DNST::MethodCall is DNST::Node {
         $!void
     }
 
-    method new(:$name!, :$on, :$void, *@children) {
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$name!, :$on, :$void, :$type, *@children) {
         my $obj := self.CREATE;
         if $on { $obj.on($on); }
         $obj.name($name);
         $obj.void($void);
+        $obj.type($type);
         $obj.set_children(@children);
         $obj;
     }

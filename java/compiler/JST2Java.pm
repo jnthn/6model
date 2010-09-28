@@ -33,18 +33,18 @@ our multi sub java_for(JST::Using $using) {
 our multi sub java_for(JST::Class $class) {
     my $code := '';
     if $class.namespace {
-        $code := $code ~ 'namespace ' ~ $class.namespce ~ " \{\n";
+        $code := $code ~ 'package ' ~ $class.namespce ~ ";\n";
     }
     $code := $code ~ 'class ' ~ $class.name ~ " \{ // JST::Class\n";
     for @($class) {
         $code := $code ~ java_for($_);
     }
     $code := $code ~ "}\n";
-    if $class.namespace {
-        $code := $code ~ "}\n";
-    }
     return $code;
 }
+
+
+
 
 our multi sub java_for(JST::Attribute $attr) {
     return '    private static ' ~ $attr.type ~ ' ' ~ $attr.name ~ "; // JST:Attribute\n";
@@ -111,7 +111,39 @@ our multi sub java_for(JST::MethodCall $mc) {
     $code := $code ~ '        ';
     unless $mc.void {
         $*LAST_TEMP := get_unique_id('result');
-        $code := $code ~ "RakudoObject $*LAST_TEMP = ";
+        my $ret_type := $mc.type || 'var';
+        my $method_name := "$invocant." ~ $mc.name;
+        if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
+        {
+            $ret_type := 'String';
+        }
+        if $ret_type eq 'var' && (
+            $method_name eq 'CaptureHelper.FormWith' ||
+            $method_name eq 'Ops.add_int' ||
+            $method_name eq 'Ops.box_str' ||
+            $method_name eq 'Ops.coerce_int_to_num' ||
+            $method_name eq 'Ops.coerce_int_to_str' ||
+            $method_name eq 'Ops.coerce_num_to_int' ||
+            $method_name eq 'Ops.coerce_num_to_str' ||
+            $method_name eq 'Ops.concat' ||
+            $method_name eq 'Ops.div_int' ||
+            $method_name eq 'Ops.equal_ints' ||
+            $method_name eq 'Ops.equal_nums' ||
+            $method_name eq 'Ops.equal_strs' ||
+            $method_name eq 'Ops.get_how' ||
+            $method_name eq 'Ops.get_what' ||
+            $method_name eq 'Ops.lllist_elems' ||
+            $method_name eq 'Ops.lllist_get_at_pos' ||
+            $method_name eq 'Ops.logical_not_int' ||
+            $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
+            $method_name eq 'Ops.mod_int' ||
+            $method_name eq 'Ops.mul_int' ||
+            $method_name eq 'Ops.sub_int'
+        )
+        {
+            $ret_type := 'RakudoObject';
+        }
+        $code := $code ~ "$ret_type $*LAST_TEMP = ";
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ "); // JST::MethodCall\n";
@@ -132,7 +164,7 @@ our multi sub java_for(JST::Call $mc) {
     $code := $code ~ '        ';
     unless $mc.void {
         $*LAST_TEMP := get_unique_id('result');
-        $code := $code ~ "var $*LAST_TEMP = ";
+        $code := $code ~ "RakudoObject $*LAST_TEMP = ";
     }
     $code := $code ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ "); // JST::Call\n";

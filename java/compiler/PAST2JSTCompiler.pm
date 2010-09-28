@@ -30,7 +30,7 @@ method compile(PAST::Node $node) {
 
     # Compile the node; ensure it is an immediate block.
     $node.blocktype('immediate');
-    my $main_block_call := dnst_for($node);
+    my $main_block_call := jst_for($node);
 
     # Build a class node and add the inner code blocks.
     my $class := JST::Class.new(
@@ -76,7 +76,11 @@ method compile(PAST::Node $node) {
             :name('LoadSetting'),
             :return_type('Context'),
             JST::Temp.new( :name('TC'), :type('Context'),
-                JST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize'), 'null' )
+                JST::MethodCall.new(
+                   :on('Rakudo.Init'), :name('Initialize'),
+                   :type('ThreadContext'),
+                   'null'
+                )
             ),
             JST::Call.new(
                 :name('blocks_init'),
@@ -108,9 +112,9 @@ method compile(PAST::Node $node) {
         $class.push(JST::Method.new(
             :name('Main'),
             :return_type('void'),
-            JST::Temp.new( :name('TC'), :type('Context'),
+            JST::Temp.new( :name('TC'), :type('ThreadContext'),
                 JST::MethodCall.new(
-                    :on('Rakudo.Init'), :name('Initialize'),
+                    :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
                     JST::Literal.new( :value('NQPSetting'), :escape(1) )
                 )
             ),
@@ -172,6 +176,7 @@ sub make_blocks_init_method($name) {
             'StaticBlockInfo[0]',
             JST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                :type('RakudoCodeRef.Instance'),
                 'null', 'null',
                 JST::ArrayLiteral.new( :type('String') )
             )
@@ -203,6 +208,7 @@ sub make_constants_init_method($name) {
                 :type('Context'),
                 JST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    :type('RakudoCodeRef.Instance'),
                     'null',
                     'StaticBlockInfo[1]',
                     JST::ArrayLiteral.new( :type('String') )
@@ -239,7 +245,7 @@ sub get_unique_id($prefix) {
 }
 
 # Compiles a block.
-our multi sub dnst_for(PAST::Block $block) {
+our multi sub jst_for(PAST::Block $block) {
     # Unshift this PAST::Block onto the block list.
     @*PAST_BLOCKS.unshift($block);
     
@@ -253,7 +259,11 @@ our multi sub dnst_for(PAST::Block $block) {
     # Setup static block info.
     my $outer_sbi := $*OUTER_SBI;
     my $our_sbi := $*SBI_POS;
-    my $our_sbi_setup := JST::MethodCall.new( :on('CodeObjectUtility'), :name('BuildStaticBlockInfo') );
+    my $our_sbi_setup := JST::MethodCall.new(
+        :on('CodeObjectUtility'),
+        :name('BuildStaticBlockInfo'),
+        :type('RakudoCodeRef.Instance')
+    );
     $*SBI_POS := $*SBI_POS + 1;
     $*SBI_SETUP.push(JST::Bind.new(
         "StaticBlockInfo[$our_sbi]",
@@ -276,7 +286,7 @@ our multi sub dnst_for(PAST::Block $block) {
     for @($block) {
         my $*OUTER_SBI := $our_sbi;
         my @*INNER_BLOCKS;
-        $stmts.push(dnst_for($_));
+        $stmts.push(jst_for($_));
         for @*INNER_BLOCKS {
             @inner_blocks.push($_);
         }
@@ -289,7 +299,7 @@ our multi sub dnst_for(PAST::Block $block) {
 
         # We'll fake this as an inner block to compile.
         my $*IN_LOADINIT := 1;
-        @*LOADINITS.push(dnst_for(PAST::Block.new(
+        @*LOADINITS.push(jst_for(PAST::Block.new(
             :blocktype('immediate'), $block.loadinit
         )));
 
@@ -315,6 +325,7 @@ our multi sub dnst_for(PAST::Block $block) {
                 :type('Context'),
                 JST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    :type('RakudoCodeRef.Instance'),
                     'null',
                     "StaticBlockInfo[$our_sbi]",
                     JST::ArrayLiteral.new( :type('String') )
@@ -374,13 +385,14 @@ our multi sub dnst_for(PAST::Block $block) {
     # low level code object.
     if $block.blocktype eq 'immediate' {
         return JST::MethodCall.new(
-            :name('getSTable().Invoke.Invoke'),
+            :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
             'TC',
             "StaticBlockInfo[$our_sbi]",
             JST::MethodCall.new(
                 :on('CaptureHelper'),
-                :name('FormWith')
+                :name('FormWith'),
+                :type('RakudoObject')
             )
         );
     }
@@ -399,7 +411,7 @@ sub compile_signature(@params) {
 
         # Type.
         if $_.multitype {
-            $param.push(dnst_for($_.multitype));
+            $param.push(jst_for($_.multitype));
         }
         else {
             $param.push('null');
@@ -433,16 +445,16 @@ sub compile_signature(@params) {
 }
 
 # Compiles a statements node - really just all the stuff in it.
-our multi sub dnst_for(PAST::Stmts $stmts) {
+our multi sub jst_for(PAST::Stmts $stmts) {
     my $result := JST::Stmts.new();
     for @($stmts) {
-        $result.push(dnst_for($_));
+        $result.push(jst_for($_));
     }
     return $result;
 }
 
 # Compiles the various forms of PAST::Op.
-our multi sub dnst_for(PAST::Op $op) {
+our multi sub jst_for(PAST::Op $op) {
     if $op.pasttype eq 'callmethod' {
         # We want to emit code for the args, but also need the
         # invocant to hand specially.
@@ -452,14 +464,14 @@ our multi sub dnst_for(PAST::Op $op) {
         # Invocant.
         my $inv := JST::Temp.new(
             :name(get_unique_id('inv')), :type('RakudoObject'),
-            dnst_for(@args.shift)
+            jst_for(@args.shift)
         );
 
         # Method lookup.
         my $callee := JST::Temp.new(
             :name(get_unique_id('callee')), :type('RakudoObject'),
             JST::MethodCall.new(
-                :on($inv.name), :name('getSTable().FindMethod.FindMethod'),
+                :on($inv.name), :name('getSTable().FindMethod.FindMethod'), :type('RakudoObject'),
                 'TC',
                 $inv.name,
                 JST::Literal.new( :value($op.name), :escape(1) ),
@@ -469,7 +481,7 @@ our multi sub dnst_for(PAST::Op $op) {
         
         # How is capture formed?
         my $capture := JST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith')
+            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
         );
         my $pos_part := JST::ArrayLiteral.new(
             :type('RakudoObject'),
@@ -480,10 +492,10 @@ our multi sub dnst_for(PAST::Op $op) {
         for @args {
             if $_.named {
                 $named_part.push(JST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(dnst_for($_));
+                $named_part.push(jst_for($_));
             }
             else {
-                $pos_part.push(dnst_for($_));
+                $pos_part.push(jst_for($_));
             }
         }
         $capture.push($pos_part);
@@ -493,7 +505,7 @@ our multi sub dnst_for(PAST::Op $op) {
         return JST::Stmts.new(
             $inv,
             JST::MethodCall.new(
-                :name('getSTable().Invoke.Invoke'),
+                :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
                 $callee,
                 'TC',
                 $callee.name,
@@ -514,7 +526,7 @@ our multi sub dnst_for(PAST::Op $op) {
             unless +@args {
                 pir::die("PAST::Op call nodes with no name must have at least one child");
             }
-            $callee := dnst_for(@args.shift);
+            $callee := jst_for(@args.shift);
         }
         $callee := JST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
 
@@ -528,10 +540,10 @@ our multi sub dnst_for(PAST::Op $op) {
         for @args {
             if $_.named {
                 $named_part.push(JST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(dnst_for($_));
+                $named_part.push(jst_for($_));
             }
             else {
-                $pos_part.push(dnst_for($_));
+                $pos_part.push(jst_for($_));
             }
         }
         $capture.push($pos_part);
@@ -539,7 +551,7 @@ our multi sub dnst_for(PAST::Op $op) {
 
         # Emit call.
         return JST::MethodCall.new(
-            :name('getSTable().Invoke.Invoke'),
+            :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
             $callee,
             'TC',
             $callee.name,
@@ -552,11 +564,11 @@ our multi sub dnst_for(PAST::Op $op) {
         my $lhs;
         {
             my $*BIND_CONTEXT := 1;
-            $lhs := dnst_for((@($op))[0]);
+            $lhs := jst_for((@($op))[0]);
         }
 
         # Now push onto that the evaluated RHS.
-        $lhs.push(dnst_for((@($op))[1]));
+        $lhs.push(jst_for((@($op))[1]));
 
         return $lhs;
     }
@@ -565,10 +577,10 @@ our multi sub dnst_for(PAST::Op $op) {
         # Just a call on the Ops class. Always pass thread context
         # as the first parameter.
         my $result := JST::MethodCall.new(
-            :on('Ops'), :name($op.name), 'TC'
+            :on('Ops'), :name($op.name), 'TC' # TODO: :type()
         );
         for @($op) {
-            $result.push(dnst_for($_));
+            $result.push(jst_for($_));
         }
         return $result;
     }
@@ -576,16 +588,16 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'if' {
         my $result := JST::If.new(
             JST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), 'TC',
-                dnst_for(PAST::Op.new(
+                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+                jst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
                 ))
             ),
-            dnst_for((@($op))[1])
+            jst_for((@($op))[1])
         );
         if +@($op) == 3 {
-            $result.push(dnst_for((@($op))[2]));
+            $result.push(jst_for((@($op))[2]));
         }
         return $result;
     }
@@ -593,13 +605,13 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'unless' {
         my $result := JST::If.new(
             JST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), 'TC',
-                dnst_for(PAST::Op.new(
+                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+                jst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     (@($op))[0]
                 ))
             ),
-            dnst_for((@($op))[1])
+            jst_for((@($op))[1])
         );
         return $result;
     }
@@ -609,18 +621,18 @@ our multi sub dnst_for(PAST::Op $op) {
         my $test_label := get_unique_id('while_lab');
         my $end_label := get_unique_id('while_end_lab');
         my $cond_result := get_unique_id('cond');
-        
+
         # Compile the condition.
         my $cond := JST::Temp.new(
             :name($cond_result), :type('RakudoObject'),
-            dnst_for(PAST::Op.new(
+            jst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
             ))
         );
 
         # Compile the body.
-        my $body := dnst_for((@($op))[1]);
+        my $body := jst_for((@($op))[1]);
 
         # Build up result.
         return JST::Stmts.new(
@@ -628,7 +640,7 @@ our multi sub dnst_for(PAST::Op $op) {
             $cond,
             JST::If.new(
                 JST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'),
+                    :on('Ops'), :name('unbox_int'), :type('int'),
                     'TC', $cond_result
                 ),
                 $body,
@@ -648,7 +660,7 @@ our multi sub dnst_for(PAST::Op $op) {
 }
 
 # Emits a value.
-our multi sub dnst_for(PAST::Val $val) {
+our multi sub jst_for(PAST::Val $val) {
     # If it's a block reference, hand back the SBI.
     if $val.value ~~ PAST::Block {
         unless $val.value<SBI> {
@@ -675,14 +687,14 @@ our multi sub dnst_for(PAST::Val $val) {
     else {
         pir::die("Can not detect type of value")
     }
-    my $type_dnst := emit_lexical_lookup($type);
+    my $type_jst := emit_lexical_lookup($type);
     
     # Add to constants table.
     my $make_const := JST::MethodCall.new(
-        :on('Ops'), :name('box_' ~ $primitive),
+        :on('Ops'), :name('box_' ~ $primitive), :type('RakudoObject'),
         'TC',
         JST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
-        $type_dnst
+        $type_jst
     );
     if $*IN_LOADINIT {
         return $make_const;
@@ -695,7 +707,7 @@ our multi sub dnst_for(PAST::Val $val) {
 }
 
 # Emits code for a variable node.
-our multi sub dnst_for(PAST::Var $var) {
+our multi sub jst_for(PAST::Var $var) {
     # See if we have a scope provided. If not, work one out.
     my $scope := $var.scope;
     unless $scope {
@@ -767,6 +779,26 @@ our multi sub dnst_for(PAST::Var $var) {
             return $var.name;
         }
     }
+    elsif $scope eq 'attribute' {
+        # Need to get hold of $?CLASS (always lookup) and self.
+        my $class;
+        my $self;
+        {
+            my $*BIND_CONTEXT := 0;
+            $class := emit_lexical_lookup('$?CLASS');
+            $self := emit_lexical_lookup('self');
+        }
+
+        # Emit attribute lookup/bind.
+        return JST::MethodCall.new(
+            :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
+            :type('RakudoObject'),
+            'TC',
+            $self,
+            $class,
+            JST::Literal.new( :value($var.name), :escape(1) )
+        );
+    }
     else {
         pir::die("Don't know how to compile variable scope " ~ $var.scope);
     }
@@ -783,7 +815,7 @@ sub declare_lexical($var) {
         my $result := emit_lexical_lookup($var.name);
         {
             my $*BIND_CONTEXT := '';
-            $result.push(dnst_for($var.viviself));
+            $result.push(jst_for($var.viviself));
         }
         return $result;
     }
@@ -793,7 +825,7 @@ sub declare_lexical($var) {
 }
 
 # Catch-all for error detection.
-our multi sub dnst_for($any) {
+our multi sub jst_for($any) {
     pir::die("Don't know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
 }
 
@@ -801,6 +833,7 @@ our multi sub dnst_for($any) {
 sub emit_lexical_lookup($name) {
     return JST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
+        :type('RakudoObject'),
         'TC',
         JST::Literal.new( :value($name), :escape(1) )
     );
@@ -810,6 +843,7 @@ sub emit_lexical_lookup($name) {
 sub emit_dynamic_lookup($name) {
     return JST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
+        :type('RakudoObject'),
         'TC',
         JST::Literal.new( :value($name), :escape(1) )
     );

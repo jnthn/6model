@@ -41,4 +41,13 @@ clean:
 Actions.pm: ../../dotnet/compiler/Actions.pm
 	@echo "todo: $@ is older than $<"
 
+JST.pm: ../../dotnet/compiler/DNST.pm
+	@echo "todo: $@ is older than $<"
+
+JST2Java.pm: ../../dotnet/compiler/DNST2CSharp.pm
+	@echo "todo: $@ is older than $<"
+
+PAST2JSTCompiler.pm: ../../dotnet/compiler/PAST2DNSTCompiler.pm
+	@echo "todo: $@ is older than $<"
+
 

@@ -1,6 +1,7 @@
 # The Java Syntax Tree set of nodes is designed to represent fundemental
 # JVM concepts. This allows most of a PAST compiler for JVM to be
-# written and used to generate Java for now, but later we can generate IL.
+# written and used to generate Java for now, but later we can generate
+# bytecode IL.
 # A tree must have the form:
 #
 #    JST::CompilationUnit
@@ -174,6 +175,7 @@ class JST::MethodCall is JST::Node {
     has $!on;
     has $!name;
     has $!void;
+    has $!type;
     
     method on($set?) {
         if $set { $!on := $set }
@@ -190,11 +192,17 @@ class JST::MethodCall is JST::Node {
         $!void
     }
 
-    method new(:$name!, :$on, :$void, *@children) {
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$name!, :$on, :$void, :$type, *@children) {
         my $obj := self.CREATE;
         if $on { $obj.on($on); }
         $obj.name($name);
         $obj.void($void);
+        $obj.type($type);
         $obj.set_children(@children);
         $obj;
     }

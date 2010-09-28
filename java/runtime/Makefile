@@ -42,71 +42,82 @@
 #                                                 Init
 #
 
+CLASSES = classes/
+
 ALL_BUILD_TARGETS = \
-	Rakudo/Metamodel/Hints.class \
-	Rakudo/Serialization/SerializationContext.class \
-	Rakudo/Runtime/ExecutionDomain.class \
-	Rakudo/Metamodel/RakudoObject.class \
-	Rakudo/Metamodel/REPRRegistry.class \
-	Rakudo/Metamodel/Representations/P6capture.class \
-	Rakudo/Metamodel/Representations/P6hash.class \
-	Rakudo/Metamodel/Representations/P6int.class \
-	Rakudo/Metamodel/Representations/P6num.class \
-	Rakudo/Metamodel/Representations/P6str.class \
-	Rakudo/Metamodel/Representations/P6opaque.class \
-	Rakudo/Runtime/CodeObjectUtility.class \
-	Rakudo/Runtime/SignatureBinder.class \
-	Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
-	Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
-	Rakudo/Init.class
+	$(CLASSES)Rakudo/Metamodel/Hints.class \
+	$(CLASSES)Rakudo/Serialization/SerializationContext.class \
+	$(CLASSES)Rakudo/Runtime/ExecutionDomain.class \
+	$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+	$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6hash.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6int.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6num.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6str.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class \
+	$(CLASSES)Rakudo/Runtime/CodeObjectUtility.class \
+	$(CLASSES)Rakudo/Runtime/SignatureBinder.class \
+	$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
+	$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
+	$(CLASSES)Rakudo/Init.class
 
 OTHER_DEPENDENT_TARGETS = \
-	Rakudo/Runtime/CaptureHelper.class \
-	Rakudo/Runtime/Lexpad.class \
-	Rakudo/Runtime/Parameter.class \
-	Rakudo/Runtime/Signature.class \
-	Rakudo/Metamodel/Representation.class \
-	Rakudo/Metamodel/Representations/P6list.class \
-	Rakudo/Metamodel/Representations/RakudoCodeRef.class \
-	Rakudo/Runtime/Context.class \
-	Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.class \
-	Rakudo/Runtime/MultiDispatch/MultiDispatcher.class \
-	Rakudo/Runtime/Ops.class \
-	Rakudo/Runtime/ThreadContext.class \
-	Rakudo/Metamodel/IFindMethod.class \
-	Rakudo/Metamodel/SharedTable.class
+	$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
+	$(CLASSES)Rakudo/Runtime/Lexpad.class \
+	$(CLASSES)Rakudo/Runtime/Parameter.class \
+	$(CLASSES)Rakudo/Runtime/Signature.class \
+	$(CLASSES)Rakudo/Metamodel/Representation.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
+	$(CLASSES)Rakudo/Runtime/Context.class \
+	$(CLASSES)Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.class \
+	$(CLASSES)Rakudo/Runtime/MultiDispatch/MultiDispatcher.class \
+	$(CLASSES)Rakudo/Runtime/Ops.class \
+	$(CLASSES)Rakudo/Runtime/ThreadContext.class \
+	$(CLASSES)Rakudo/Metamodel/IFindMethod.class \
+	$(CLASSES)Rakudo/Metamodel/SharedTable.class
 
 INNER_CLASSES = \
-	Rakudo/Metamodel/Representations/RakudoCodeRef$$Instance.class
+	$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef$$Instance.class
 
-all: RakudoRuntime.jar
+JAVAC = javac -d $(CLASSES) -classpath $(CLASSES)
+
+all: $(CLASSES) RakudoRuntime.jar
+
+$(CLASSES):
+	perl -MExtUtils::Command -e mkpath $(CLASSES)
 
 RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
-	jar cf RakudoRuntime.jar $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) '$(INNER_CLASSES)'
+	jar cf RakudoRuntime.jar -C $(CLASSES) .
+#RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
+#	jar cf RakudoRuntime.jar $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) '$(INNER_CLASSES)'
 # For troubleshooting, use `jar cvf RakudoRuntime.jar` instead.
 # Use `jar tf RakudoRuntime.jar` to tell what was done, or `jar tvf` instead.
 
-Rakudo/Metamodel/Hints.class: Rakudo/Metamodel/Hints.java
-	javac Rakudo/Metamodel/Hints.java
+$(CLASSES)Rakudo/Metamodel/Hints.class: Rakudo/Metamodel/Hints.java
+	$(JAVAC) Rakudo/Metamodel/Hints.java
 
-Rakudo/Serialization/SerializationContext.class: Rakudo/Serialization/SerializationContext.java
-	javac Rakudo/Serialization/SerializationContext.java
+$(CLASSES)Rakudo/Serialization/SerializationContext.class: Rakudo/Serialization/SerializationContext.java
+	$(JAVAC) Rakudo/Serialization/SerializationContext.java
 
-Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.java
-	javac Rakudo/Runtime/ExecutionDomain.java
+$(CLASSES)Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.java
+	$(JAVAC) Rakudo/Runtime/ExecutionDomain.java
 
 # There is a long circular dependency from RakudoObject to SharedTable.
 # Handle it by compiling all the interdependent files in a single step.
 # Thanks jnthn++ for the suggestion.
-Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
-		Rakudo/Serialization/SerializationContext.class \
+$(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
+		Rakudo/Serialization/SerializationContext.java \
 		Rakudo/Metamodel/Representation.java \
 		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
+		Rakudo/Metamodel/Representations/P6capture.java \
 		Rakudo/Metamodel/Representations/P6list.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
+		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
 		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
@@ -114,15 +125,17 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Runtime/ThreadContext.java \
 		Rakudo/Metamodel/IFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
-	javac \
+	$(JAVAC) \
 		Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Metamodel/Representation.java \
 		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
+		Rakudo/Metamodel/Representations/P6capture.java \
 		Rakudo/Metamodel/Representations/P6list.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
+		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
 		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
@@ -131,109 +144,106 @@ Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Metamodel/IFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
 
-Rakudo/Metamodel/REPRRegistry.class: Rakudo/Metamodel/REPRRegistry.java
-	javac Rakudo/Metamodel/REPRRegistry.java
+$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class
+	$(JAVAC) Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java
 
-Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
-		Rakudo/Metamodel/Hints.class
-	javac Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java
+$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
+		$(CLASSES)Rakudo/Metamodel/IFindMethod.class \
+		$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
+		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Runtime/CodeObjectUtility.class \
+		$(CLASSES)Rakudo/Runtime/Ops.class \
+		$(CLASSES)Rakudo/Runtime/ThreadContext.class
+	$(JAVAC) Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
 
-Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java \
-		Rakudo/Metamodel/IFindMethod.class \
-		Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/Representations/P6capture.class \
-		Rakudo/Metamodel/Representations/P6list.class \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.class \
-		Rakudo/Metamodel/REPRRegistry.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Runtime/CodeObjectUtility.class \
-		Rakudo/Runtime/Ops.class \
-		Rakudo/Runtime/ThreadContext.class
-	javac Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class: Rakudo/Metamodel/Representations/P6capture.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Serialization/SerializationContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6capture.java
 
-Rakudo/Metamodel/Representations/P6capture.class: Rakudo/Metamodel/Representations/P6capture.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Serialization/SerializationContext.class
-	javac Rakudo/Metamodel/Representations/P6capture.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6hash.class: Rakudo/Metamodel/Representations/P6hash.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Serialization/SerializationContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6hash.java
 
-Rakudo/Metamodel/Representations/P6hash.class: Rakudo/Metamodel/Representations/P6hash.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Serialization/SerializationContext.class
-	javac Rakudo/Metamodel/Representations/P6hash.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6int.class: Rakudo/Metamodel/Representations/P6int.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Serialization/SerializationContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6int.java
 
-Rakudo/Metamodel/Representations/P6int.class: Rakudo/Metamodel/Representations/P6int.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Serialization/SerializationContext.class
-	javac Rakudo/Metamodel/Representations/P6int.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6num.class: Rakudo/Metamodel/Representations/P6num.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Runtime/ThreadContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6num.java
 
-Rakudo/Metamodel/Representations/P6num.class: Rakudo/Metamodel/Representations/P6num.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Runtime/ThreadContext.class
-	javac Rakudo/Metamodel/Representations/P6num.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6str.class: Rakudo/Metamodel/Representations/P6str.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Runtime/ThreadContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6str.java
 
-Rakudo/Metamodel/Representations/P6str.class: Rakudo/Metamodel/Representations/P6str.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Runtime/ThreadContext.class
-	javac Rakudo/Metamodel/Representations/P6str.java
+$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java \
+		$(CLASSES)Rakudo/Metamodel/Hints.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
+		$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
+		$(CLASSES)Rakudo/Runtime/Ops.class \
+		$(CLASSES)Rakudo/Runtime/ThreadContext.class \
+		$(CLASSES)Rakudo/Serialization/SerializationContext.class
+	$(JAVAC) Rakudo/Metamodel/Representations/P6opaque.java
 
-Rakudo/Metamodel/Representations/P6opaque.class: Rakudo/Metamodel/Representations/P6opaque.java \
-		Rakudo/Metamodel/Hints.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/SharedTable.class \
-		Rakudo/Runtime/CaptureHelper.class \
-		Rakudo/Runtime/Ops.class \
-		Rakudo/Runtime/ThreadContext.class \
-		Rakudo/Serialization/SerializationContext.class
-	javac Rakudo/Metamodel/Representations/P6opaque.java
+$(CLASSES)Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtility.java \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
+		$(CLASSES)Rakudo/Metamodel/Representation.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class
+	$(JAVAC) Rakudo/Runtime/CodeObjectUtility.java
 
-Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtility.java \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/REPRRegistry.class \
-		Rakudo/Metamodel/Representation.class \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.class
-	javac Rakudo/Runtime/CodeObjectUtility.java
+$(CLASSES)Rakudo/Runtime/SignatureBinder.class: Rakudo/Runtime/SignatureBinder.java \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
+		$(CLASSES)Rakudo/Runtime/Context.class
+	$(JAVAC) Rakudo/Runtime/SignatureBinder.java
 
-Rakudo/Runtime/SignatureBinder.class: Rakudo/Runtime/SignatureBinder.java \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representations/P6capture.class \
-		Rakudo/Runtime/Context.class
-	javac Rakudo/Runtime/SignatureBinder.java
-
-Rakudo/Init.class: Rakudo/Init.java \
-		Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
-		Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
-		Rakudo/Metamodel/RakudoObject.class \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.class \
-		Rakudo/Metamodel/Representations/P6capture.class \
-		Rakudo/Metamodel/Representations/P6hash.class \
-		Rakudo/Metamodel/Representations/P6int.class \
-		Rakudo/Metamodel/Representations/P6list.class \
-		Rakudo/Metamodel/Representations/P6opaque.class \
-		Rakudo/Metamodel/REPRRegistry.class \
-		Rakudo/Runtime/CaptureHelper.class \
-		Rakudo/Runtime/Context.class \
-		Rakudo/Runtime/ExecutionDomain.class \
-		Rakudo/Runtime/Lexpad.class \
-		Rakudo/Runtime/ThreadContext.class
-	javac Rakudo/Init.java
+$(CLASSES)Rakudo/Init.class: Rakudo/Init.java \
+		$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
+		$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
+		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6hash.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6int.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class \
+		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
+		$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
+		$(CLASSES)Rakudo/Runtime/Context.class \
+		$(CLASSES)Rakudo/Runtime/ExecutionDomain.class \
+		$(CLASSES)Rakudo/Runtime/Lexpad.class \
+		$(CLASSES)Rakudo/Runtime/ThreadContext.class
+	$(JAVAC) Rakudo/Init.java
 
 # System to report which java files are older than their dotnet
 # equivalents.  The dotnet files churn a lot, so it's important to check
@@ -361,6 +371,7 @@ todolist: $(TRANSLATED_SOURCE_FILES)
 clean:
 	perl -MExtUtils::Command -e rm_f RakudoRuntime.jar \
 		$(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS)
+	perl -MExtUtils::Command -e rm_rf classes
 
 help:
 	@echo "In 6model/java/runtime you can make the following:"

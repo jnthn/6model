@@ -351,7 +351,7 @@ sub package($/) {
     my $name := ~$<package_def><name>;
     
     # Prefix the class initialization with initial setup. Also install it
-    # in the symbol table right away.
+    # in the symbol table right away, and also into $?CLASS.
     $*PACKAGE-SETUP.unshift(PAST::Stmts.new(
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
@@ -363,7 +363,11 @@ sub package($/) {
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name($name) ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
-        )
+        ),
+        PAST::Op.new( :pasttype('bind'),
+            PAST::Var.new( :name('$?CLASS') ),
+            PAST::Var.new( :name('type_obj'), :scope('register') )
+        ),
         # XXX name
         # XXX is parent
     ));
@@ -382,16 +386,20 @@ sub package($/) {
         ),
         PAST::Var.new( :name('type_obj'), :scope('register') )
     ));
-    
-    # Run this at loadinit time.
-    @BLOCK[0].loadinit.push(PAST::Block.new( :blocktype('immediate'), $*PACKAGE-SETUP ));
 
-    # Set up lexical for this to live in.
+    # Set up lexical for the type object to live in.
     @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
     @BLOCK[0].symbol($name, :scope('lexical'));
 
-    # Just evaluate anything else in the package in-line.
+    # Evaluate anything else in the package in-line; also give it a $?CLASS
+    # lexical.
     my $past := $<package_def>.ast;
+    $past.unshift(PAST::Var.new( :name('$?CLASS'), :scope('lexical'), :isdecl(1) ));
+    $past.symbol('$?CLASS', :scope('lexical'));
+
+    # Attach the class code to run at loadinit time.
+    $past.loadinit.push(PAST::Block.new( :blocktype('immediate'), $*PACKAGE-SETUP ));
+
     return $past;
 }
 

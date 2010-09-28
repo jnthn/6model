@@ -75,8 +75,12 @@ method compile(PAST::Node $node) {
         $class.push(DNST::Method.new(
             :name('LoadSetting'),
             :return_type('Context'),
-            DNST::Temp.new( :name('TC'), :type('var'),
-                DNST::MethodCall.new( :on('Rakudo.Init'), :name('Initialize'), 'null' )
+            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
+                DNST::MethodCall.new(
+                    :on('Rakudo.Init'), :name('Initialize'),
+                    :type('ThreadContext'),
+                    'null'
+                )
             ),
             DNST::Call.new(
                 :name('blocks_init'),
@@ -87,7 +91,7 @@ method compile(PAST::Node $node) {
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
             DNST::MethodCall.new(
-                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'),
+                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'), :void(1),
                 DNST::Literal.new( :value('NQPStr'), :escape(1) ),
                 'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null)'
             ),
@@ -108,9 +112,9 @@ method compile(PAST::Node $node) {
         $class.push(DNST::Method.new(
             :name('Main'),
             :return_type('void'),
-            DNST::Temp.new( :name('TC'), :type('var'),
+            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
                 DNST::MethodCall.new(
-                    :on('Rakudo.Init'), :name('Initialize'),
+                    :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
                     DNST::Literal.new( :value('NQPSetting'), :escape(1) )
                 )
             ),
@@ -162,6 +166,7 @@ sub make_blocks_init_method($name) {
             'StaticBlockInfo[0]',
             DNST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                :type('RakudoCodeRef.Instance'),
                 'null', 'null',
                 DNST::ArrayLiteral.new( :type('String') )
             )
@@ -193,6 +198,7 @@ sub make_constants_init_method($name) {
                 :type('Context'),
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    :type('RakudoCodeRef.Instance'),
                     'null',
                     'StaticBlockInfo[1]',
                     DNST::ArrayLiteral.new( :type('string') )
@@ -243,7 +249,11 @@ our multi sub dnst_for(PAST::Block $block) {
     # Setup static block info.
     my $outer_sbi := $*OUTER_SBI;
     my $our_sbi := $*SBI_POS;
-    my $our_sbi_setup := DNST::MethodCall.new( :on('CodeObjectUtility'), :name('BuildStaticBlockInfo') );
+    my $our_sbi_setup := DNST::MethodCall.new(
+        :on('CodeObjectUtility'),
+        :name('BuildStaticBlockInfo'),
+        :type('RakudoCodeRef.Instance')
+    );
     $*SBI_POS := $*SBI_POS + 1;
     $*SBI_SETUP.push(DNST::Bind.new(
         "StaticBlockInfo[$our_sbi]",
@@ -305,6 +315,7 @@ our multi sub dnst_for(PAST::Block $block) {
                 :type('Context'),
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
+                    :type('RakudoCodeRef.Instance'),
                     'null',
                     "StaticBlockInfo[$our_sbi]",
                     DNST::ArrayLiteral.new( :type('string') )
@@ -364,13 +375,14 @@ our multi sub dnst_for(PAST::Block $block) {
     # low level code object.
     if $block.blocktype eq 'immediate' {
         return DNST::MethodCall.new(
-            :name('STable.Invoke'),
+            :name('STable.Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
             'TC',
             "StaticBlockInfo[$our_sbi]",
             DNST::MethodCall.new(
                 :on('CaptureHelper'),
-                :name('FormWith')
+                :name('FormWith'),
+                :type('RakudoObject')
             )
         );
     }

@@ -111,7 +111,8 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     $code := $code ~ '        ';
     unless $mc.void {
         $*LAST_TEMP := get_unique_id('result');
-        $code := $code ~ "var $*LAST_TEMP = ";
+        my $ret_type := $mc.type || 'var';
+        $code := $code ~ "$ret_type $*LAST_TEMP = ";
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";

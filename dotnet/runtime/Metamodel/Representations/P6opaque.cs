@@ -254,8 +254,6 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="WHAT"></param>
         private void ComputeSlotAllocation(ThreadContext TC, RakudoObject WHAT)
         {
-            var HOW = WHAT.STable.HOW;
-
             // Allocate slot mapping table.
             SlotAllocation = new Dictionary<RakudoObject, Dictionary<string, int>>();
 
@@ -265,9 +263,10 @@ namespace Rakudo.Metamodel.Representations
             while (CurrentClass != null)
             {
                 // Get attributes and iterate over them.
+                var HOW = CurrentClass.STable.HOW;
                 var AttributesMeth = HOW.STable.FindMethod(TC, HOW, "attributes", Hints.NO_HINT);
                 var Attributes = AttributesMeth.STable.Invoke(TC, AttributesMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { HOW, WHAT },
+                    new RakudoObject[] { HOW, CurrentClass },
                     new Dictionary<string, RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
                 var AttributesElemsMeth = Attributes.STable.FindMethod(TC, Attributes, "elems", Hints.NO_HINT);
                 var AttributesElems = Ops.unbox_int(TC, AttributesElemsMeth.STable.Invoke(TC, AttributesElemsMeth,
@@ -292,7 +291,7 @@ namespace Rakudo.Metamodel.Representations
                 // Find the next parent(s).
                 var ParentsMeth = HOW.STable.FindMethod(TC, HOW, "parents", Hints.NO_HINT);
                 var Parents = ParentsMeth.STable.Invoke(TC, ParentsMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { HOW, WHAT },
+                    new RakudoObject[] { HOW, CurrentClass },
                     new Dictionary<string,RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
 
                 // Check how many parents we have.

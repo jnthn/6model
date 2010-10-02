@@ -90,10 +90,8 @@ $(CLASSES):
 
 RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
 	jar cf RakudoRuntime.jar -C $(CLASSES) .
-#RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
-#	jar cf RakudoRuntime.jar $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) '$(INNER_CLASSES)'
 # For troubleshooting, use `jar cvf RakudoRuntime.jar` instead.
-# Use `jar tf RakudoRuntime.jar` to tell what was done, or `jar tvf` instead.
+# Use `jar tvf RakudoRuntime.jar` to tell what was done.
 
 $(CLASSES)Rakudo/Metamodel/Hints.class: Rakudo/Metamodel/Hints.java
 	$(JAVAC) Rakudo/Metamodel/Hints.java
@@ -371,7 +369,7 @@ todolist: $(TRANSLATED_SOURCE_FILES)
 clean:
 	perl -MExtUtils::Command -e rm_f RakudoRuntime.jar \
 		$(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS)
-	perl -MExtUtils::Command -e rm_rf classes
+	perl -MExtUtils::Command -e rm_rf $(CLASSES)
 
 help:
 	@echo "In 6model/java/runtime you can make the following:"

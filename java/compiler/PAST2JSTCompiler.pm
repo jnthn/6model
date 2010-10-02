@@ -1,6 +1,6 @@
 # This is the beginings of a PAST to Java Syntax Tree translator. It'll
-# no doubt evolve somewhat over time, and get filled out as we support more
-# and more of PAST.
+# no doubt evolve somewhat over time, and get filled out as we support
+# more and more of PAST.
 class PAST2JSTCompiler;
 
 # Entry point for the compiler.
@@ -75,7 +75,7 @@ method compile(PAST::Node $node) {
         $class.push(JST::Method.new(
             :name('LoadSetting'),
             :return_type('Context'),
-            JST::Temp.new( :name('TC'), :type('Context'),
+            JST::Temp.new( :name('TC'), :type('ThreadContext'),
                 JST::MethodCall.new(
                    :on('Rakudo.Init'), :name('Initialize'),
                    :type('ThreadContext'),
@@ -110,7 +110,7 @@ method compile(PAST::Node $node) {
     }
     else {
         $class.push(JST::Method.new(
-            :name('Main'),
+            :name('main'), # Main in the C# version
             :return_type('void'),
             JST::Temp.new( :name('TC'), :type('ThreadContext'),
                 JST::MethodCall.new(
@@ -142,6 +142,7 @@ method compile(PAST::Node $node) {
         JST::Using.new( :namespace('Rakudo.Metamodel.Representations.P6int') ),
         JST::Using.new( :namespace('Rakudo.Metamodel.Representations.RakudoCodeRef') ),
         JST::Using.new( :namespace('Rakudo.Metamodel.Representations.RakudoCodeRef.Instance') ),
+        JST::Using.new( :namespace('Rakudo.Metamodel.REPRRegistry') ),
         JST::Using.new( :namespace('Rakudo.Runtime.CaptureHelper') ),
         JST::Using.new( :namespace('Rakudo.Runtime.CodeObjectUtility') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Context') ),
@@ -368,7 +369,8 @@ our multi sub jst_for(PAST::Block $block) {
 
     # Finish geneating code setup block call.
     $our_sbi_setup.push(JST::New.new(
-        :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
+        :type('RakudoCodeRef.IFunc_Body'),
+        # :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
         $result.name
     ));
     $our_sbi_setup.push("StaticBlockInfo[$outer_sbi]");

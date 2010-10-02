@@ -1,6 +1,13 @@
 # This works if you have parrot, parrot-nqp and javac in your path.
 
-all: gen_actions.pir gen_grammar.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir gen_nqpsetting.class
+CLASSES = classes/
+
+JAVAC = javac -d $(CLASSES)
+
+all: $(CLASSES) gen_actions.pir gen_grammar.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir NQPSetting.jar
+
+$(CLASSES):
+	perl -MExtUtils::Command -e mkpath $(CLASSES)
 
 gen_actions.pir: Actions.pm
 	parrot-nqp --target=pir Actions.pm > gen_actions.pir
@@ -17,20 +24,22 @@ gen_jst.pir: JST.pm
 gen_jst2java.pir: JST2Java.pm
 	parrot-nqp --target=pir JST2Java.pm > gen_jst2java.pir
 
-gen_nqpsetting.class: ../../common/NQP/NQPSetting.pm \
+NQPSetting.jar: ../../common/NQP/NQPSetting.pm \
 		gen_actions.pir \
 		gen_grammar.pir \
 		gen_jst.pir \
 		gen_past2jst.pir \
 		gen_jst2java.pir
 	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > gen_nqpsetting.java
-	javac -classpath ../runtime/RakudoRuntime.jar gen_nqpsetting.java
+	$(JAVAC) -classpath ../runtime/RakudoRuntime.jar gen_nqpsetting.java
+	jar cf NQPSetting.jar -C $(CLASSES) .
 
 test: all
 	prove -r --exec try.sh ..\..\t\nqp
 
 clean:
 	perl -MExtUtils::Command -e rm_f gen_*.pir *.class *.jar *.java
+	perl -MExtUtils::Command -e rm_rf $(CLASSES)
 
 # Java source code files "depend" on files in the dotnet/* directories,
 # in the sense that they were manually translated.

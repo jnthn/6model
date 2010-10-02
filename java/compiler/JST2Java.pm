@@ -35,16 +35,13 @@ our multi sub java_for(JST::Class $class) {
     if $class.namespace {
         $code := $code ~ 'package ' ~ $class.namespce ~ ";\n";
     }
-    $code := $code ~ 'class ' ~ $class.name ~ " \{ // JST::Class\n";
+    $code := $code ~ 'public class ' ~ $class.name ~ " \{ // JST::Class\n"; # the C# version omits public
     for @($class) {
         $code := $code ~ java_for($_);
     }
     $code := $code ~ "}\n";
     return $code;
 }
-
-
-
 
 our multi sub java_for(JST::Attribute $attr) {
     return '    private static ' ~ $attr.type ~ ' ' ~ $attr.name ~ "; // JST:Attribute\n";
@@ -54,7 +51,7 @@ our multi sub java_for(JST::Method $meth) {
     my $*LAST_TEMP := '';
 
     # Method header.
-    my $code := '    private static ' ~
+    my $code := '    public static ' ~ # the C# version has private
         $meth.return_type ~ ' ' ~ 
         $meth.name ~ '(' ~
         pir::join(', ', $meth.params) ~
@@ -109,9 +106,10 @@ our multi sub java_for(JST::MethodCall $mc) {
 
     # Code-gen the call.
     $code := $code ~ '        ';
+    my $ret_type := $mc.type || 'var';  # TODO: delete
     unless $mc.void {
         $*LAST_TEMP := get_unique_id('result');
-        my $ret_type := $mc.type || 'var';
+        # TODO my $ret_type := $mc.type || 'var';
         my $method_name := "$invocant." ~ $mc.name;
         if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
         {
@@ -132,13 +130,15 @@ our multi sub java_for(JST::MethodCall $mc) {
             $method_name eq 'Ops.equal_strs' ||
             $method_name eq 'Ops.get_how' ||
             $method_name eq 'Ops.get_what' ||
+            $method_name eq 'Ops.instance_of' ||
             $method_name eq 'Ops.lllist_elems' ||
             $method_name eq 'Ops.lllist_get_at_pos' ||
             $method_name eq 'Ops.logical_not_int' ||
             $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
             $method_name eq 'Ops.mod_int' ||
             $method_name eq 'Ops.mul_int' ||
-            $method_name eq 'Ops.sub_int'
+            $method_name eq 'Ops.sub_int' ||
+            $method_name eq 'StaticBlockInfo[1].StaticLexPad.SetByName' # WTF?
         )
         {
             $ret_type := 'RakudoObject';
@@ -147,6 +147,7 @@ our multi sub java_for(JST::MethodCall $mc) {
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ "); // JST::MethodCall\n";
+    if $ret_type eq 'var' { $code := $code ~ "// var should be " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
 
     return $code;
 }
@@ -183,9 +184,14 @@ our multi sub java_for(JST::New $new) {
 
     # Code-gen the constructor call.
     $*LAST_TEMP := get_unique_id('new');
-    $code := $code ~ "        " ~ $new.type ~ " $*LAST_TEMP = new " ~
-        $new.type ~ "(" ~ pir::join(', ', @arg_names) ~ "); // JST::New\n";
-
+    $code := $code ~ "        " ~ $new.type ~ " $*LAST_TEMP = new ";
+    if $new.type eq 'RakudoCodeRef.IFunc_Body' {
+        $code := $code ~ $new.type ~ "() \{ public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap ) \{ return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);\}\}";
+    }
+    else {
+        $code := $code ~ $new.type ~ "(" ~ pir::join(', ', @arg_names) ~ ")";
+    }
+    $code := $code ~ "; // JST::New\n";
     return $code;
 }
 
@@ -245,10 +251,20 @@ our multi sub java_for(JST::Bind $bind) {
 }
 
 our multi sub java_for(JST::Literal $lit) {
-    $*LAST_TEMP := $lit.escape ??
-        # XXX Need to really escape stuff in there.
-        ('"' ~ ~$lit.value ~ '"') !! # CSharp began with @" here
-        $lit.value;
+    if $lit.escape {
+        my $str_in := $lit.value;
+        my $str_out := '';
+        while pir::length($str_in) {
+            my $char := pir::substr($str_in, 0, 1);
+            $str_in := pir::substr($str_in, 1);
+            if $char eq "\n" { $char := "\\n"; }
+            if $char eq "\t" { $char := "\\t"; }
+            $str_out := $str_out ~ $char;
+        }
+        $*LAST_TEMP := '"' ~ $str_out ~ '"'
+    } else {
+        $*LAST_TEMP := $lit.value;
+    }
     return '';
 }
 

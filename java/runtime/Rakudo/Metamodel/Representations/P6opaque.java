@@ -262,7 +262,6 @@ public final class P6opaque implements Representation
     }
     private void ComputeSlotAllocation(ThreadContext tc, RakudoObject WHAT)
     {
-        RakudoObject HOW = WHAT.getSTable().HOW;
 
         // Allocate slot mapping table.
         SlotAllocation = new HashMap<RakudoObject, HashMap<String, Integer>>();
@@ -273,11 +272,12 @@ public final class P6opaque implements Representation
         while (currentClass != null)
         {
             // Get attributes and iterate over them.
+            RakudoObject HOW = currentClass.getSTable().HOW;
             RakudoObject AttributesMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
             HashMap<String, RakudoObject> localBoxInt1 = new HashMap<String, RakudoObject>();
             localBoxInt1.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
             RakudoObject Attributes = AttributesMeth.getSTable().Invoke.Invoke(tc, AttributesMeth, CaptureHelper.FormWith(
-                new RakudoObject[] { HOW, WHAT },
+                new RakudoObject[] { HOW, currentClass },
                 localBoxInt1)); // new HashMap<String, RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
             RakudoObject AttributesElemsMeth = Attributes.getSTable().FindMethod.FindMethod(tc, Attributes, "elems", Hints.NO_HINT);
             int AttributesElems = Ops.unbox_int(tc, AttributesElemsMeth.getSTable().Invoke.Invoke(tc, AttributesElemsMeth,
@@ -304,7 +304,7 @@ public final class P6opaque implements Representation
             HashMap<String,RakudoObject> localBoxInt2 = new HashMap<String,RakudoObject>();
             localBoxInt2.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
             RakudoObject Parents = ParentsMeth.getSTable().Invoke.Invoke(tc, ParentsMeth, CaptureHelper.FormWith(
-                new RakudoObject[] { HOW, WHAT },
+                new RakudoObject[] { HOW, currentClass },
                 localBoxInt2)); // new HashMap<String,RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
             // Check how many parents we have.
             RakudoObject ParentElemsMeth = Parents.getSTable().FindMethod.FindMethod(tc, Parents, "elems", Hints.NO_HINT);

@@ -480,7 +480,7 @@ our multi sub dnst_for(PAST::Op $op) {
         my $named_part := DNST::DictionaryLiteral.new(
             :key_type('string'), :value_type('RakudoObject') );
         for @args {
-            if $_.named {
+            if $_ ~~ PAST::Node && $_.named {
                 $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
                 $named_part.push(dnst_for($_));
             }
@@ -528,7 +528,7 @@ our multi sub dnst_for(PAST::Op $op) {
         my $named_part := DNST::DictionaryLiteral.new(
             :key_type('string'), :value_type('RakudoObject') );
         for @args {
-            if $_.named {
+            if $_ ~~ PAST::Node && $_.named {
                 $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
                 $named_part.push(dnst_for($_));
             }
@@ -840,9 +840,14 @@ sub declare_lexical($var) {
     }
 }
 
-# Catch-all for error detection.
+# Catch-all for values and error detection.
 our multi sub dnst_for($any) {
-    pir::die("Don't know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
+    if pir::isa($any, 'String') || pir::isa($any, 'Integer') || pir::isa($any, 'Float') {
+        return dnst_for(PAST::Val.new( :value($any) ));
+    }
+    else {
+        pir::die("Don't know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
+    }
 }
 
 # Emits a lookup of a lexical.

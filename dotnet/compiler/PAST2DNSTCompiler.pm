@@ -644,6 +644,32 @@ our multi sub dnst_for(PAST::Op $op) {
         );
     }
 
+    elsif $op.pasttype eq 'list' {
+        my $tmp_name := get_unique_id('list_');
+        my $result := DNST::Stmts.new(
+            DNST::Temp.new(
+                :name($tmp_name), :type('RakudoObject'),
+                dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('new'),
+                    PAST::Var.new( :name('NQPList'), :scope('lexical') )
+                ))
+            )
+        );
+        my $i := 0;
+        for @($op) {
+            $result.push(DNST::MethodCall.new(
+                :on('Ops'), :name('lllist_bind_at_pos'), :void(1),
+                'TC',
+                $tmp_name,
+                dnst_for(PAST::Val.new( :value($i) )),
+                dnst_for($_)
+            ));
+            $i := $i + 1;
+        }
+        $result.push($tmp_name);
+        return $result;
+    }
+
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }

@@ -866,6 +866,32 @@ method number($/) {
     make PAST::Val.new( :value($value) );
 }
 
+# XXX Overridden from HLL::Actions because it relies on PIR concat.
+method quote_delimited($/) {
+    my @parts;
+    my $lastlit := '';
+    for $<quote_atom> {
+        my $ast := $_.ast;
+        if !PAST::Node.ACCEPTS($ast) {
+            $lastlit := $lastlit ~ $ast;
+        }
+        elsif $ast.isa(PAST::Val) {
+            $lastlit := $lastlit ~ $ast.value;
+        }
+        else {
+            if $lastlit gt '' { @parts.push($lastlit); }
+            @parts.push($ast);
+            $lastlit := '';
+        }
+    }
+    if $lastlit gt '' { @parts.push($lastlit); }
+    my $past := @parts ?? @parts.shift !! '';
+    while @parts {
+        $past := PAST::Op.new( :pasttype('call'), :name('&infix:<~>'), $past, @parts.shift );
+    }
+    make $past;
+}
+
 method quote:sym<apos>($/) { make $<quote_EXPR>.ast; }
 method quote:sym<dblq>($/) { make $<quote_EXPR>.ast; }
 method quote:sym<qq>($/)   { make $<quote_EXPR>.ast; }

@@ -208,3 +208,7 @@ sub ok($check, $diag) {
     print("ok ");
     say($count);
 }
+
+# XXX Bad hack, we'll replace this later.
+knowhow Any {
+}

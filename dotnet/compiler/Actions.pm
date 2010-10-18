@@ -35,8 +35,7 @@ sub vivitype($sigil) {
         )
     }
     else {
-        # XXX This is REALLY wrong...
-        undef
+        PAST::Var.new( :name('Any'), :scope('lexical') )
     }
 }
 

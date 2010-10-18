@@ -119,6 +119,10 @@ sub &infix:<ne>($x, $y) {
     !nqp::equal_strs($x.Str, $y.Str)
 }
 
+sub &infix:<=:=>($x, $y) {
+    nqp::equal_refs($x, $y)
+}
+
 sub &prefix:<!>($x) {
     nqp::logical_not_int($x.Bool)
 }

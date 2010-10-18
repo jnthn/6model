@@ -268,6 +268,34 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Coerces a string into an integer.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Str"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static RakudoObject coerce_str_to_int(ThreadContext TC, RakudoObject Str, RakudoObject TargetType)
+        {
+            int Value = 0;
+            int.TryParse(Ops.unbox_str(TC, Str), out Value);
+            return Ops.box_int(TC, Value, TargetType);
+        }
+
+        /// <summary>
+        /// Coerces a string into an number.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Str"></param>
+        /// <param name="TargetType"></param>
+        /// <returns></returns>
+        public static RakudoObject coerce_str_to_num(ThreadContext TC, RakudoObject Str, RakudoObject TargetType)
+        {
+            double Value = 0;
+            double.TryParse(Ops.unbox_str(TC, Str), out Value);
+            return Ops.box_num(TC, Value, TargetType);
+        }
+
+        /// <summary>
         /// Gets a lexical variable of the given name.
         /// </summary>
         /// <param name="i"></param>

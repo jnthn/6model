@@ -43,8 +43,9 @@ public class Init
 
         // Either load a named setting or use the fake bootstrapping one.
         Context settingContext =
-            (settingName != null) ? LoadSetting(settingName, knowHOW)
-                                  : BootstrapSetting(knowHOW);
+            // Comment out the next line to always use the fake Setting.
+            (settingName != null) ? LoadSetting(settingName, knowHOW) :
+                                    BootstrapSetting(knowHOW);
 
         // Cache native capture and LLCode type object.
         CaptureHelper.CaptureTypeObject = settingContext.LexPad.GetByName("capture");
@@ -61,7 +62,7 @@ public class Init
         threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
         return threadContext;
     }
-    
+
     /// <summary>
     /// Registers all of the built-in representations.
     /// </summary>
@@ -90,6 +91,7 @@ public class Init
     /// <returns></returns>
     private static Context BootstrapSetting(RakudoObject KnowHOW)
     {
+        System.err.println( "calling new Context from Init" );
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
             { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "LLCode", "list" });
@@ -123,41 +125,61 @@ public class Init
     /// <param name="Name"></param>
     /// <param name="KnowHOW"></param>
     /// <returns></returns>
-    public static Context LoadSetting(String name, RakudoObject knowHOW)
+    public static Context LoadSetting(String settingName, RakudoObject knowHOW)
     {
         // Load the assembly.
-        // var settingAssembly = AppDomain.CurrentDomain.Load(Name);
+        System.err.println("Init.LoadSetting begin loading " + settingName );
         ClassLoader loader = ClassLoader.getSystemClassLoader();
-        Class<?> classNQPSetting; // grrr, a wildcard type :-(
+        Class<?> classNQPSetting = null; // grrr, a wildcard type :-(
         try {
-            classNQPSetting = loader.loadClass(name);
+            classNQPSetting = loader.loadClass(settingName);
         }
         catch (ClassNotFoundException ex) {
-            classNQPSetting = null;
-            System.err.println("Class " + name + " not found: " + ex.getMessage());
+            System.err.println("Class " + settingName + " not found: " + ex.getMessage());
+            System.exit(1);
+        }
+        catch ( Exception ex ) {
+            System.err.println("loadClass(\"" + settingName + "\") exception: " + ex.getMessage());
+            System.exit(1);
+        }
+
+        // TODO: remove
+        if ( classNQPSetting == null ) {
+            System.err.println("classNQPSetting is null");
             System.exit(1);
         }
 
         // Find the setting type and its LoadSetting method.
         // var Class = settingAssembly.GetType("NQPSetting");
         // var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
-        String s = new String();
-        Class stringClass = s.getClass();
-        java.lang.reflect.Method methodLoadSetting;
+//      String s = new String();
+//      Class stringClass = s.getClass();
+        java.lang.reflect.Method methodLoadSetting = null;
         try {
-            methodLoadSetting = classNQPSetting.getMethod("LoadSetting", stringClass);
+            methodLoadSetting = classNQPSetting.getMethod("LoadSetting");
         }
         catch ( NoSuchMethodException  ex) {
-            methodLoadSetting = null;
             System.err.println("Method LoadSetting not found: " + ex.getMessage());
             System.exit(1);
         }
+        catch ( Exception ex ) {
+            System.err.println("getMethod(\"LoadSetting\") exception: " + ex.getMessage());
+            System.exit(1);
+        }
+
+        // TODO: remove
+        if ( methodLoadSetting == null ) {
+            System.err.println("methodLoadSetting is null");
+            System.exit(1);
+        }
+        else {
+            System.err.println("methodLoadSetting is ok: " + methodLoadSetting );
+        }
 
         // Run it to get the context we want.
-        // Context settingContext = (Context)Method.Invoke(null, new Object[] { });
         Context settingContext = null;
         try {
-            settingContext = (Context)methodLoadSetting.invoke( null, s );
+            settingContext = (Context)methodLoadSetting.invoke( null );
         }
         catch (IllegalAccessException ex) {
             System.err.println("Illegal access: " + ex.getMessage());

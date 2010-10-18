@@ -1,8 +1,9 @@
-# This compiles a Java Syntax Tree down to Java.
+# Compile a Java Syntax Tree down to Java.
 class JST2JavaCompiler;
 
 method compile(JST::Node $node) {
     my $*CUR_ID := 0;
+    my %*CUR_ID;
     return java_for($node);
 }
 
@@ -10,6 +11,16 @@ method compile(JST::Node $node) {
 sub get_unique_id($prefix) {
     $*CUR_ID := $*CUR_ID + 1;
     return $prefix ~ '_' ~ $*CUR_ID;
+}
+
+# A slightly troubleshooting-friendlier alternative to get_unique_id
+sub get_unique_global_name($prefix, $suffix) {
+    my $number := 1;
+    if %*CUR_ID{$prefix} > 0 { $number := %*CUR_ID{$prefix} + 1; }
+    %*CUR_ID{$prefix} := $number;
+    my $result := $prefix ~ '_' ~ $number;
+    if $suffix ne '' { $result := $result ~ '_' ~ $suffix; }
+    return $result;
 }
 
 our multi sub java_for(JST::CompilationUnit $node) {
@@ -79,7 +90,7 @@ our multi sub java_for(JST::Stmts $stmts) {
 
 our multi sub java_for(JST::TryFinally $tf) {
     unless +@($tf) == 2 { pir::die('JST::TryFinally nodes must have 2 children') }
-    my $try_result := get_unique_id('try_result');
+    my $try_result := get_unique_global_name('try_result','');
     my $code := "        RakudoObject $try_result; // JST::TryFinally\n" ~
                 "        try \{\n" ~
                 java_for((@($tf))[0]);
@@ -106,10 +117,9 @@ our multi sub java_for(JST::MethodCall $mc) {
 
     # Code-gen the call.
     $code := $code ~ '        ';
-    my $ret_type := $mc.type || 'var';  # TODO: delete
     unless $mc.void {
-        $*LAST_TEMP := get_unique_id('result');
-        # TODO my $ret_type := $mc.type || 'var';
+        my $ret_type := $mc.type || 'var';
+        $*LAST_TEMP := get_unique_global_name('result','methcall');
         my $method_name := "$invocant." ~ $mc.name;
         if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
         {
@@ -139,16 +149,14 @@ our multi sub java_for(JST::MethodCall $mc) {
             $method_name eq 'Ops.mul_int' ||
             $method_name eq 'Ops.sub_int' ||
             $method_name eq 'StaticBlockInfo[1].StaticLexPad.SetByName' # WTF?
-        )
-        {
+        ) {
             $ret_type := 'RakudoObject';
         }
         $code := $code ~ "$ret_type $*LAST_TEMP = ";
+        if $ret_type eq 'var' { $code := $code ~ "// var should be " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ "); // JST::MethodCall\n";
-    if $ret_type eq 'var' { $code := $code ~ "// var should be " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
-
     return $code;
 }
 
@@ -164,7 +172,7 @@ our multi sub java_for(JST::Call $mc) {
     # Code-gen the call.
     $code := $code ~ '        ';
     unless $mc.void {
-        $*LAST_TEMP := get_unique_id('result');
+        $*LAST_TEMP := get_unique_global_name('result','call');
         $code := $code ~ "RakudoObject $*LAST_TEMP = ";
     }
     $code := $code ~ $mc.name ~
@@ -183,13 +191,14 @@ our multi sub java_for(JST::New $new) {
     }
 
     # Code-gen the constructor call.
-    $*LAST_TEMP := get_unique_id('new');
+    $*LAST_TEMP := get_unique_global_name('new','');
     $code := $code ~ "        " ~ $new.type ~ " $*LAST_TEMP = new ";
+    $code := $code ~ $new.type;
     if $new.type eq 'RakudoCodeRef.IFunc_Body' {
-        $code := $code ~ $new.type ~ "() \{ public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap ) \{ return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);\}\}";
+        $code := $code ~ "() \{ public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap ) \{ return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);\}\}";
     }
     else {
-        $code := $code ~ $new.type ~ "(" ~ pir::join(', ', @arg_names) ~ ")";
+        $code := $code ~ "(" ~ pir::join(', ', @arg_names) ~ ")";
     }
     $code := $code ~ "; // JST::New\n";
     return $code;
@@ -199,7 +208,7 @@ our multi sub java_for(JST::If $if) {
     unless +@($if) >= 2 { pir::die('A JST::If node must have at least 2 children') }
 
     # Need a variable to put the final result in.
-    my $if_result := get_unique_id('if_result');
+    my $if_result := get_unique_global_name('if_result','');
 
     # Get the conditional and emit if.
     my $code := java_for((@($if))[0]);
@@ -283,7 +292,7 @@ our multi sub java_for(JST::ArrayLiteral $al) {
     }
 
     # Code-gen the array.
-    $*LAST_TEMP := get_unique_id('arr');
+    $*LAST_TEMP := get_unique_global_name('arr','arrayliteral');
     return $code ~ "        " ~ $al.type ~ "[] $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
         pir::join(',', @item_names) ~ "}; // JST::ArrayLiteral\n";
 }
@@ -302,7 +311,7 @@ our multi sub java_for(JST::DictionaryLiteral $dl) {
     }
 
     # Code-gen the dictionary.
-    $*LAST_TEMP := get_unique_id('dic');
+    $*LAST_TEMP := get_unique_global_name('dic','dictionaryliteral');
     return $code ~ "        HashMap<" ~ $dl.key_type ~ ', ' ~ $dl.value_type ~ "> $*LAST_TEMP = new HashMap<" ~
         $dl.key_type ~ ', ' ~ $dl.value_type ~ ">(); // JST::DictionaryLiteral\n" ~
         "        $*LAST_TEMP.put" ~

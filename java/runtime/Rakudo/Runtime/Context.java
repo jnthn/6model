@@ -38,8 +38,10 @@ public class Context
     /// <summary>
     /// Creates an empty, uninitialized context.
     /// </summary>
-    public Context()
+    public Context() // it could be private, except that Init() calls it.
     {
+        System.err.println( "new empty Context created" );
+        this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
     }
 
     /// <summary>
@@ -57,10 +59,18 @@ public class Context
         // Static sub object should have this as the current
         // context.
         staticCodeObject.CurrentContext = this;
+        
+        this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
+        // TODO: remove
+        if ( this.LexPad == null ) {
+            System.err.println( "this.LexPad is null in Context.java" );
+            System.exit(1);
+        }
 
-        // Lex pad should be copy of the static one.
-        // XXX This isn't quite what we want in the long run, but it
-        // does fine for now.
+        // Lex pad should be an "instantiation" of the static one.
+        // Instantiating a lexpad creates a new dynamic instance of it
+        // from a static one, copying over the slot storage entries
+        // from the static one but sharing the slot mapping.
         this.LexPad.SlotMapping = StaticCodeObject.StaticLexPad.SlotMapping;
         this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.clone();
 

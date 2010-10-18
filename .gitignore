@@ -7,5 +7,7 @@
 gen_*
 dotnet/compiler/x.*
 dotnet/compiler/NQPSetting.cs
-java/compiler/x.*
 dotnet/runtime/obj/*
+java/compiler/x.*
+java/compiler/NQPSetting.*
+java/compiler/RakudoOutput.*

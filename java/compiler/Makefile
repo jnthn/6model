@@ -24,14 +24,16 @@ gen_jst.pir: JST.pm
 gen_jst2java.pir: JST2Java.pm
 	parrot-nqp --target=pir JST2Java.pm > gen_jst2java.pir
 
-NQPSetting.jar: ../../common/NQP/NQPSetting.pm \
+NQPSetting.java: ../../common/NQP/NQPSetting.pm \
 		gen_actions.pir \
 		gen_grammar.pir \
 		gen_jst.pir \
 		gen_past2jst.pir \
 		gen_jst2java.pir
-	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > gen_nqpsetting.java
-	$(JAVAC) -classpath ../runtime/RakudoRuntime.jar gen_nqpsetting.java
+	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > NQPSetting.java
+
+NQPSetting.jar: NQPSetting.java
+	$(JAVAC) -classpath ../runtime/RakudoRuntime.jar NQPSetting.java
 	jar cf NQPSetting.jar -C $(CLASSES) .
 
 test: all

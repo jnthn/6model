@@ -109,9 +109,12 @@ method compile(PAST::Node $node) {
         ));
     }
     else {
+        my @params;
+        @params.push('String[] args');
         $class.push(JST::Method.new(
             :name('main'), # Main in the C# version
             :return_type('void'),
+            :params(@params),
             JST::Temp.new( :name('TC'), :type('ThreadContext'),
                 JST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),

@@ -7,7 +7,7 @@ import Rakudo.Metamodel.RakudoObject;
 /// Represents a lexpad - either the static version or the dynamic
 /// one.
 /// </summary>
-public class Lexpad
+public class Lexpad  // struct in the C# version
 {
     /// <summary>
     /// This is the slot mapping, allocating names to slots. All the
@@ -30,8 +30,11 @@ public class Lexpad
     {
         SlotMapping = new HashMap<String, Integer>(SlotNames.length);
         int Slot = 0;
-        for (String Name : SlotNames)
+        for (String Name : SlotNames) {
             SlotMapping.put(Name, Slot++);
+            // System.err.println("adding into LexPad: " + Name);
+        }
+        // System.err.println("LexPad SlotNames length: " + SlotNames.length);
         Storage = new RakudoObject[SlotNames.length];
     }
 
@@ -57,7 +60,7 @@ public class Lexpad
     }
 
     /// <summary>
-    /// Extends the lexpad with an extra slot.
+    /// Extends the lexpad with an extra slot.  TODO: optimize if possible
     /// </summary>
     /// <param name="Name"></param>
     public void Extend(String[] Names)

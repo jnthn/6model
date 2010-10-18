@@ -22,13 +22,22 @@ sub block_immediate($block) {
 }
 
 sub vivitype($sigil) {
-    # XXX Needs to change to be more portable...
-    $sigil eq '%'
-    ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'Hash']"))
-    !! ($sigil eq '@'
-        ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'ResizablePMCArray']"))
-        # XXX ...and this is really wrong.
-        !! undef);
+    if $sigil eq '%' {
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('new'),
+            PAST::Var.new( :name('NQPHash'), :scope('lexical') )
+        )
+    }
+    elsif $sigil eq '@' {
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('new'),
+            PAST::Var.new( :name('NQPArray'), :scope('lexical') )
+        )
+    }
+    else {
+        # XXX This is REALLY wrong...
+        undef
+    }
 }
 
 

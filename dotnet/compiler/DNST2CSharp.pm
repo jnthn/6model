@@ -215,8 +215,7 @@ our multi sub cs_for(DNST::Bind $bind) {
 
 our multi sub cs_for(DNST::Literal $lit) {
     $*LAST_TEMP := $lit.escape ??
-        # XXX Need to really escape stuff in there.
-        ('@"' ~ ~$lit.value ~ '"') !!
+        ('@"' ~ pir::join__ssp('""', pir::split__pss('"', ~$lit.value)) ~ '"') !!
         $lit.value;
     return '';
 }

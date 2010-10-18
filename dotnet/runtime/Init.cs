@@ -138,19 +138,28 @@ namespace Rakudo
             SettingContext.LexPad.SetByName("print",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
-                        var Value = CaptureHelper.GetPositional(C, 0);
-                        var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                        var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.Write(Ops.unbox_str(null, StrVal));
+                        for (int i = 0; i < CaptureHelper.NumPositionals(C); i++)
+                        {
+                            var Value = CaptureHelper.GetPositional(C, i);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth,
+                                CaptureHelper.FormWith( new RakudoObject[] { Value }));
+                            Console.Write(Ops.unbox_str(null, StrVal));
+                        }
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.SetByName("say",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {
-                        var Value = CaptureHelper.GetPositional(C, 0);
-                        var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                        var StrVal = StrMeth.STable.Invoke(TC, StrMeth, C);
-                        Console.WriteLine(Ops.unbox_str(null, StrVal));
+                        for (int i = 0; i < CaptureHelper.NumPositionals(C); i++)
+                        {
+                            var Value = CaptureHelper.GetPositional(C, i);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth,
+                                CaptureHelper.FormWith( new RakudoObject[] { Value }));
+                            Console.Write(Ops.unbox_str(null, StrVal));
+                        }
+                        Console.WriteLine();
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null));

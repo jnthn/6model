@@ -6,7 +6,13 @@ knowhow NQPStr is repr('P6str') {
         nqp::logical_not_int(nqp::equal_strs(self, "")) &&
             nqp::logical_not_int(nqp::equal_strs(self, "0"))
     }
+    method Numeric() {
+        nqp::coerce_str_to_num(self, NQPNum)
+    }
     method Str() {
+        self
+    }
+    method Stringy() {
         self
     }
 }
@@ -24,7 +30,13 @@ knowhow NQPInt is repr('P6int') {
     method Num() {
         nqp::coerce_int_to_num(self, NQPNum)
     }
+    method Numeric() {
+        self
+    }
     method Str() {
+        nqp::coerce_int_to_str(self, NQPStr)
+    }
+    method Stringy() {
         nqp::coerce_int_to_str(self, NQPStr)
     }
 }
@@ -42,7 +54,13 @@ knowhow NQPNum is repr('P6num') {
     method Num() {
         self
     }
+    method Numeric() {
+        self
+    }
     method Str() {
+        nqp::coerce_num_to_str(self, NQPStr)
+    }
+    method Stringy() {
         nqp::coerce_num_to_str(self, NQPStr)
     }
 }
@@ -107,6 +125,14 @@ sub &prefix:<!>($x) {
 
 sub &prefix:<?>($x) {
     $x.Bool
+}
+
+sub &prefix:<~>($x) {
+    $x.Stringy
+}
+
+sub &prefix:<+>($x) {
+    $x.Numeric
 }
 
 proto sub &infix:<+>($x, $y) {

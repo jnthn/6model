@@ -72,6 +72,9 @@ knowhow NQPList is repr('P6list') {
     method elems() {
         nqp::lllist_elems(self)
     }
+    method Numeric() {
+        self.elems
+    }
     method at_pos($idx) {
         nqp::lllist_get_at_pos(self, $idx.Int)
     }
@@ -80,6 +83,9 @@ knowhow NQPList is repr('P6list') {
 knowhow NQPArray is repr('P6list') {
     method new() {
         nqp::instance_of(self.WHAT)
+    }
+    method Numeric() {
+        self.elems
     }
     method elems() {
         nqp::lllist_elems(self)

@@ -929,7 +929,7 @@ method quote:sym</ />($/, $key?) {
 method quote_escape:sym<$>($/) { make $<variable>.ast; }
 method quote_escape:sym<{ }>($/) {
     make PAST::Op.new(
-        :pirop('set S*'), block_immediate($<block>.ast), :node($/)
+        :pasttype('callmethod'), :name('Stringy'), block_immediate($<block>.ast), :node($/)
     );
 }
 method quote_escape:sym<esc>($/) { make "\c[27]"; }

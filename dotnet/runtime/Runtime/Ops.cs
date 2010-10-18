@@ -420,6 +420,18 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Compares reference equality.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static RakudoObject equal_refs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC, x == y ? 1 : 0, TC.DefaultBoolBoxType);
+        }
+
+        /// <summary>
         /// Logical not.
         /// </summary>
         /// <param name="x"></param>

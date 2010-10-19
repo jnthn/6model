@@ -835,19 +835,19 @@ method semilist($/) { make $<statement>.ast }
 
 method postcircumfix:sym<[ ]>($/) {
     make PAST::Var.new( $<EXPR>.ast , :scope('keyed_int'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('@')) );
 }
 
 method postcircumfix:sym<{ }>($/) {
     make PAST::Var.new( $<EXPR>.ast , :scope('keyed'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('%')) );
 }
 
 method postcircumfix:sym<ang>($/) {
     make PAST::Var.new( $<quote_EXPR>.ast, :scope('keyed'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('%')) );
 }
 

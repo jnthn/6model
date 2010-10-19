@@ -550,17 +550,13 @@ our multi sub dnst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'bind' {
-        # Construct DNST for LHS in bind context.
-        my $lhs;
+        my $*BIND_CONTEXT := 1;
+        my $*BIND_VALUE;
         {
-            my $*BIND_CONTEXT := 1;
-            $lhs := dnst_for((@($op))[0]);
+            my $*BIND_CONTEXT := 0;
+            $*BIND_VALUE := dnst_for((@($op))[1]);
         }
-
-        # Now push onto that the evaluated RHS.
-        $lhs.push(dnst_for((@($op))[1]));
-
-        return $lhs;
+        return dnst_for((@($op))[0]);
     }
 
     elsif $op.pasttype eq 'nqpop' {
@@ -718,7 +714,7 @@ our multi sub dnst_for(PAST::Val $val) {
     else {
         my $const_id := +@*CONSTANTS;
         @*CONSTANTS.push($make_const);
-        return "ConstantsTable[$const_id]";
+        return DNST::Literal.new( :value("ConstantsTable[$const_id]") );
     }
 }
 
@@ -785,11 +781,16 @@ our multi sub dnst_for(PAST::Var $var) {
     elsif $scope eq 'register' {
         if $var.isdecl {
             my $result := DNST::Temp.new( :name($var.name), :type('RakudoObject') );
-            unless $*BIND_CONTEXT { $result.push('null'); }
+            if $*BIND_CONTEXT {
+                $result.push($*BIND_VALUE);
+            }
+            else {
+                $result.push('null');
+            }
             return $result;
         }
         elsif $*BIND_CONTEXT {
-            return DNST::Bind.new( $var.name );
+            return DNST::Bind.new( $var.name, $*BIND_VALUE );
         }
         else {
             return $var.name;
@@ -806,7 +807,7 @@ our multi sub dnst_for(PAST::Var $var) {
         }
 
         # Emit attribute lookup/bind.
-        return DNST::MethodCall.new(
+        my $lookup := DNST::MethodCall.new(
             :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
             :type('RakudoObject'),
             'TC',
@@ -814,6 +815,10 @@ our multi sub dnst_for(PAST::Var $var) {
             $class,
             DNST::Literal.new( :value($var.name), :escape(1) )
         );
+        if $*BIND_CONTEXT {
+            $lookup.push($*BIND_VALUE);
+        }
+        return $lookup;
     }
     elsif $scope eq 'keyed_int' {
         # Get thing to do lookup in without bind context applied - we simply
@@ -823,7 +828,7 @@ our multi sub dnst_for(PAST::Var $var) {
             my $*BIND_CONTEXT := 0;
             return dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('bind_pos'),
-                @($var)[0], @($var)[1]
+                @($var)[0], @($var)[1], $*BIND_VALUE
             ));
         }
         else {
@@ -845,13 +850,13 @@ sub declare_lexical($var) {
 
     # Run viviself if there is one and bind it.
     if pir::defined($var.viviself) {
-        my $*BIND_CONTEXT := 'bind_lex';
-        my $result := emit_lexical_lookup($var.name);
+        my $*BIND_CONTEXT := 1;
+        my $*BIND_VALUE;
         {
-            my $*BIND_CONTEXT := '';
-            $result.push(dnst_for($var.viviself));
+            my $*BIND_CONTEXT := 0;
+            $*BIND_VALUE := dnst_for($var.viviself);
         }
-        return $result;
+        return emit_lexical_lookup($var.name);
     }
     else {
         return emit_lexical_lookup($var.name);
@@ -860,7 +865,12 @@ sub declare_lexical($var) {
 
 # Catch-all for values and error detection.
 our multi sub dnst_for($any) {
-    if pir::isa($any, 'String') || pir::isa($any, 'Integer') || pir::isa($any, 'Float') {
+    if $any ~~ DNST::Node {
+        # DNST of something already in DNST is itself.
+        return $any;
+    }
+    elsif pir::isa($any, 'String') || pir::isa($any, 'Integer') || pir::isa($any, 'Float') {
+        # Literals - wrap up in a value node and compile that.
         return dnst_for(PAST::Val.new( :value($any) ));
     }
     else {
@@ -870,20 +880,28 @@ our multi sub dnst_for($any) {
 
 # Emits a lookup of a lexical.
 sub emit_lexical_lookup($name) {
-    return DNST::MethodCall.new(
+    my $lookup := DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
         :type('RakudoObject'),
         'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );
+    if $*BIND_CONTEXT {
+        $lookup.push($*BIND_VALUE);
+    }
+    $lookup
 }
 
 # Emits a lookup of a dynamic var.
 sub emit_dynamic_lookup($name) {
-    return DNST::MethodCall.new(
+    my $lookup := DNST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
         :type('RakudoObject'),
         'TC',
         DNST::Literal.new( :value($name), :escape(1) )
     );
+    if $*BIND_CONTEXT {
+        $lookup.push($*BIND_VALUE);
+    }
+    $lookup
 }

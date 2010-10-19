@@ -821,10 +821,10 @@ our multi sub dnst_for(PAST::Var $var) {
         return $lookup;
     }
     elsif $scope eq 'keyed_int' {
-        # Get thing to do lookup in without bind context applied - we simply
-        # want to look it up.
         # XXX viviself, vivibase.
         if $*BIND_CONTEXT {
+            # Get thing to do lookup in without bind context applied - we simply
+            # want to look it up.
             my $*BIND_CONTEXT := 0;
             return dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('bind_pos'),
@@ -834,6 +834,24 @@ our multi sub dnst_for(PAST::Var $var) {
         else {
             return dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('at_pos'),
+                @($var)[0], @($var)[1]
+            ));
+        }
+    }
+    elsif $scope eq 'keyed' {
+        # XXX viviself, vivibase.
+        if $*BIND_CONTEXT {
+            # Get thing to do lookup in without bind context applied - we simply
+            # want to look it up.
+            my $*BIND_CONTEXT := 0;
+            return dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_key'),
+                @($var)[0], @($var)[1], $*BIND_VALUE
+            ));
+        }
+        else {
+            return dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_key'),
                 @($var)[0], @($var)[1]
             ));
         }

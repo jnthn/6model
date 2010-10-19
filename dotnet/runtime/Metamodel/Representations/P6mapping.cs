@@ -8,14 +8,14 @@ namespace Rakudo.Metamodel.Representations
 {
     /// <summary>
     /// This is a very first cut at a mapping representation. Just stores
-    /// hash mappings of one object to another at the moment. Not really
+    /// hash mappings of one string to object at the moment. Not really
     /// efficient, and no compact struct support, but gets us started.
     /// </summary>
     public class P6mapping : Representation
     {
         internal class Instance : RakudoObject
         {
-            public Dictionary<RakudoObject, RakudoObject> Storage;
+            public Dictionary<string, RakudoObject> Storage;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;
@@ -44,7 +44,7 @@ namespace Rakudo.Metamodel.Representations
         public override RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
             var Object = new Instance(WHAT.STable);
-            Object.Storage = new Dictionary<RakudoObject, RakudoObject>();
+            Object.Storage = new Dictionary<string, RakudoObject>();
             return Object;
         }
 

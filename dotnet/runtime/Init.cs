@@ -75,6 +75,7 @@ namespace Rakudo
                 REPRRegistry.register_REPR("P6capture", new P6capture());
                 REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
                 REPRRegistry.register_REPR("P6list", new P6list());
+                REPRRegistry.register_REPR("P6mapping", new P6mapping());
                 REPRS_Registered = true;
             }
         }

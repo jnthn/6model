@@ -51,6 +51,7 @@
     <Compile Include="Metamodel\Representations\P6list.cs" />
     <Compile Include="Metamodel\Representations\P6capture.cs" />
     <Compile Include="Metamodel\Representations\P6int.cs" />
+    <Compile Include="Metamodel\Representations\P6mapping.cs" />
     <Compile Include="Metamodel\Representations\P6num.cs" />
     <Compile Include="Metamodel\Representations\P6str.cs" />
     <Compile Include="Metamodel\Representations\RakudoCodeRef.cs" />

@@ -559,7 +559,7 @@ namespace Rakudo.Runtime
         /// <param name="LLList"></param>
         /// <param name="Index"></param>
         /// <returns></returns>
-        public static void lllist_bind_at_pos(ThreadContext TC, RakudoObject LLList, RakudoObject IndexObj, RakudoObject Value)
+        public static RakudoObject lllist_bind_at_pos(ThreadContext TC, RakudoObject LLList, RakudoObject IndexObj, RakudoObject Value)
         {
             if (LLList is P6list.Instance)
             {
@@ -577,6 +577,7 @@ namespace Rakudo.Runtime
                         Storage.Add(null);
                     Storage.Add(Value);
                 }
+                return Value;
             }
             else
             {

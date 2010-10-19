@@ -108,6 +108,18 @@ knowhow NQPHash is repr('P6mapping') {
     method new() {
         nqp::instance_of(self.WHAT)
     }
+    method Numeric() {
+        self.elems
+    }
+    method elems() {
+        nqp::llmapping_elems(self)
+    }
+    method at_key($key) {
+        nqp::llmapping_get_at_key(self, $key.Str)
+    }
+    method bind_key($key, $value) {
+        nqp::llmapping_bind_at_key(self, $key.Str, $value)
+    }
 }
 
 # This is a little bit of a cheat. We only really need to keep

@@ -6,6 +6,12 @@ knowhow NQPStr is repr('P6str') {
         nqp::logical_not_int(nqp::equal_strs(self, "")) &&
             nqp::logical_not_int(nqp::equal_strs(self, "0"))
     }
+    method Int() {
+        nqp::coerce_str_to_int(self, NQPInt)
+    }
+    method Num() {
+        nqp::coerce_str_to_num(self, NQPNum)
+    }
     method Numeric() {
         nqp::coerce_str_to_num(self, NQPNum)
     }
@@ -92,6 +98,9 @@ knowhow NQPArray is repr('P6list') {
     }
     method at_pos($idx) {
         nqp::lllist_get_at_pos(self, $idx.Int)
+    }
+    method bind_pos($idx, $value) {
+        nqp::lllist_bind_at_pos(self, $idx.Int, $value)
     }
 }
 

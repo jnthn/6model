@@ -651,7 +651,7 @@ our multi sub dnst_for(PAST::Op $op) {
                 :name($tmp_name), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('new'),
-                    PAST::Var.new( :name('NQPList'), :scope('lexical') )
+                    PAST::Var.new( :name('NQPArray'), :scope('lexical') )
                 ))
             )
         );
@@ -814,6 +814,24 @@ our multi sub dnst_for(PAST::Var $var) {
             $class,
             DNST::Literal.new( :value($var.name), :escape(1) )
         );
+    }
+    elsif $scope eq 'keyed_int' {
+        # Get thing to do lookup in without bind context applied - we simply
+        # want to look it up.
+        # XXX viviself, vivibase.
+        if $*BIND_CONTEXT {
+            my $*BIND_CONTEXT := 0;
+            return dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_pos'),
+                @($var)[0], @($var)[1]
+            ));
+        }
+        else {
+            return dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_pos'),
+                @($var)[0], @($var)[1]
+            ));
+        }
     }
     else {
         pir::die("Don't know how to compile variable scope " ~ $var.scope);

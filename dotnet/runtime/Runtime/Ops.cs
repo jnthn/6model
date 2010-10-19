@@ -20,9 +20,10 @@ namespace Rakudo.Runtime
         /// <param name="HOW"></param>
         /// <param name="REPRName"></param>
         /// <returns></returns>
-        public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, string REPRName)
+        public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, RakudoObject REPRName)
         {
-            return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(TC, HOW);
+            var REPRNameStr = Ops.unbox_str(TC, REPRName);
+            return REPRRegistry.get_REPR_by_name(REPRNameStr).type_object_for(TC, HOW);
         }
 
         /// <summary>

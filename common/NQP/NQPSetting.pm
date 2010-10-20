@@ -229,7 +229,7 @@ sub plan($n) {
     print("1..");
     say($n);
 }
-sub ok($check, $diag) {
+sub ok($check, $diag?) {
     $count := $count + 1;
     unless $check { print("not ") }
     print("ok ");

@@ -87,14 +87,12 @@ namespace Rakudo.Runtime
                     {
                         // We have an argument, just bind it.
                         C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
+                        CurPositional++;
                     }
                     else
                     {
                         // XXX Default value, vivification.
                     }
-
-                    // Increment positional counter.
-                    CurPositional++;
                 }
 
                 // Named slurpy?

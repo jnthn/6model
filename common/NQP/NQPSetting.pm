@@ -239,3 +239,9 @@ sub ok($check, $diag) {
 # XXX Bad hack, we'll replace this later.
 knowhow Any {
 }
+
+# GLOBAL stash.
+# (XXX Really want one per compilation unit and unify, but this will get us
+# started. Also really want a stash type that knows its name rather than just
+# a hash, I guess.)
+::GLOBAL := NQPHash.new();

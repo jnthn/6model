@@ -28,6 +28,9 @@ method compile(PAST::Node $node) {
     # Also need to track the PAST blocks we're in.
     my @*PAST_BLOCKS;
 
+    # Current namespace path.
+    my @*CURRENT_NS;
+
     # Compile the node; ensure it is an immediate block.
     $node.blocktype('immediate');
     my $main_block_call := dnst_for($node);
@@ -242,6 +245,15 @@ our multi sub dnst_for(PAST::Block $block) {
     # We'll collect all the parameter nodes and lexical declarations.
     my @*PARAMS;
     my @*LEXICALS;
+
+    # Update namespace.
+    my @*CURRENT_NS;
+    if pir::isa($block.namespace(), 'ResizablePMCArray') {
+        @*CURRENT_NS := $block.namespace();
+    }
+    elsif ~$block.namespace() ne '' {
+        @*CURRENT_NS.push(~$block.namespace());
+    }
     
     # Fresh bind context.
     my $*BIND_CONTEXT := 0;
@@ -758,22 +770,53 @@ our multi sub dnst_for(PAST::Var $var) {
         }
     }
     elsif $scope eq 'package' {
-        if $var.isdecl { pir::die("Don't know how to handle is_decl on package"); }
-
         # Get all parts of the name.
         my @parts;
         if $var.namespace {
             for $var.namespace { @parts.push($_); }
         }
+        else {
+            if +@*CURRENT_NS {
+                for @*CURRENT_NS {
+                    @parts.push($_)
+                }
+            }
+            else {
+                @parts.push('GLOBAL');
+            }
+        }
         @parts.push($var.name);
 
         # First, we need to look up the first part.
-        my $lookup := emit_lexical_lookup(@parts.shift);
+        my $lookup;
+        {
+            my $*BIND_CONTEXT := 0;
+            $lookup := emit_lexical_lookup(@parts.shift);
+        }
+
+        # If we're in bind context, need to treat last part specially.
+        my $bindee;
+        if $*BIND_CONTEXT {
+            $bindee := @parts.pop;
+        }
 
         # Now chase down the rest.
         for @parts {
-            # XXX todo: wrap the lookup in postcircumfix:<{ }> call(s).
-            pir::die('Multi-level package lookups NYI');
+            $lookup := dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_key'),
+                $lookup,
+                PAST::Val.new( :value(~$_) )
+            ));
+        }
+
+        # Binding, if needed.
+        if $*BIND_CONTEXT {
+            $lookup := dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_key'),
+                $lookup,
+                PAST::Val.new( :value(~$bindee) ),
+                $*BIND_VALUE
+            ));
         }
 
         return $lookup;

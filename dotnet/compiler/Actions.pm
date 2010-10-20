@@ -365,7 +365,7 @@ sub package($/) {
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
-                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('package') )
+                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') )
             )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -459,7 +459,7 @@ method variable_declarator($/) {
             PAST::Var.new( :name('type_obj'), :scope('register') ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new'),
-                PAST::Var.new( :name($meta-attr-type), :scope('package') ),
+                PAST::Var.new( :name($meta-attr-type), :scope('lexical') ),
                 PAST::Val.new( :value($name), :named('name') )
             )
         ));
@@ -619,12 +619,47 @@ method parameter($/) {
 }
 
 method typename($/) {
-    my @name := HLL::Compiler.parse_name(~$/);
-    make PAST::Var.new(
-        :name(@name.pop),
-        :namespace(@name),
-        :scope('package')
-    );
+    if is_lexical(~$/) {
+        make PAST::Var.new(
+            :name(~$/),
+            :scope('lexical')
+        );
+    }
+    else {
+        my @name := HLL::Compiler.parse_name(~$/);
+        make PAST::Var.new(
+            :name(@name.pop),
+            :namespace(@name),
+            :scope('package')
+        );
+    }
+}
+
+# Check if something is a lexical or not.
+sub is_lexical($name) {
+    # XXX Big hack for now, until we can really look at the contents
+    # of the setting.
+    my %setting_names;
+    %setting_names<KnowHOW>          := 1;
+    %setting_names<KnowHOWAttribute> := 1;
+    %setting_names<NQPStr>           := 1;
+    %setting_names<NQPInt>           := 1;
+    %setting_names<NQPNum>           := 1;
+    %setting_names<NQPList>          := 1;
+    %setting_names<NQPArray>         := 1;
+    %setting_names<NQPHash>          := 1;
+    if %setting_names{$name} {
+        return 1;
+    }
+    for @BLOCK {
+        my %sym := $_.symbol($name);
+        if %sym {
+            if %sym<scope> eq 'lexical' {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 method param_var($/) {
@@ -739,11 +774,16 @@ method term:sym<identifier>($/) {
 }
 
 method term:sym<name>($/) {
-    my @ns := pir::clone__PP($<name><identifier>);
-    my $name := @ns.pop;
-    @ns.shift if @ns && @ns[0] eq 'GLOBAL';
-    my $var :=
-        PAST::Var.new( :name(~$name), :namespace(@ns), :scope('package') );
+    my $var;
+    if is_lexical(~$<name>) {
+        $var := PAST::Var.new( :name(~$<name>), :scope('lexical') );
+    }
+    else {
+        my @ns := pir::clone__PP($<name><identifier>);
+        my $name := @ns.pop;
+        @ns.shift if @ns && @ns[0] eq 'GLOBAL';
+        $var := PAST::Var.new( :name(~$name), :namespace(@ns), :scope('package') );
+    }
     my $past := $var;
     if $<args> {
         $past := $<args>[0].ast;

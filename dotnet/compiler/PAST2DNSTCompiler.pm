@@ -811,6 +811,7 @@ our multi sub dnst_for(PAST::Var $var) {
 
         # Binding, if needed.
         if $*BIND_CONTEXT {
+            my $*BIND_CONTEXT := 0;
             $lookup := dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('bind_key'),
                 $lookup,

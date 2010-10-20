@@ -262,7 +262,7 @@ token variable {
     | $<sigil>=['$'] $<desigilname>=[<[/_!]>]
 }
 
-token sigil { <[$@%&]> }
+token sigil { <[$@%&]> | '::' }
 
 token twigil { <[*!?]> }
 

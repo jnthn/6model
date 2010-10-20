@@ -327,7 +327,12 @@ method variable($/) {
             $past.viviself( vivitype( $<sigil> ) );
             $past.lvalue(1);
         }
-        if $<twigil>[0] eq '*' {
+        if $<sigil> eq '::' {
+            $past.isdecl(1);
+            $past.name(~$<desigilname>);
+            @BLOCK[0].symbol($past.name(), :scope('lexical'));
+        }
+        elsif $<twigil>[0] eq '*' {
             $past.scope('contextual');
             $past.viviself( 
                 PAST::Var.new( 

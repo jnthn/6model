@@ -675,5 +675,18 @@ namespace Rakudo.Runtime
                 throw new Exception("Cannot use llmapping_elems if representation is not P6mapping");
             }
         }
+
+        /// <summary>
+        /// Leaves the specified block, returning the specified value from it. This
+        /// unwinds the stack.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Block"></param>
+        /// <param name="ReturnValue"></param>
+        /// <returns></returns>
+        public static RakudoObject leave_block(ThreadContext TC, RakudoObject Block, RakudoObject ReturnValue)
+        {
+            throw new Exceptions.LeaveStackUnwinderException(Block as RakudoCodeRef.Instance, ReturnValue);
+        }
     }
 }

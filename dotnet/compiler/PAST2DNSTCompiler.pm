@@ -140,9 +140,10 @@ method compile(PAST::Node $node) {
     return DNST::CompilationUnit.new(
         DNST::Using.new( :namespace('System') ),
         DNST::Using.new( :namespace('System.Collections.Generic') ),
-        DNST::Using.new( :namespace('Rakudo.Runtime') ),
         DNST::Using.new( :namespace('Rakudo.Metamodel') ),
         DNST::Using.new( :namespace('Rakudo.Metamodel.Representations') ),
+        DNST::Using.new( :namespace('Rakudo.Runtime') ),
+        DNST::Using.new( :namespace('Rakudo.Runtime.Exceptions') ),
         $class
     );
 }
@@ -357,7 +358,20 @@ our multi sub dnst_for(PAST::Block $block) {
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
     $result.push(DNST::TryFinally.new(
-        $stmts,
+        DNST::TryCatch.new(
+            :exception_type('LeaveStackUnwinderException'),
+            :exception_var('exc'),
+            $stmts,
+            DNST::Stmts.new(
+                DNST::If.new(
+                    DNST::Literal.new(
+                        :value("(exc.TargetBlock == StaticBlockInfo[$our_sbi] ? 1 : 0)")
+                    ),
+                    DNST::Throw.new()
+                ),
+                "exc.PayLoad"
+            )
+        ),
         DNST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
     

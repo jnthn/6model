@@ -45,6 +45,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Init.cs" />
@@ -57,6 +59,7 @@
     <Compile Include="Metamodel\Representations\RakudoCodeRef.cs" />
     <Compile Include="Metamodel\REPRRegistry.cs" />
     <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Exceptions\LeaveStackUnwinderException.cs" />
     <Compile Include="Runtime\ExecutionDomain.cs" />
     <Compile Include="Metamodel\KnowHOW\KnowHOWBootstrapper.cs" />
     <Compile Include="Metamodel\KnowHOW\KnowHOWREPR.cs" />

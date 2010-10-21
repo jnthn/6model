@@ -365,7 +365,7 @@ our multi sub dnst_for(PAST::Block $block) {
             DNST::Stmts.new(
                 DNST::If.new(
                     DNST::Literal.new(
-                        :value("(exc.TargetBlock == StaticBlockInfo[$our_sbi] ? 1 : 0)")
+                        :value("(exc.TargetBlock != StaticBlockInfo[$our_sbi] ? 1 : 0)")
                     ),
                     DNST::Throw.new()
                 ),

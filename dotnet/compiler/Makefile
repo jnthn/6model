@@ -19,7 +19,7 @@ gen_dnst2csharp.pir: DNST2CSharp.pm
 
 NQPSetting.dll: ../../common/NQP/NQPSetting.pm  gen_actions.pir gen_grammar.pir gen_dnst.pir gen_past2dnst.pir gen_dnst2csharp.pir
 	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > NQPSetting.cs
-	csc /target:library /debug /out:NQPSetting.dll /reference:RakudoRuntime.dll NQPSetting.cs
+	csc /warn:0 /target:library /debug /out:NQPSetting.dll /reference:RakudoRuntime.dll NQPSetting.cs
 
 test: all
 	prove -r --exec try ..\..\t\nqp

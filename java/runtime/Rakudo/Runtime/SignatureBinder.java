@@ -5,6 +5,8 @@ import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.P6capture;
 import Rakudo.Runtime.Context;
 
+
+
 /// <summary>
 /// Simple signature binder implementation.
 /// </summary>
@@ -85,14 +87,12 @@ public class SignatureBinder // static class in the C# version
                 {
                     // We have an argument, just bind it.
                     C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
+                    CurPositional++;
                 }
                 else
                 {
                     // XXX Default value, vivification.
                 }
-
-                // Increment positional counter.
-                CurPositional++;
             }
 
             // Named slurpy?

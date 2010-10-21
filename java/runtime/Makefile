@@ -69,6 +69,7 @@ OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Metamodel/Representation.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+	$(CLASSES)Rakudo/Metamodel/Representations/P6mapping.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
 	$(CLASSES)Rakudo/Runtime/Context.class \
 	$(CLASSES)Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.class \
@@ -114,6 +115,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Runtime/Signature.java \
 		Rakudo/Metamodel/Representations/P6capture.java \
 		Rakudo/Metamodel/Representations/P6list.java \
+		Rakudo/Metamodel/Representations/P6mapping.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
@@ -132,6 +134,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Runtime/Signature.java \
 		Rakudo/Metamodel/Representations/P6capture.java \
 		Rakudo/Metamodel/Representations/P6list.java \
+		Rakudo/Metamodel/Representations/P6mapping.java \
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
@@ -153,6 +156,7 @@ $(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class: Rakudo/Metamodel/K
 		$(CLASSES)Rakudo/Metamodel/Representation.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6mapping.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
 		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
 		$(CLASSES)Rakudo/Metamodel/SharedTable.class \
@@ -234,6 +238,7 @@ $(CLASSES)Rakudo/Init.class: Rakudo/Init.java \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6hash.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6int.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
+		$(CLASSES)Rakudo/Metamodel/Representations/P6mapping.class \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class \
 		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
 		$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
@@ -259,6 +264,7 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Metamodel/Representations/P6hash.java \
 	Rakudo/Metamodel/Representations/P6int.java \
 	Rakudo/Metamodel/Representations/P6list.java \
+	Rakudo/Metamodel/Representations/P6mapping.java \
 	Rakudo/Metamodel/Representations/P6num.java \
 	Rakudo/Metamodel/Representations/P6opaque.java \
 	Rakudo/Metamodel/Representations/P6str.java \
@@ -306,6 +312,9 @@ Rakudo/Metamodel/Representations/P6int.java: ../../dotnet/runtime/Metamodel/Repr
 	@echo "todo: $@ is older than $<"
 
 Rakudo/Metamodel/Representations/P6list.java: ../../dotnet/runtime/Metamodel/Representations/P6list.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Metamodel/Representations/P6mapping.java: ../../dotnet/runtime/Metamodel/Representations/P6mapping.cs
 	@echo "todo: $@ is older than $<"
 
 Rakudo/Metamodel/Representations/P6num.java: ../../dotnet/runtime/Metamodel/Representations/P6num.cs

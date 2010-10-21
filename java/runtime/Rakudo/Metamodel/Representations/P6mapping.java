@@ -1,6 +1,5 @@
 package Rakudo.Metamodel.Representations;
-
-import java.util.ArrayList;
+import java.util.HashMap;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
@@ -8,21 +7,15 @@ import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
-/// This is a very first cut at a list representation. Essentially,
-/// it just knows how to store a list of objects at the moment. At
-/// some point we need to define the way that it will handle compact
-/// arrays.
+/// This is a very first cut at a mapping representation. Just stores
+/// hash mappings of one string to object at the moment. Not really
+/// efficient, and no compact struct support, but gets us started.
 /// </summary>
-public class P6list implements Representation
+public class P6mapping implements Representation
 {
     public class Instance extends RakudoObject
     {
-        /// <summary>
-        /// Just use a .Net List at the moment, but an array would
-        /// be more efficient in the long run (though give us more
-        /// stuff to implement ourselves).
-        /// </summary>
-        public ArrayList<RakudoObject> Storage;
+        public HashMap<String,RakudoObject> Storage;
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);
@@ -51,7 +44,7 @@ public class P6list implements Representation
     public  RakudoObject instance_of(ThreadContext tc, RakudoObject WHAT)
     {
         Instance object = new Instance(WHAT.getSTable());
-        object.Storage = new ArrayList<RakudoObject>();
+        object.Storage = new HashMap<String,RakudoObject>();
         return object;
     }
 
@@ -65,17 +58,17 @@ public class P6list implements Representation
         return ((Instance)object).Storage != null;
     }
 
-    public  RakudoObject get_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name)
+    public  RakudoObject get_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, int hint)
+    public  RakudoObject get_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void bind_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
+    public  void bind_attribute(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
     {
         throw new UnsupportedOperationException();
     }

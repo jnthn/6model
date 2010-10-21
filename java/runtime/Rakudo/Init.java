@@ -8,6 +8,7 @@ import Rakudo.Metamodel.Representations.P6capture;
 import Rakudo.Metamodel.Representations.P6hash;
 import Rakudo.Metamodel.Representations.P6int;
 import Rakudo.Metamodel.Representations.P6list;
+import Rakudo.Metamodel.Representations.P6mapping;
 import Rakudo.Metamodel.Representations.P6num;
 import Rakudo.Metamodel.Representations.P6opaque;
 import Rakudo.Metamodel.Representations.P6str;
@@ -23,8 +24,7 @@ import Rakudo.Runtime.ThreadContext;
 /// <summary>
 /// Does initialization of the Rakudo library.
 /// </summary>
-public class Init
-//public static class Init
+public class Init  // public static in the C# version
 {
     /// <summary>
     /// Have we already registered the representations?
@@ -44,7 +44,7 @@ public class Init
         // Either load a named setting or use the fake bootstrapping one.
         Context settingContext =
             // Comment out the next line to always use the fake Setting.
-            (settingName != null) ? LoadSetting(settingName, knowHOW) :
+//          (settingName != null) ? LoadSetting(settingName, knowHOW) :
                                     BootstrapSetting(knowHOW);
 
         // Cache native capture and LLCode type object.
@@ -60,6 +60,7 @@ public class Init
         threadContext.DefaultIntBoxType  = settingContext.LexPad.GetByName("NQPInt");
         threadContext.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
         threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
+        threadContext.DefaultListType    = settingContext.LexPad.GetByName("NQPList");
         return threadContext;
     }
 
@@ -79,6 +80,7 @@ public class Init
             REPRRegistry.register_REPR("P6capture", new P6capture());
             REPRRegistry.register_REPR("RakudoCodeRef", new RakudoCodeRef());
             REPRRegistry.register_REPR("P6list", new P6list());
+            REPRRegistry.register_REPR("P6mapping", new P6mapping());
             REPRS_Registered = true;
         }
     }
@@ -113,6 +115,7 @@ public class Init
                 REPRRegistry.get_REPR_by_name("P6int").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("P6num").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("P6str").type_object_for(null,null),
+                REPRRegistry.get_REPR_by_name("P6list").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,KnowHOW.getSTable().REPR.instance_of(null,KnowHOW)),
                 CodeObjectUtility.WrapNativeMethod(funcBody)
             };
@@ -150,10 +153,6 @@ public class Init
         }
 
         // Find the setting type and its LoadSetting method.
-        // var Class = settingAssembly.GetType("NQPSetting");
-        // var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
-//      String s = new String();
-//      Class stringClass = s.getClass();
         java.lang.reflect.Method methodLoadSetting = null;
         try {
             methodLoadSetting = classNQPSetting.getMethod("LoadSetting");

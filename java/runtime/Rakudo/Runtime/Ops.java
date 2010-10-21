@@ -1,32 +1,29 @@
 package Rakudo.Runtime;
-
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.P6list;
+import Rakudo.Metamodel.Representations.P6mapping;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
 import Rakudo.Runtime.MultiDispatch.LexicalCandidateFinder;
 import Rakudo.Runtime.MultiDispatch.MultiDispatcher;
-
 /// <summary>
-/// This class implements the various vm::op options that are
-/// available.
+/// This class implements the various vm::op options that are available.
 /// </summary>
-public class Ops
+public class Ops  // public static in the C# version
 {
-    /// <summary>
-    /// Creates a type object associated with the given HOW and of the
-    /// given representation.
+    /// <summary>Creates a type object associated with the given HOW and of the given representation.
     /// </summary>
     /// <param name="HOW"></param>
     /// <param name="REPRName"></param>
     /// <returns></returns>
-    public static RakudoObject type_object_for(ThreadContext tc, RakudoObject HOW, String REPRName)
+    public static RakudoObject type_object_for(ThreadContext tc, RakudoObject HOW, RakudoObject REPRName)
     {
-        return REPRRegistry.get_REPR_by_name(REPRName).type_object_for(tc, HOW);
+        String strREPRName = Ops.unbox_str(tc, REPRName);
+        return REPRRegistry.get_REPR_by_name(strREPRName).type_object_for(tc, HOW);
     }
 
     /// <summary>
@@ -67,7 +64,7 @@ public class Ops
     /// <param name="object"></param>
     /// <param name="Class"></param>
     /// <param name="name"></param>
-    /// <param name="Hint"></param>
+    /// <param name="hint"></param>
     /// <returns></returns>
     public static RakudoObject get_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint)
     {
@@ -80,15 +77,14 @@ public class Ops
     /// <param name="object"></param>
     /// <param name="Class"></param>
     /// <param name="name"></param>
-    /// <param name="Hint"></param>
-    public static RakudoObject bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject value)
+    public static RakudoObject bind_attr(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject value)
     {
         object.getSTable().REPR.bind_attribute(tc, object, Class, name, value);
         return value;
     }
 
-    /// <summary>
     /// Binds the value of an attribute to the given value, using the
+    /// <summary>
     /// given hint.
     /// </summary>
     /// <param name="object"></param>
@@ -273,6 +269,34 @@ public class Ops
     }
 
     /// <summary>
+    /// Coerces a string into an integer.
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="Str"></param>
+    /// <param name="TargetType"></param>
+    /// <returns></returns>
+    public static RakudoObject coerce_str_to_int(ThreadContext tc, RakudoObject strObject, RakudoObject targetType)
+    {
+        int value = Integer.parseInt(Ops.unbox_str(tc, strObject));
+        return Ops.box_int(tc, value, targetType);
+    }
+
+
+    /// <summary>
+    /// Coerces a string into an number.
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="Str"></param>
+    /// <param name="TargetType"></param>
+    /// <returns></returns>
+    public static RakudoObject coerce_str_to_num(ThreadContext tc, RakudoObject strObject, RakudoObject targetType)
+    {
+        double value = Double.parseDouble(Ops.unbox_str(tc, strObject));
+        return Ops.box_num(tc, value, targetType);
+    }
+
+
+    /// <summary>
     /// Gets a lexical variable of the given name.
     /// </summary>
     /// <param name="i"></param>
@@ -281,9 +305,7 @@ public class Ops
     public static RakudoObject get_lex(ThreadContext tc, String name)
     {
         Context curContext = tc.CurrentContext;
-        while (curContext != null)
-        {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
+        while (curContext != null) {
             if (curContext.LexPad.SlotMapping.containsKey(name)) {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
@@ -304,7 +326,6 @@ public class Ops
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
                 int index = curContext.LexPad.SlotMapping.get(name);
@@ -325,9 +346,7 @@ public class Ops
     public static RakudoObject get_dynamic(ThreadContext tc, String name)
     {
         Context curContext = tc.CurrentContext;
-        while (curContext != null)
-        {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
+        while (curContext != null) {
             if (curContext.LexPad.SlotMapping.containsKey(name)) {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
@@ -348,7 +367,6 @@ public class Ops
         Context curContext = tc.CurrentContext;
         while (curContext != null)
         {
-            // if (CurContext.LexPad.SlotMapping.TryGetValue(name, out Index)) // the C# version
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
                 int index = curContext.LexPad.SlotMapping.get(name);
@@ -398,8 +416,20 @@ public class Ops
     public static RakudoObject equal_strs(ThreadContext tc, RakudoObject x, RakudoObject y)
     {
         return Ops.box_int(tc,
-            (Ops.unbox_str(tc, x) == Ops.unbox_str(tc, y) ? 1 : 0),
+            (Ops.unbox_str(tc, x).equals(Ops.unbox_str(tc, y)) ? 1 : 0),
             tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares reference equality.
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public static RakudoObject equal_refs(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc, x == y ? 1 : 0, tc.DefaultBoolBoxType);
     }
 
     /// <summary>
@@ -530,7 +560,7 @@ public class Ops
     /// <param name="LLList"></param>
     /// <param name="Index"></param>
     /// <returns></returns>
-    public static void lllist_bind_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject indexObj, RakudoObject value)
+    public static RakudoObject lllist_bind_at_pos(ThreadContext tc, RakudoObject lowlevelList, RakudoObject indexObj, RakudoObject value)
     {
         if (lowlevelList instanceof P6list.Instance)
         {
@@ -548,6 +578,7 @@ public class Ops
                     storage.add(null);
                 storage.add(value);
             }
+            return value;
         }
         else
         {
@@ -561,7 +592,6 @@ public class Ops
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
-    /// <param name="Index"></param>
     /// <returns></returns>
     public static RakudoObject lllist_elems(ThreadContext tc, RakudoObject lowlevelList)
     {
@@ -574,4 +604,76 @@ public class Ops
             throw new UnsupportedOperationException("Cannot use lllist_elems if representation is not P6list");
         }
     }
+
+    /// <summary>
+    /// Gets a value at a given key from a low level mapping (something that
+    /// uses the P6mapping representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLMapping"></param>
+    /// <param name="Key"></param>
+    /// <returns></returns>
+    public static RakudoObject llmapping_get_at_key(ThreadContext tc, RakudoObject lowlevelMapping, RakudoObject key)
+    {
+        if (lowlevelMapping instanceof P6mapping.Instance)
+        {
+            HashMap<String,RakudoObject> storage = ((P6mapping.Instance)lowlevelMapping).Storage;
+            String strKey = Ops.unbox_str(tc, key);
+            if (storage.containsKey(strKey))
+                return storage.get(strKey);
+            else
+                return null;
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use llmapping_get_at_key if representation is not P6mapping");
+        }
+    }
+
+    /// <summary>
+    /// Binds a value at a given key from a low level mapping (something that
+    /// uses the P6mapping representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLMapping"></param>
+    /// <param name="Key"></param>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject llmapping_bind_at_key(ThreadContext tc, RakudoObject lowlevelMapping, RakudoObject key, RakudoObject value)
+    {
+        if (lowlevelMapping instanceof P6mapping.Instance)
+        {
+            HashMap<String,RakudoObject> storage = ((P6mapping.Instance)lowlevelMapping).Storage;
+            String strKey = Ops.unbox_str(tc, key);
+
+            // this space intentionally left blank ;)
+
+            storage.put(strKey, value);
+            return value;
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use llmapping_bind_at_key if representation is not P6mapping");
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of elements in a low level mapping (something that
+    /// uses the P6mapping representation).
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="LLMapping"></param>
+    /// <returns></returns>
+    public static RakudoObject llmapping_elems(ThreadContext tc, RakudoObject lowlevelMapping)
+    {
+        if (lowlevelMapping instanceof P6mapping.Instance)
+        {
+            return Ops.box_int(tc, ((P6mapping.Instance)lowlevelMapping).Storage.size(), tc.DefaultIntBoxType);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use llmapping_elems if representation is not P6mapping");
+        }
+    }
 }
+

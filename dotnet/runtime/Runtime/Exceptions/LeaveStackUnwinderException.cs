@@ -24,9 +24,11 @@ namespace Rakudo.Runtime.Exceptions
         public RakudoObject PayLoad;
 
         /// <summary>
-        /// Creates a LeaveStackUnwinderException to 
+        /// Creates a LeaveStackUnwinderException to target the given block
+        /// and exit it with the specified payload.
         /// </summary>
         /// <param name="TargetBlock"></param>
+        /// <param name="PayLoad"></param>
         public LeaveStackUnwinderException(RakudoCodeRef.Instance TargetBlock, RakudoObject PayLoad)
         {
             this.TargetBlock = TargetBlock;

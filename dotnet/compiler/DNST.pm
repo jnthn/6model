@@ -231,6 +231,36 @@ class DNST::TryFinally is DNST::Node {
     }
 }
 
+class DNST::TryCatch is DNST::Node {
+    has $!exception_type;
+    has $!exception_var;
+
+    method exception_type($set?) {
+        if $set { $!exception_type := $set }
+        $!exception_type
+    }
+
+    method exception_var($set?) {
+        if $set { $!exception_var := $set }
+        $!exception_var
+    }
+
+    method new(*@children, :$exception_type!, :$exception_var!) {
+        my $obj := self.CREATE;
+        $obj.exception_type($exception_type);
+        $obj.exception_var($exception_var);
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class DNST::Throw is DNST::Node {
+    method new() {
+        my $obj := self.CREATE;
+        $obj;
+    }
+}
+
 class DNST::If is DNST::Node {
     method new(*@children) {
         my $obj := self.CREATE;

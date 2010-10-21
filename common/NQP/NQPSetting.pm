@@ -134,6 +134,12 @@ knowhow KnowHOWAttribute is repr('P6str') {
     }
 }
 
+knowhow NQPCode is repr('RakudoCodeRef') {
+    method leave($with) {
+        nqp::leave_block(self, $with)
+    }
+}
+
 ## XXX Need coercive Any fallbacks too.
 
 proto sub &infix:<==>($x, $y) {

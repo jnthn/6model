@@ -95,6 +95,22 @@ our multi sub cs_for(DNST::TryFinally $tf) {
     return $code;
 }
 
+our multi sub cs_for(DNST::TryCatch $tc) {
+    unless +@($tc) == 2 { pir::die('DNST::TryCatch nodes must have 2 children') }
+    my $try_result := get_unique_id('try_result');
+    my $code := "        RakudoObject $try_result;\n" ~
+                "        try \{\n" ~
+                cs_for((@($tc))[0]);
+    $code := $code ~
+                "        $try_result = $*LAST_TEMP;\n" ~
+                "        } catch(" ~ $tc.exception_type ~ " " ~ $tc.exception_var  ~ ")\{\n" ~
+                cs_for((@($tc))[1]) ~
+                "        $try_result = $*LAST_TEMP;\n" ~
+                "        }\n";
+    $*LAST_TEMP := $try_result;
+    return $code;
+}
+
 our multi sub cs_for(DNST::MethodCall $mc) {
     # Code generate all the arguments.
     my @arg_names;
@@ -218,6 +234,11 @@ our multi sub cs_for(DNST::Literal $lit) {
         ('@"' ~ pir::join__ssp('""', pir::split__pss('"', ~$lit.value)) ~ '"') !!
         $lit.value;
     return '';
+}
+
+our multi sub cs_for(DNST::Throw $throw) {
+    $*LAST_TEMP := 'null';
+    return '        throw;';
 }
 
 our multi sub cs_for(String $s) {

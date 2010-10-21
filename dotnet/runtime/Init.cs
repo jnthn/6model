@@ -43,7 +43,7 @@ namespace Rakudo
 
             // Cache native capture and LLCode type object.
             CaptureHelper.CaptureTypeObject = SettingContext.LexPad.GetByName("capture");
-            CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad.GetByName("LLCode");
+            CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad.GetByName("NQPCode");
 
             // Create an execution domain and a thread context for it.
             var ExecDom = new ExecutionDomain();
@@ -90,7 +90,7 @@ namespace Rakudo
         {
             var SettingContext = new Context();
             SettingContext.LexPad = new Lexpad(new string[]
-                { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "LLCode", "list" });
+                { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
             SettingContext.LexPad.Storage = new RakudoObject[]
                 {
                     KnowHOW,
@@ -134,7 +134,7 @@ namespace Rakudo
             // Fudge a few more things in.
             // XXX Should be able to toss all of thse but KnowHOW.
             SettingContext.LexPad.Extend(new string[]
-                { "KnowHOW", "print", "say", "capture", "LLCode" });
+                { "KnowHOW", "print", "say", "capture" });
             SettingContext.LexPad.SetByName("KnowHOW", KnowHOW);
             SettingContext.LexPad.SetByName("print",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
@@ -164,7 +164,6 @@ namespace Rakudo
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null));
-            SettingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, KnowHOW.STable.REPR.instance_of(null, KnowHOW)));
             
             return SettingContext;
         }

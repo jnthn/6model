@@ -122,18 +122,6 @@ knowhow NQPHash is repr('P6mapping') {
     }
 }
 
-# This is a little bit of a cheat. We only really need to keep
-# hold of a name for the most basic attribute class, so we just
-# use the string representation.
-knowhow KnowHOWAttribute is repr('P6str') {
-    method new(:$name) {
-        nqp::box_str(nqp::unbox_str($name), KnowHOWAttribute)
-    }
-    method name() {
-        nqp::box_str(nqp::unbox_str(self), NQPStr)
-    }
-}
-
 knowhow NQPCode is repr('RakudoCodeRef') {
     method leave($with) {
         nqp::leave_block(self, $with)

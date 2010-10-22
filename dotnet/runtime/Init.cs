@@ -29,16 +29,17 @@ namespace Rakudo
             // Bootstrap the meta-model.
             RegisterRepresentations();
             var KnowHOW = KnowHOWBootstrapper.Bootstrap();
+            var KnowHOWAttribute = KnowHOWBootstrapper.SetupKnowHOWAttribute(KnowHOW);
 
             // See if we're to load a setting or use the fake bootstrapping one.
             Context SettingContext;
             if (SettingName == null)
             {
-                SettingContext = BootstrapSetting(KnowHOW);
+                SettingContext = BootstrapSetting(KnowHOW, KnowHOWAttribute);
             }
             else
             {
-                SettingContext = LoadSetting(SettingName, KnowHOW);
+                SettingContext = LoadSetting(SettingName, KnowHOW, KnowHOWAttribute);
             }
 
             // Cache native capture and LLCode type object.
@@ -86,14 +87,15 @@ namespace Rakudo
         /// </summary>
         /// <param name="KnowHOW"></param>
         /// <returns></returns>
-        private static Context BootstrapSetting(RakudoObject KnowHOW)
+        private static Context BootstrapSetting(RakudoObject KnowHOW, RakudoObject KnowHOWAttribute)
         {
             var SettingContext = new Context();
             SettingContext.LexPad = new Lexpad(new string[]
-                { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
+                { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
             SettingContext.LexPad.Storage = new RakudoObject[]
                 {
                     KnowHOW,
+                    KnowHOWAttribute,
                     REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null),
                     REPRRegistry.get_REPR_by_name("P6int").type_object_for(null, null),
                     REPRRegistry.get_REPR_by_name("P6num").type_object_for(null, null),
@@ -119,7 +121,7 @@ namespace Rakudo
         /// <param name="Name"></param>
         /// <param name="KnowHOW"></param>
         /// <returns></returns>
-        public static Context LoadSetting(string Name, RakudoObject KnowHOW)
+        public static Context LoadSetting(string Name, RakudoObject KnowHOW, RakudoObject KnowHOWAttribute)
         {
             // Load the assembly.
             var SettingAssembly = AppDomain.CurrentDomain.Load(Name);
@@ -134,8 +136,9 @@ namespace Rakudo
             // Fudge a few more things in.
             // XXX Should be able to toss all of thse but KnowHOW.
             SettingContext.LexPad.Extend(new string[]
-                { "KnowHOW", "print", "say", "capture" });
+                { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture" });
             SettingContext.LexPad.SetByName("KnowHOW", KnowHOW);
+            SettingContext.LexPad.SetByName("KnowHOWAttribute", KnowHOWAttribute);
             SettingContext.LexPad.SetByName("print",
                 CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                     {

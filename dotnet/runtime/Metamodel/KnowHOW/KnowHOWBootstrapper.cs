@@ -145,5 +145,35 @@ namespace Rakudo.Metamodel.KnowHOW
             // And we should be done.
             return KnowHOW;
         }
+
+        /// <summary>
+        /// Sets up the KnowHOWAttribute object/class, which actually is a
+        /// KnowHOW.
+        /// </summary>
+        /// <returns></returns>
+        public static RakudoObject SetupKnowHOWAttribute(RakudoObject KnowHOW)
+        {
+            // Create a new HOW instance.
+            var HOW = KnowHOW.STable.REPR.instance_of(null, KnowHOW) as KnowHOWREPR.KnowHOWInstance;
+
+            // We base the attribute on P6str, since we just want to store an
+            // attribute name for now.
+            var KnowHOWAttribute = REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, HOW);
+
+            // Add methods new and Str.
+            HOW.Methods.Add("new", CodeObjectUtility.WrapNativeMethod((TC, Code, Cap) =>
+                {
+                    var WHAT = CaptureHelper.GetPositional(Cap, 0).STable.WHAT;
+                    var Name = Ops.unbox_str(TC, CaptureHelper.GetNamed(Cap, "name"));
+                    return Ops.box_str(TC, Name, WHAT);
+                }));
+            HOW.Methods.Add("name", CodeObjectUtility.WrapNativeMethod((TC, Code, Cap) =>
+                {
+                    var self = CaptureHelper.GetPositional(Cap, 0);
+                    return Ops.box_str(TC, Ops.unbox_str(TC, self), TC.DefaultStrBoxType);
+                }));
+
+            return KnowHOWAttribute;
+        }
     }
 }

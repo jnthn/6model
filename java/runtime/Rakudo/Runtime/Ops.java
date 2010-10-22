@@ -6,8 +6,10 @@ import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.P6list;
 import Rakudo.Metamodel.Representations.P6mapping;
+import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Runtime.Exceptions.LeaveStackUnwinderException;
 import Rakudo.Runtime.MultiDispatch.LexicalCandidateFinder;
 import Rakudo.Runtime.MultiDispatch.MultiDispatcher;
 /// <summary>
@@ -674,6 +676,20 @@ public class Ops  // public static in the C# version
         {
             throw new UnsupportedOperationException("Cannot use llmapping_elems if representation is not P6mapping");
         }
+    }
+
+    /// <summary>
+    /// Leaves the specified block, returning the specified value from it. This
+    /// unwinds the stack.
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="Block"></param>
+    /// <param name="ReturnValue"></param>
+    /// <returns></returns>
+    public static RakudoObject leave_block(ThreadContext tc, RakudoObject block, RakudoObject returnValue)
+        throws LeaveStackUnwinderException
+    {
+        throw new LeaveStackUnwinderException((RakudoCodeRef.Instance)block, returnValue);
     }
 }
 

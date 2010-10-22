@@ -96,7 +96,7 @@ public class Init  // public static in the C# version
         System.err.println( "calling new Context from Init" );
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
-            { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "LLCode", "list" });
+            { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "LLCode", "list" });
         RakudoCodeRef.IFunc_Body funcBody = new RakudoCodeRef.IFunc_Body()
         { // create an anonymous class
             public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {

@@ -29,9 +29,9 @@ public class Lexpad  // struct in the C# version
     public Lexpad(String[] SlotNames)
     {
         SlotMapping = new HashMap<String, Integer>(SlotNames.length);
-        int Slot = 0;
-        for (String Name : SlotNames) {
-            SlotMapping.put(Name, Slot++);
+        int slot = 0;
+        for (String name : SlotNames) {
+            SlotMapping.put(name, slot++);
             // System.err.println("adding into LexPad: " + Name);
         }
         // System.err.println("LexPad SlotNames length: " + SlotNames.length);
@@ -43,9 +43,9 @@ public class Lexpad  // struct in the C# version
     /// </summary>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public RakudoObject GetByName(String Name)
+    public RakudoObject GetByName(String name)
     {
-        return Storage[SlotMapping.get(Name)];
+        return Storage[SlotMapping.get(name)];
     }
 
     /// <summary>
@@ -53,10 +53,10 @@ public class Lexpad  // struct in the C# version
     /// </summary>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public RakudoObject SetByName(String Name, RakudoObject Value)
+    public RakudoObject SetByName(String name, RakudoObject value)
     {
-        Storage[SlotMapping.get(Name)] = Value;
-        return Value;
+        Storage[SlotMapping.get(name)] = value;
+        return value;
     }
 
     /// <summary>

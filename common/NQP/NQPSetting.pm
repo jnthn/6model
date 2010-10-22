@@ -301,6 +301,7 @@ knowhow NQPClassHOW {
 
     method BUILD() {
         $!composed := 0;
+        %!methods := NQPHash.new;
         self;
     }
 
@@ -311,6 +312,14 @@ knowhow NQPClassHOW {
     method new_type() {
         my $metaclass := self.new();
         nqp::type_object_for($metaclass, 'P6opaque');
+    }
+
+    method add_method($obj, $name, $code_obj) {
+        # XXX TODO This crashes due to lack of auto-viv. :/
+        #if %!methods{$name} {
+        #    die("This class already has a method named " ~ $name);
+        #}
+        %!methods{$name} := $code_obj;
     }
 
     method compose($obj) {
@@ -332,6 +341,25 @@ knowhow NQPClassHOW {
         my @mro;
         @mro[0] := $obj;
         @mro;
+    }
+
+    ##
+    ## Introspecty
+    ##
+
+    method method_table($obj) {
+        %!methods
+    }
+
+    ##
+    ## Dispatchy
+    ##
+
+    method find_method($obj, $name) {
+        # XXX TODO Epic cheat, replace with that's in the ClassHOW that we
+        # run on Parrot. Needs auto-viv, .defined, return.
+        my %meths := @!mro[0].HOW.method_table($obj);
+        %meths{$name}
     }
 }
 

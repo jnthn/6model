@@ -80,10 +80,10 @@ namespace Rakudo.Metamodel.KnowHOW
                 var Positionals = (Cap as P6capture.Instance).Positionals;
                 var HOW = Positionals[0] as KnowHOWREPR.KnowHOWInstance;
                 RakudoObject Method;
-                if (HOW.Methods.TryGetValue(Ops.unbox_str(TC, Positionals[1]), out Method))
+                if (HOW.Methods.TryGetValue(Ops.unbox_str(TC, Positionals[2]), out Method))
                     return Method;
                 else
-                    throw new InvalidOperationException("No such method " + Ops.unbox_str(TC, Positionals[1]));
+                    throw new InvalidOperationException("No such method " + Ops.unbox_str(TC, Positionals[2]));
             }));
             KnowHOWMeths.Add("compose", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {

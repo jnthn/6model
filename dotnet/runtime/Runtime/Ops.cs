@@ -703,12 +703,15 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                var Handlers = CurContext.StaticCodeObject.Handlers;
-                if (Handlers != null)
-                    for (int i = 0; i < Handlers.Length; i++)
-                        if (Handlers[i].Type == WantType)
-                            return Exceptions.ExceptionDispatcher.CallHandler(TC,
-                                Handlers[i].HandleBlock, ExceptionObject);
+                if (CurContext.StaticCodeObject != null)
+                {
+                    var Handlers = CurContext.StaticCodeObject.Handlers;
+                    if (Handlers != null)
+                        for (int i = 0; i < Handlers.Length; i++)
+                            if (Handlers[i].Type == WantType)
+                                return Exceptions.ExceptionDispatcher.CallHandler(TC,
+                                    Handlers[i].HandleBlock, ExceptionObject);
+                }
                 CurContext = CurContext.Caller;
             }
             Exceptions.ExceptionDispatcher.DieFromUnhandledException(TC, ExceptionObject);
@@ -729,12 +732,15 @@ namespace Rakudo.Runtime
             var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
-                var Handlers = CurContext.StaticCodeObject.Handlers;
-                if (Handlers != null)
-                    for (int i = 0; i < Handlers.Length; i++)
-                        if (Handlers[i].Type == WantType)
-                            return Exceptions.ExceptionDispatcher.CallHandler(TC,
-                                Handlers[i].HandleBlock, ExceptionObject);
+                if (CurContext.StaticCodeObject != null)
+                {
+                    var Handlers = CurContext.StaticCodeObject.Handlers;
+                    if (Handlers != null)
+                        for (int i = 0; i < Handlers.Length; i++)
+                            if (Handlers[i].Type == WantType)
+                                return Exceptions.ExceptionDispatcher.CallHandler(TC,
+                                    Handlers[i].HandleBlock, ExceptionObject);
+                }
                 CurContext = CurContext.Outer;
             }
             Exceptions.ExceptionDispatcher.DieFromUnhandledException(TC, ExceptionObject);

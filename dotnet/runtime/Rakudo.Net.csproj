@@ -59,6 +59,9 @@
     <Compile Include="Metamodel\Representations\RakudoCodeRef.cs" />
     <Compile Include="Metamodel\REPRRegistry.cs" />
     <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Exceptions\ExceptionDispatcher.cs" />
+    <Compile Include="Runtime\Exceptions\ExceptionType.cs" />
+    <Compile Include="Runtime\Exceptions\Handler.cs" />
     <Compile Include="Runtime\Exceptions\LeaveStackUnwinderException.cs" />
     <Compile Include="Runtime\ExecutionDomain.cs" />
     <Compile Include="Metamodel\KnowHOW\KnowHOWBootstrapper.cs" />

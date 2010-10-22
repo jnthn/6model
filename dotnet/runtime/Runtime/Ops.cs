@@ -688,5 +688,57 @@ namespace Rakudo.Runtime
         {
             throw new Exceptions.LeaveStackUnwinderException(Block as RakudoCodeRef.Instance, ReturnValue);
         }
+
+        /// <summary>
+        /// Throws the specified exception, looking for an exception handler in the
+        /// dynmaic scope.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="ExceptionObject"></param>
+        /// <param name="ExceptionType"></param>
+        /// <returns></returns>
+        public static RakudoObject throw_dynamic(ThreadContext TC, RakudoObject ExceptionObject, RakudoObject ExceptionType)
+        {
+            int WantType = Ops.unbox_int(TC, ExceptionType);
+            var CurContext = TC.CurrentContext;
+            while (CurContext != null)
+            {
+                var Handlers = CurContext.StaticCodeObject.Handlers;
+                if (Handlers != null)
+                    for (int i = 0; i < Handlers.Length; i++)
+                        if (Handlers[i].Type == WantType)
+                            return Exceptions.ExceptionDispatcher.CallHandler(TC,
+                                Handlers[i].HandleBlock, ExceptionObject);
+                CurContext = CurContext.Caller;
+            }
+            Exceptions.ExceptionDispatcher.DieFromUnhandledException(TC, ExceptionObject);
+            return null; // Unreachable; above call exits always.
+        }
+
+        /// <summary>
+        /// Throws the specified exception, looking for an exception handler in the
+        /// lexical scope.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="ExceptionObject"></param>
+        /// <param name="ExceptionType"></param>
+        /// <returns></returns>
+        public static RakudoObject throw_lexical(ThreadContext TC, RakudoObject ExceptionObject, RakudoObject ExceptionType)
+        {
+            int WantType = Ops.unbox_int(TC, ExceptionType);
+            var CurContext = TC.CurrentContext;
+            while (CurContext != null)
+            {
+                var Handlers = CurContext.StaticCodeObject.Handlers;
+                if (Handlers != null)
+                    for (int i = 0; i < Handlers.Length; i++)
+                        if (Handlers[i].Type == WantType)
+                            return Exceptions.ExceptionDispatcher.CallHandler(TC,
+                                Handlers[i].HandleBlock, ExceptionObject);
+                CurContext = CurContext.Outer;
+            }
+            Exceptions.ExceptionDispatcher.DieFromUnhandledException(TC, ExceptionObject);
+            return null; // Unreachable; above call exits always.
+        }
     }
 }

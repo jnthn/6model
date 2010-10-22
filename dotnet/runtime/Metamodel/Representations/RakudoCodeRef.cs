@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rakudo.Runtime;
+using Rakudo.Runtime.Exceptions;
 
 namespace Rakudo.Metamodel.Representations
 {
@@ -42,7 +43,16 @@ namespace Rakudo.Metamodel.Representations
             /// The context currently using this sub.
             /// </summary>
             public Context CurrentContext;
+
+            /// <summary>
+            /// Exception handlers this block has, if any.
+            /// </summary>
+            public Handler[] Handlers;
             
+            /// <summary>
+            /// Creates a new instance with the given S-Table.
+            /// </summary>
+            /// <param name="STable"></param>
             public Instance(SharedTable STable)
             {
                 this.STable = STable;

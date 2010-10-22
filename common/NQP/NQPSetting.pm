@@ -217,6 +217,38 @@ sub &infix:<~>($x, $y) {
     nqp::concat($x.Str, $y.Str);
 }
 
+# A basic, fairly bare-bones exception object.
+knowhow NQPException {
+    has $!message;
+    has $!resumable;
+
+    method new($message) {
+        nqp::instance_of(self.WHAT).BUILD(:message($message))
+    }
+
+    method BUILD(:$message) {
+        $!message := $message;
+        $!resumable := 0;
+        self;
+    }
+
+    method resumable() {
+        $!resumable
+    }
+
+    method resume() {
+        $!resumable := 1;
+    }
+
+    method Str() {
+        $!message
+    }
+}
+
+sub die($message) {
+    nqp::throw_dynamic(NQPException.new($message), 0)
+}
+
 # For tests.
 my $count := NQPInt.new();
 sub plan($n) {

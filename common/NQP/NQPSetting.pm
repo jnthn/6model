@@ -262,6 +262,79 @@ sub ok($check, $diag?) {
     say($count);
 }
 
+# Here comes the start of a heavily under construction ClassHOW.
+knowhow NQPClassHOW {
+    ##
+    ## Attributes
+    ##
+
+    # Name of the class.
+    has $!name;
+
+    # Attributes, methods, parents and roles directly added.
+    has %!attributes;
+    has %!methods;
+    has @!parents;
+    has @!roles;
+
+    # Vtable and mapping of method names to slots.
+    has @!vtable;
+    has %!method-vtable-slots;
+
+    # Have we been composed?
+    has $!composed;
+
+    # Cached MRO (list of the type objects).
+    has @!mro;
+
+    # Full list of roles that we do.
+    has @!done;
+
+    ##
+    ## Declarative.
+    ##
+
+    # Creates a new instance of this meta-class.
+    method new() {
+        nqp::instance_of(self).BUILD()
+    }
+
+    method BUILD() {
+        $!composed := 0;
+        self;
+    }
+
+    # Create a new meta-class instance, and then a new type object
+    # to go with it, and return that.
+    # XXX TODO :$repr named parameter defaulting to P6opaque (don't
+    # have default values yet implemented).
+    method new_type() {
+        my $metaclass := self.new();
+        nqp::type_object_for($metaclass, 'P6opaque');
+    }
+
+    method compose($obj) {
+        # XXX TODO: Compose roles, compose attributes.
+
+        # Some things we only do if we weren't already composed once, like
+        # building the MRO.
+        unless $!composed {
+            @!mro := compute_c3_mro($obj);
+            $!composed := 1;
+        }
+
+        $obj
+    }
+
+    # XXX TODO: Get enough working to bring over the C3 implementation that
+    # we run on 6model on Parrot.
+    sub compute_c3_mro($obj) {
+        my @mro;
+        @mro[0] := $obj;
+        @mro;
+    }
+}
+
 # XXX Bad hack, we'll replace this later.
 knowhow Any {
 }

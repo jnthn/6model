@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rakudo.Metamodel;
+using Rakudo.Metamodel.Representations;
 
 namespace Rakudo.Runtime.Exceptions
 {
@@ -20,7 +21,27 @@ namespace Rakudo.Runtime.Exceptions
         /// <returns></returns>
         public static RakudoObject CallHandler(ThreadContext TC, RakudoObject Handler, RakudoObject ExceptionObject)
         {
-            throw new NotImplementedException();
+            // Invoke the handler. Note that in some cases we never return from it;
+            // for example, the return exception handler does .leave.
+            var Returned = Handler.STable.Invoke(TC, Handler, CaptureHelper.FormWith(new RakudoObject[] { ExceptionObject }));
+
+            // So, we returned. Let's see if it's resumable.
+            var ResumableMeth = Returned.STable.FindMethod(TC, Returned, "resumable", Hints.NO_HINT);
+            var Resumable = ResumableMeth.STable.Invoke(TC, ResumableMeth, CaptureHelper.FormWith(new RakudoObject[] { Returned }));
+            if (Ops.unbox_int(TC, Resumable) != 0)
+            {
+                // Resumable, so don't need to stack unwind. Simply return
+                // from here.
+                return Returned;
+            }
+            else
+            {
+                // Not resumable, so stack unwind out of the block containing
+                // the handler.
+                throw new LeaveStackUnwinderException(
+                    (Handler as RakudoCodeRef.Instance).OuterBlock,
+                    Returned);
+            }
         }
 
         /// <summary>
@@ -40,9 +61,6 @@ namespace Rakudo.Runtime.Exceptions
             {
                 Console.Error.WriteLine("Died from an exception, and died trying to stringify it too.");
             }
-
-            // We'll also write a stack trace. It's a .Net one for now.
-            Console.Error.Write(new Exception().StackTrace);
 
             // Exit with an error code.
             Environment.Exit(1);

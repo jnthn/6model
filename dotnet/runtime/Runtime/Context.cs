@@ -69,7 +69,7 @@ namespace Rakudo.Runtime
             this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.Clone();
 
             // Set outer context.
-            var OuterBlock = StaticCodeObject.OuterBlock;
+            RakudoCodeRef.Instance OuterBlock = StaticCodeObject.OuterBlock;
             if (OuterBlock.CurrentContext != null)
             {
                 this.Outer = OuterBlock.CurrentContext;
@@ -78,7 +78,7 @@ namespace Rakudo.Runtime
             {
                 // Auto-close. In this we go setting up fake contexts
                 // that use the static lexpad until we find a real one.
-                var CurContext = this;
+                Context CurContext = this;
                 while (OuterBlock != null)
                 {
                     // If we found a block with a context, we're done.
@@ -89,7 +89,7 @@ namespace Rakudo.Runtime
                     }
 
                     // Build the fake context.
-                    var OuterContext = new Context();
+                    Context OuterContext = new Context();
                     OuterContext.StaticCodeObject = OuterBlock;
                     OuterContext.LexPad = OuterBlock.StaticLexPad;
 

@@ -23,11 +23,11 @@ namespace Rakudo.Runtime.Exceptions
         {
             // Invoke the handler. Note that in some cases we never return from it;
             // for example, the return exception handler does .leave.
-            var Returned = Handler.STable.Invoke(TC, Handler, CaptureHelper.FormWith(new RakudoObject[] { ExceptionObject }));
+            RakudoObject Returned = Handler.STable.Invoke(TC, Handler, CaptureHelper.FormWith(new RakudoObject[] { ExceptionObject }));
 
             // So, we returned. Let's see if it's resumable.
-            var ResumableMeth = Returned.STable.FindMethod(TC, Returned, "resumable", Hints.NO_HINT);
-            var Resumable = ResumableMeth.STable.Invoke(TC, ResumableMeth, CaptureHelper.FormWith(new RakudoObject[] { Returned }));
+            RakudoObject ResumableMeth = Returned.STable.FindMethod(TC, Returned, "resumable", Hints.NO_HINT);
+            RakudoObject Resumable = ResumableMeth.STable.Invoke(TC, ResumableMeth, CaptureHelper.FormWith(new RakudoObject[] { Returned }));
             if (Ops.unbox_int(TC, Resumable) != 0)
             {
                 // Resumable, so don't need to stack unwind. Simply return
@@ -53,8 +53,8 @@ namespace Rakudo.Runtime.Exceptions
             // Try to stringify the exception object.
             try
             {
-                var StrMeth = Exception.STable.FindMethod(TC, Exception, "Str", Hints.NO_HINT);
-                var Stringified = StrMeth.STable.Invoke(TC, StrMeth, CaptureHelper.FormWith(new RakudoObject[] { Exception }));
+                RakudoObject StrMeth = Exception.STable.FindMethod(TC, Exception, "Str", Hints.NO_HINT);
+                RakudoObject Stringified = StrMeth.STable.Invoke(TC, StrMeth, CaptureHelper.FormWith(new RakudoObject[] { Exception }));
                 Console.WriteLine(Ops.unbox_str(TC, Stringified));
             }
             catch

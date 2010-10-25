@@ -1,3 +1,5 @@
+#undef USE_PRIVATE_METHOD
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,16 +26,16 @@ namespace Rakudo.Runtime.MultiDispatch
         {
             // Sort the candidates.
             // XXX Cache this in the future.
-            var SortedCandidates = Sort(Candidates);
+            List<RakudoCodeRef.Instance> SortedCandidates = Sort(Candidates);
 
             // Extract the native capture.
             // XXX Handle non-native captures too.
-            var NativeCapture = Capture as P6capture.Instance;
+            P6capture.Instance NativeCapture = Capture as P6capture.Instance;
 
             // Now go through the sorted candidates and find the first one that
             // matches.
-            var PossiblesList = new List<RakudoCodeRef.Instance>();
-            foreach (var Candidate in SortedCandidates)
+            List<RakudoCodeRef.Instance> PossiblesList = new List<RakudoCodeRef.Instance>();
+            foreach (RakudoCodeRef.Instance Candidate in SortedCandidates)
             {
                 // If we hit a null, we're at the end of a group.
                 if (Candidate == null)
@@ -48,17 +50,17 @@ namespace Rakudo.Runtime.MultiDispatch
                 }
                 
                 /* Check if it's admissable by arity. */
-                var NumArgs = NativeCapture.Positionals.Length;
+                int NumArgs = NativeCapture.Positionals.Length;
                 if (NumArgs < Candidate.Sig.NumRequiredPositionals ||
                     NumArgs > Candidate.Sig.NumPositionals)
                     continue;
 
                 /* Check if it's admissable by type. */
-                var TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals);
-                var TypeMismatch = false;
+                int TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals);
+                bool TypeMismatch = false;
                 for (int i = 0; i < TypeCheckCount; i++) {
-                    var Arg = NativeCapture.Positionals[i];
-                    var Type = Candidate.Sig.Parameters[i].Type;
+                    RakudoObject Arg = NativeCapture.Positionals[i];
+                    RakudoObject Type = Candidate.Sig.Parameters[i].Type;
                     if (Arg.STable.WHAT != Type && Type != null)
                     {
                         TypeMismatch = true;
@@ -83,11 +85,12 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <returns></returns>
         private static List<RakudoCodeRef.Instance> Sort(List<RakudoCodeRef.Instance> Unsorted)
         {
-            var Sorted = new List<RakudoCodeRef.Instance>(Unsorted);
+            List<RakudoCodeRef.Instance> Sorted = new List<RakudoCodeRef.Instance>(Unsorted);
             Sorted.Add(null);
             return Sorted;
         }
 
+#if USE_PRIVATE_METHOD // while this causes "private not used" warnings
         /// <summary>
         /// Checks if one signature is narrower than another.
         /// </summary>
@@ -96,8 +99,8 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <returns></returns>
         private static int IsNarrower(RakudoCodeRef.Instance a, RakudoCodeRef.Instance b)
         {
-            var Narrower = 0;
-            var Tied = 0;
+            int Narrower = 0;
+            int Tied = 0;
             int i, TypesToCheck;
 
             /* Work out how many parameters to compare, factoring in slurpiness
@@ -111,8 +114,8 @@ namespace Rakudo.Runtime.MultiDispatch
 
             /* Analyse each parameter in the two candidates. */
             for (i = 0; i < TypesToCheck; i++) {
-                var TypeObjA = a.Sig.Parameters[i].Type;
-                var TypeObjB = b.Sig.Parameters[i].Type;
+                RakudoObject TypeObjA = a.Sig.Parameters[i].Type;
+                RakudoObject TypeObjB = b.Sig.Parameters[i].Type;
                 if (TypeObjA == TypeObjB)
                 {
                     /* In a full Perl 6 multi dispatcher, you'd consider
@@ -140,7 +143,7 @@ namespace Rakudo.Runtime.MultiDispatch
             * slurpiness makes the candidate narrower. Otherwise, they're tied. */
             return !a.Sig.HasSlurpyPositional() && b.Sig.HasSlurpyPositional() ? 1 : 0;
         }
-
+#endif
         /// <summary>
         /// Compares two types to see if the first is narrower than the second.
         /// XXX This is not complete yet, just very basic check.

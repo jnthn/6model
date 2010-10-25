@@ -47,14 +47,14 @@ namespace Rakudo.Metamodel
                 else
                 {
                     // Find the find_method method.
-                    var HOW = Obj.STable.HOW;
+                    RakudoObject HOW = Obj.STable.HOW;
                     RakudoObject Meth = Obj.STable.CachedFindMethod;
                     if (Meth == null)
                         Obj.STable.CachedFindMethod = Meth = HOW.STable.FindMethod(
                             TC, HOW, "find_method", Hints.NO_HINT);
 
                     // Call it.
-                    var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Obj, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
+                    RakudoObject Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Obj, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
                     return Meth.STable.Invoke(TC, Meth, Cap);
                 }
             };
@@ -71,8 +71,8 @@ namespace Rakudo.Metamodel
         public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Invoke =
             (TC, Obj, Cap) =>
             {
-                var STable = Obj.STable;
-                var Invokable = STable.CachedInvoke ?? (STable.CachedInvoke = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT));
+                SharedTable STable = Obj.STable;
+                RakudoObject Invokable = STable.CachedInvoke ?? (STable.CachedInvoke = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT));
                 return Invokable.STable.Invoke(TC, Obj, Cap);
             };
 

@@ -46,7 +46,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
-            var STable = new SharedTable();
+            SharedTable STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = new P6opaque();
             STable.WHAT = new Instance(STable);
@@ -64,7 +64,7 @@ namespace Rakudo.Metamodel.Representations
         {
             if (SlotAllocation == null)
                 ComputeSlotAllocation(TC, WHAT);
-            var Object = new Instance(WHAT.STable);
+            Instance Object = new Instance(WHAT.STable);
             Object.SlotStorage = new RakudoObject[Slots];
             return Object;
         }
@@ -90,7 +90,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject get_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name)
         {
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
 
             // Try the slot allocation first.
             Dictionary<string, int> ClassAllocation;
@@ -102,7 +102,7 @@ namespace Rakudo.Metamodel.Representations
             // Fall back to the spill storage.
             if (I.SpillStorage != null && I.SpillStorage.ContainsKey(ClassHandle))
             {
-                var ClassStore = I.SpillStorage[ClassHandle];
+                Dictionary<string,RakudoObject> ClassStore = I.SpillStorage[ClassHandle];
                 if (ClassStore.ContainsKey(Name))
                     return ClassStore[Name];
             }
@@ -120,7 +120,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint)
         {
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
             {
                 return I.SlotStorage[Hint];
@@ -129,7 +129,7 @@ namespace Rakudo.Metamodel.Representations
             {
                 if (I.SpillStorage != null && I.SpillStorage.ContainsKey(ClassHandle))
                 {
-                    var ClassStore = I.SpillStorage[ClassHandle];
+                    Dictionary<string,RakudoObject> ClassStore = I.SpillStorage[ClassHandle];
                     if (ClassStore.ContainsKey(Name))
                         return ClassStore[Name];
                 }
@@ -146,7 +146,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Value"></param>
         public override void bind_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
 
             // Try the slot allocation first.
             Dictionary<string, int> ClassAllocation;
@@ -163,7 +163,7 @@ namespace Rakudo.Metamodel.Representations
                 I.SpillStorage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             if (!I.SpillStorage.ContainsKey(ClassHandle))
                 I.SpillStorage.Add(ClassHandle, new Dictionary<string, RakudoObject>());
-            var ClassStore = I.SpillStorage[ClassHandle];
+            Dictionary<string,RakudoObject> ClassStore = I.SpillStorage[ClassHandle];
             if (ClassStore.ContainsKey(Name))
                 ClassStore[Name] = Value;
             else
@@ -180,7 +180,7 @@ namespace Rakudo.Metamodel.Representations
         /// <param name="Value"></param>
         public override void bind_attribute_with_hint(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, int Hint, RakudoObject Value)
         {
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
             if (Hint < I.SlotStorage.Length)
             {
                 I.SlotStorage[Hint] = Value;
@@ -195,7 +195,7 @@ namespace Rakudo.Metamodel.Representations
                     I.SpillStorage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
                 if (!I.SpillStorage.ContainsKey(ClassHandle))
                     I.SpillStorage.Add(ClassHandle, new Dictionary<string, RakudoObject>());
-                var ClassStore = I.SpillStorage[ClassHandle];
+                Dictionary<string,RakudoObject> ClassStore = I.SpillStorage[ClassHandle];
                 if (ClassStore.ContainsKey(Name))
                     ClassStore[Name] = Value;
                 else
@@ -258,27 +258,27 @@ namespace Rakudo.Metamodel.Representations
             SlotAllocation = new Dictionary<RakudoObject, Dictionary<string, int>>();
 
             // Walk through the parents list.
-            var CurrentClass = WHAT;
-            var CurrentSlot = 0;
+            RakudoObject CurrentClass = WHAT;
+            int CurrentSlot = 0;
             while (CurrentClass != null)
             {
                 // Get attributes and iterate over them.
-                var HOW = CurrentClass.STable.HOW;
-                var AttributesMeth = HOW.STable.FindMethod(TC, HOW, "attributes", Hints.NO_HINT);
-                var Attributes = AttributesMeth.STable.Invoke(TC, AttributesMeth, CaptureHelper.FormWith(
+                RakudoObject HOW = CurrentClass.STable.HOW;
+                RakudoObject AttributesMeth = HOW.STable.FindMethod(TC, HOW, "attributes", Hints.NO_HINT);
+                RakudoObject Attributes = AttributesMeth.STable.Invoke(TC, AttributesMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { HOW, CurrentClass },
                     new Dictionary<string, RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
-                var AttributesElemsMeth = Attributes.STable.FindMethod(TC, Attributes, "elems", Hints.NO_HINT);
-                var AttributesElems = Ops.unbox_int(TC, AttributesElemsMeth.STable.Invoke(TC, AttributesElemsMeth,
+                RakudoObject AttributesElemsMeth = Attributes.STable.FindMethod(TC, Attributes, "elems", Hints.NO_HINT);
+                int AttributesElems = Ops.unbox_int(TC, AttributesElemsMeth.STable.Invoke(TC, AttributesElemsMeth,
                     CaptureHelper.FormWith(new RakudoObject[] { Attributes })));
-                var AttrAtPosMeth = Attributes.STable.FindMethod(TC, Attributes, "at_pos", Hints.NO_HINT);
+                RakudoObject AttrAtPosMeth = Attributes.STable.FindMethod(TC, Attributes, "at_pos", Hints.NO_HINT);
                 for (int i = 0; i < AttributesElems; i++)
                 {
                     // Get the attribute, then get its name.
-                    var Attr = AttrAtPosMeth.STable.Invoke(TC, AttrAtPosMeth, CaptureHelper.FormWith(
+                    RakudoObject Attr = AttrAtPosMeth.STable.Invoke(TC, AttrAtPosMeth, CaptureHelper.FormWith(
                         new RakudoObject[] { Attributes, Ops.box_int(TC, i, TC.DefaultIntBoxType) }));
-                    var NameMeth = Attr.STable.FindMethod(TC, Attr, "name", Hints.NO_HINT);
-                    var Name = Ops.unbox_str(TC, NameMeth.STable.Invoke(TC, NameMeth, CaptureHelper.FormWith(
+                    RakudoObject NameMeth = Attr.STable.FindMethod(TC, Attr, "name", Hints.NO_HINT);
+                    string Name = Ops.unbox_str(TC, NameMeth.STable.Invoke(TC, NameMeth, CaptureHelper.FormWith(
                         new RakudoObject[] { Attr })));
 
                     // Allocate a slot.
@@ -289,14 +289,14 @@ namespace Rakudo.Metamodel.Representations
                 }
 
                 // Find the next parent(s).
-                var ParentsMeth = HOW.STable.FindMethod(TC, HOW, "parents", Hints.NO_HINT);
-                var Parents = ParentsMeth.STable.Invoke(TC, ParentsMeth, CaptureHelper.FormWith(
+                RakudoObject ParentsMeth = HOW.STable.FindMethod(TC, HOW, "parents", Hints.NO_HINT);
+                RakudoObject Parents = ParentsMeth.STable.Invoke(TC, ParentsMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { HOW, CurrentClass },
                     new Dictionary<string,RakudoObject>() { { "local", Ops.box_int(TC, 1, TC.DefaultBoolBoxType) } }));
 
                 // Check how many parents we have.
-                var ParentElemsMeth = Parents.STable.FindMethod(TC, Parents, "elems", Hints.NO_HINT);
-                var ParentElems = Ops.unbox_int(TC, ParentElemsMeth.STable.Invoke(TC, ParentElemsMeth,
+                RakudoObject ParentElemsMeth = Parents.STable.FindMethod(TC, Parents, "elems", Hints.NO_HINT);
+                int ParentElems = Ops.unbox_int(TC, ParentElemsMeth.STable.Invoke(TC, ParentElemsMeth,
                     CaptureHelper.FormWith(new RakudoObject[] { Parents })));
                 if (ParentElems == 0)
                 {
@@ -313,7 +313,7 @@ namespace Rakudo.Metamodel.Representations
                 else
                 {
                     // Just one. Get next parent.
-                    var AtPosMeth = Parents.STable.FindMethod(TC, Parents, "at_pos", Hints.NO_HINT);
+                    RakudoObject AtPosMeth = Parents.STable.FindMethod(TC, Parents, "at_pos", Hints.NO_HINT);
                     CurrentClass = AtPosMeth.STable.Invoke(TC, AtPosMeth, CaptureHelper.FormWith(
                         new RakudoObject[] { Parents, Ops.box_int(TC, 0, TC.DefaultIntBoxType) }));
                 }

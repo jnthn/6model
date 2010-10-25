@@ -39,7 +39,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
-            var STable = new SharedTable();
+            SharedTable STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = this;
             STable.WHAT = new Instance(STable);
@@ -54,7 +54,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
-            var Object = new Instance(WHAT.STable);
+            Instance Object = new Instance(WHAT.STable);
             Object.Storage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             return Object;
         }
@@ -81,10 +81,10 @@ namespace Rakudo.Metamodel.Representations
         {
             // If no storage ever allocated, trivially no value. Otherwise,
             // return what we find.
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
             if (I.Storage == null || !I.Storage.ContainsKey(ClassHandle))
                 return null;
-            var ClassStore = I.Storage[ClassHandle];
+            Dictionary<string,RakudoObject> ClassStore = I.Storage[ClassHandle];
             return ClassStore.ContainsKey(Name) ? ClassStore[Name] : null;
         }
 
@@ -111,7 +111,7 @@ namespace Rakudo.Metamodel.Representations
         public override void bind_attribute(ThreadContext TC, RakudoObject Object, RakudoObject ClassHandle, string Name, RakudoObject Value)
         {
             // If no storage at all, allocate some.
-            var I = (Instance)Object;
+            Instance I = (Instance)Object;
             if (I.Storage == null)
                 I.Storage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             if (!I.Storage.ContainsKey(ClassHandle))
@@ -119,7 +119,7 @@ namespace Rakudo.Metamodel.Representations
             
             // Now stick in the name slot for the class storage, creating if it
             // needed.
-            var ClassStore = I.Storage[ClassHandle];
+            Dictionary<string,RakudoObject> ClassStore = I.Storage[ClassHandle];
             if (ClassStore.ContainsKey(Name))
                 ClassStore[Name] = Value;
             else

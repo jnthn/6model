@@ -21,7 +21,7 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <returns></returns>
         public static List<RakudoCodeRef.Instance> FindCandidates(Context CallerScope, Context ProtoScope, string CandidateHolderName)
         {
-            var Result = new List<RakudoCodeRef.Instance>();
+            List<RakudoCodeRef.Instance> Result = new List<RakudoCodeRef.Instance>();
             Context CurScope = null;
             do
             {
@@ -34,7 +34,7 @@ namespace Rakudo.Runtime.MultiDispatch
                 // Any candidates here?
                 int Index;
                 if (CurScope.LexPad.SlotMapping != null && CurScope.LexPad.SlotMapping.TryGetValue(CandidateHolderName, out Index))
-                    foreach (var Candidate in (CurScope.LexPad.Storage[Index] as P6list.Instance).Storage)
+                    foreach (RakudoObject Candidate in (CurScope.LexPad.Storage[Index] as P6list.Instance).Storage)
                         Result.Add(Candidate as RakudoCodeRef.Instance);
             } while (CurScope != ProtoScope);
             return Result;

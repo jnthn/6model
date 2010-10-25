@@ -24,7 +24,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith()
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
+            P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             return C;
         }
 
@@ -35,7 +35,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs)
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
+            P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             C.Positionals = PosArgs;
             return C;
         }
@@ -47,7 +47,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs)
         {
-            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
+            P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             C.Positionals = PosArgs;
             C.Nameds = NamedArgs;
             return C;
@@ -61,10 +61,10 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject GetPositional(RakudoObject Capture, int Pos)
         {
-            var NativeCapture = Capture as P6capture.Instance;
+            P6capture.Instance NativeCapture = Capture as P6capture.Instance;
             if (NativeCapture != null)
             {
-                var Possies = NativeCapture.Positionals;
+                RakudoObject[] Possies = NativeCapture.Positionals;
                 if (Possies != null && Pos < Possies.Length)
                     return Possies[Pos];
                 else
@@ -83,10 +83,10 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static int NumPositionals(RakudoObject Capture)
         {
-            var NativeCapture = Capture as P6capture.Instance;
+            P6capture.Instance NativeCapture = Capture as P6capture.Instance;
             if (NativeCapture != null)
             {
-                var Possies = NativeCapture.Positionals;
+                RakudoObject[] Possies = NativeCapture.Positionals;
                 return Possies == null ? 0 : Possies.Length;
             }
             else
@@ -103,10 +103,10 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject GetNamed(RakudoObject Capture, string Name)
         {
-            var NativeCapture = Capture as P6capture.Instance;
+            P6capture.Instance NativeCapture = Capture as P6capture.Instance;
             if (NativeCapture != null)
             {
-                var Nameds = NativeCapture.Nameds;
+                Dictionary<string,RakudoObject> Nameds = NativeCapture.Nameds;
                 if (Nameds != null && Nameds.ContainsKey(Name))
                     return Nameds[Name];
                 else

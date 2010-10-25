@@ -40,26 +40,26 @@ namespace Rakudo.Runtime
         {
             // Make sure the object is really a low level capture (don't handle
             // otherwise yet) and grab the pieces.
-            var NativeCapture = Capture as P6capture.Instance;
+            P6capture.Instance NativeCapture = Capture as P6capture.Instance;
             if (NativeCapture == null)
                 throw new NotImplementedException("Can only deal with native captures at the moment");
-            var Positionals = NativeCapture.Positionals ?? EmptyPos;
-            var Nameds = NativeCapture.Nameds ?? EmptyNamed;
+            RakudoObject[] Positionals = NativeCapture.Positionals ?? EmptyPos;
+            Dictionary<string,RakudoObject> Nameds = NativeCapture.Nameds ?? EmptyNamed;
 
             // If we have no signature, that's same as an empty signature.
-            var Sig = C.StaticCodeObject.Sig;
+            Signature Sig = C.StaticCodeObject.Sig;
             if (Sig == null)
                 return;
 
             // Current positional.
-            var CurPositional = 0;
+            int CurPositional = 0;
 
             // Iterate over the parameters.
-            var Params = Sig.Parameters;
-            var NumParams = Params.Length;
+            Parameter[] Params = Sig.Parameters;
+            int NumParams = Params.Length;
             for (int i = 0; i < NumParams; i++)
             {
-                var Param = Params[i];
+                Parameter Param = Params[i];
 
                 // Positional required?
                 if (Param.Flags == Parameter.POS_FLAG)
@@ -139,7 +139,7 @@ namespace Rakudo.Runtime
             }
 
             // Ensure we had enough positionals.
-            var PossiesInCapture = Positionals.Length;
+            int PossiesInCapture = Positionals.Length;
             if (CurPositional != PossiesInCapture)
                 throw new Exception("Too many positional arguments passed; expected " +
                     NumRequiredPositionals(C.StaticCodeObject.Sig).ToString() +
@@ -156,7 +156,7 @@ namespace Rakudo.Runtime
         private static int NumRequiredPositionals(Signature Sig)
         {
             int Num = 0;
-            foreach (var Param in Sig.Parameters)
+            foreach (Parameter Param in Sig.Parameters)
                 if (Param.Flags != 0 || Param.Name != null)
                     break;
                 else

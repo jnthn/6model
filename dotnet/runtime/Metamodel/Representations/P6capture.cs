@@ -31,7 +31,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
-            var STable = new SharedTable();
+            SharedTable STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = this;
             STable.WHAT = new Instance(STable);
@@ -55,7 +55,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override bool defined(ThreadContext TC, RakudoObject O)
         {
-            var Obj = (Instance)O;
+            Instance Obj = (Instance)O;
             return Obj.Positionals != null || Obj.Nameds != null;
         }
 

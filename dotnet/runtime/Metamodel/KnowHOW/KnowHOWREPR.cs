@@ -34,7 +34,7 @@ namespace Rakudo.Metamodel.KnowHOW
         /// <returns></returns>
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW)
         {
-            var STable = new SharedTable();
+            SharedTable STable = new SharedTable();
             STable.HOW = HOW;
             STable.REPR = this;
             STable.WHAT = new KnowHOWInstance(STable);
@@ -48,7 +48,7 @@ namespace Rakudo.Metamodel.KnowHOW
         /// <returns></returns>
         public override RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
-            var Object = new KnowHOWInstance(WHAT.STable);
+            KnowHOWInstance Object = new KnowHOWInstance(WHAT.STable);
             Object.Methods = new Dictionary<string, RakudoObject>();
             Object.Attributes = new List<RakudoObject>();
             return Object;

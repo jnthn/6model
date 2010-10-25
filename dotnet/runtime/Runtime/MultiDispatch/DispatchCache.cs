@@ -96,18 +96,18 @@ namespace Rakudo.Runtime.MultiDispatch
             if (Positionals.Length <= MAX_ARITY)
             {
                 // ...and we did cache something...
-                var Cache = ArityCaches[Positionals.Length];
+                ArityCache Cache = ArityCaches[Positionals.Length];
                 if (Cache.NumEntries != 0)
                 {
                     // Get what we're looking for.
-                    var Seeking = PositionalsToTypeCacheIDs(Positionals);
+                    long[] Seeking = PositionalsToTypeCacheIDs(Positionals);
 
                     // Look through the cache for it. ci = type cache array index,
                     // ri = result list index.
                     int ci = 0;
                     for (int ri = 0; ri < Cache.NumEntries; ri++)
                     {
-                        var Matched = true;
+                        bool Matched = true;
                         for (int j = 0; j < Positionals.Length; j++)
                         {
                             if (Seeking[j] != Cache.TypeIDs[ci])
@@ -137,13 +137,13 @@ namespace Rakudo.Runtime.MultiDispatch
             if (Positionals.Length <= MAX_ARITY)
             {
                 // Compute the type cache ID tuple.
-                var ToAdd = PositionalsToTypeCacheIDs(Positionals);
+                long[] ToAdd = PositionalsToTypeCacheIDs(Positionals);
 
                 // Snapshot the previous arity cache.
-                var Previous = ArityCaches[Positionals.Length];
+                ArityCache Previous = ArityCaches[Positionals.Length];
 
                 // Build a new one.
-                var New = new ArityCache();
+                ArityCache New = new ArityCache();
                 if (Previous == null)
                 {
                     // First time. We go in slot 0.
@@ -174,7 +174,7 @@ namespace Rakudo.Runtime.MultiDispatch
                     else
                     {
                         // Pick a victim.
-                        var Evictee = new Random().Next(MAX_ENTRIES + 1);
+                        int Evictee = new Random().Next(MAX_ENTRIES + 1);
                         int i, j;
                         for (i = 0, j = Evictee * ToAdd.Length; i < ToAdd.Length; i++, j++)
                             New.TypeIDs[j] = ToAdd[i];
@@ -199,10 +199,10 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <returns></returns>
         private long[] PositionalsToTypeCacheIDs(RakudoObject[] Positionals)
         {
-            var Result = new long[Positionals.Length];
+            long[] Result = new long[Positionals.Length];
             for (int i = 0; i < Positionals.Length; i++)
             {
-                var STable = Positionals[i].STable;
+                SharedTable STable = Positionals[i].STable;
                 Result[i] = STable.TypeCacheID | (STable.REPR.defined(null, Positionals[i]) ? 1L : 0L);
             }
             return Result;

@@ -1,7 +1,9 @@
 package Rakudo.Metamodel.Representations;
 
 import java.util.HashMap;
+
 import Rakudo.Runtime.Context;
+import Rakudo.Runtime.Exceptions.Handler;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
 import Rakudo.Runtime.Parameter;
@@ -23,8 +25,8 @@ public final class RakudoCodeRef implements Representation
     // implement it, as the Java equivalent of a C# lambda expression.
     // Used in for example: CodeObjectUtility
     public interface IFunc_Body {
-        public RakudoObject Invoke(ThreadContext tc, RakudoObject ro1, RakudoObject ro2);
-    }
+        public RakudoObject Invoke(ThreadContext tc, RakudoObject meth, RakudoObject capt);
+    }  // C# has public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>; // TODO: why 4 parameters and not 3?
 
     /// <summary>
     /// This is how the boxed form of a P6str looks.
@@ -35,7 +37,6 @@ public final class RakudoCodeRef implements Representation
         /// The code body - the thing that actually runs instructions.
         /// </summary>
         public RakudoCodeRef.IFunc_Body Body; // IFunc_Body is defined above Instance
-        // public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
 
         /// <summary>
         /// The static lexpad.
@@ -57,6 +58,11 @@ public final class RakudoCodeRef implements Representation
         /// </summary>
         public Context CurrentContext;
 
+        /// <summary>
+        /// Exception handlers this block has, if any.
+        /// </summary>
+        public Handler[] Handlers;
+        
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -81,10 +87,10 @@ public final class RakudoCodeRef implements Representation
 
         // Also twiddle the S-Table's Invoke to invoke the contained
         // function.
-        sTable.Invoke = new IFunc_Body() { // create an anonymous class
-            public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap )
+        sTable.Invoke = new IFunc_Body() { // the C# version has a lambda
+            public RakudoObject Invoke( ThreadContext tci, RakudoObject meth, RakudoObject capt )
             {
-                return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);
+                return ((RakudoCodeRef.Instance)meth).Body.Invoke(tci, meth, capt);
             }
         };
         return sTable.WHAT;

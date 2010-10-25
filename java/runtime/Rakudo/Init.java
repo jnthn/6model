@@ -40,6 +40,7 @@ public class Init  // public static in the C# version
         // Bootstrap the meta-model.
         RegisterRepresentations();
         RakudoObject knowHOW = KnowHOWBootstrapper.Bootstrap();
+        RakudoObject knowHOWAttribute = KnowHOWBootstrapper.SetupKnowHOWAttribute(knowHOW);
 
         // Either load a named setting or use the fake bootstrapping one.
         Context settingContext =
@@ -61,6 +62,7 @@ public class Init  // public static in the C# version
         threadContext.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
         threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
         threadContext.DefaultListType    = settingContext.LexPad.GetByName("NQPList");
+
         return threadContext;
     }
 
@@ -96,7 +98,7 @@ public class Init  // public static in the C# version
         System.err.println( "calling new Context from Init" );
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
-            { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "LLCode", "list" });
+            { "KnowHOW", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
         RakudoCodeRef.IFunc_Body funcBody = new RakudoCodeRef.IFunc_Body()
         { // create an anonymous class
             public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
@@ -128,7 +130,7 @@ public class Init  // public static in the C# version
     /// <param name="Name"></param>
     /// <param name="KnowHOW"></param>
     /// <returns></returns>
-    public static Context LoadSetting(String settingName, RakudoObject knowHOW)
+    public static Context LoadSetting(String settingName, RakudoObject knowHOW, RakudoObject knowHOWAttribute)
     {
         // Load the assembly.
         System.err.println("Init.LoadSetting begin loading " + settingName );
@@ -192,9 +194,10 @@ public class Init  // public static in the C# version
         // Fudge a few more things in.
         // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
-            { "KnowHOW", "print", "say", "capture", "LLCode" });
+            { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture", "LLCode" });
 
         settingContext.LexPad.SetByName("KnowHOW", knowHOW);
+        settingContext.LexPad.SetByName("KnowHOWAttribute", knowHOWAttribute);
 
         RakudoCodeRef.IFunc_Body funcPrint = new RakudoCodeRef.IFunc_Body()
         { // create an anonymous class
@@ -222,7 +225,6 @@ public class Init  // public static in the C# version
         };
         settingContext.LexPad.SetByName("say", CodeObjectUtility.WrapNativeMethod(funcSay));
         settingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null,null));
-        settingContext.LexPad.SetByName("LLCode", REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, knowHOW.getSTable().REPR.instance_of(null, knowHOW)));
 
         return settingContext;
     }

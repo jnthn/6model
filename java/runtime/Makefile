@@ -9,11 +9,13 @@
 #                                            SerializationContext
 #                                             |                |
 #        +------------------------> RakudoObject               |
-#        |                           |  |     |                |
-#        |                   Parameter Lexpad |                |
-#        |                         |    |     |                |
-#        |                   Signature  |   Representation     |
-#        |                         |    |    |      |    |     |
+#        |                          | |  |     |               |
+#        |                  Parameter | Lexpad |               |
+#        |                    |       |  |     |               |
+#        |                    |  Handler |     |               |
+#        |                    |        | |     |               |
+#        |                   Signature | |   Representation    |
+#        |                         |   | |    |     |    |     |
 #        |  +--+----------------> RakudoCodeRef     |    |     |
 #        |  |  |                           |        |    |     |
 #        1  2  3         ExecutionDomain  Context   |    |     |
@@ -63,6 +65,7 @@ ALL_BUILD_TARGETS = \
 
 OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
+	$(CLASSES)Rakudo/Runtime/Exceptions/Handler.class \
 	$(CLASSES)Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.class \
 	$(CLASSES)Rakudo/Runtime/Lexpad.class \
 	$(CLASSES)Rakudo/Runtime/Parameter.class \
@@ -123,6 +126,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
 		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
@@ -143,6 +147,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
 		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
@@ -347,6 +352,9 @@ Rakudo/Runtime/CodeObjectUtility.java: ../../dotnet/runtime/Runtime/CodeObjectUt
 
 Rakudo/Runtime/Context.java: ../../dotnet/runtime/Runtime/Context.cs
 	@echo "todo: Rakudo/Runtime/Context.java is older than ../../dotnet/runtime/Runtime/Context.cs"
+
+Rakudo/Runtime/Exceptions/Handler.java: ../../dotnet/runtime/Runtime/Exceptions/Handler.cs
+	@echo "todo: Rakudo/Runtime/Exceptions/Handler.java is older than ../../dotnet/runtime/Runtime/Exceptions/Handler.cs"
 
 Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java: ../../dotnet/runtime/Runtime/Exceptions/LeaveStackUnwinderException.cs
 	@echo "todo: Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java is older than ../../dotnet/runtime/Runtime/Exceptions/LeaveStackUnwinderException.cs"

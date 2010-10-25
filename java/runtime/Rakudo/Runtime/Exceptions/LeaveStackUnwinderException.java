@@ -7,7 +7,7 @@ import Rakudo.Metamodel.Representations.RakudoCodeRef;
 /// This exception is thrown to actually unwind the (dotnet) stack after
 /// we run an exception handler.
 /// </summary>
-public class LeaveStackUnwinderException extends Exception
+public class LeaveStackUnwinderException extends RuntimeException // not Exception, see http://www.javapractices.com/topic/TopicAction.do?Id=129
 {
     /// <summary>
     /// The block we're looking for.

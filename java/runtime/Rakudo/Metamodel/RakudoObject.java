@@ -13,9 +13,9 @@ public abstract class RakudoObject
     /// Every object must have a way to refer to the shared table,
     /// which contains the commonalities this object has.
     /// </summary>
-    private SharedTable STable;
-    public SharedTable getSTable() { return STable; }
-    public void setSTable( SharedTable st ) { STable = st; }
+    private SharedTable sTable;
+    public SharedTable getSTable() { return sTable; }
+    public void setSTable( SharedTable st ) { sTable = st; }
     // SharedTable STable { get; set; } // the C# version
 
     /// <summary>

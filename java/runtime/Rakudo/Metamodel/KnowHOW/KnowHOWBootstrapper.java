@@ -23,8 +23,7 @@ import Rakudo.Runtime.ThreadContext;
 /// for implementing the various other bits of the object model.
 /// Works in conjunction with KnowHOWREPR.
 /// </summary>
-public class KnowHOWBootstrapper
-// public static class KnowHOWBootstrapper // the C# version
+public class KnowHOWBootstrapper  // public static in the C# version
 {
     /// <summary>
     /// Bootstraps the KnowHOW. This is were things "bottom out" in the
@@ -117,9 +116,7 @@ public class KnowHOWBootstrapper
                     return HOW.Methods.get(Ops.unbox_str(tc, Positionals[1]));
                 else {
                     // throw new NoSuchMethodException("No such method " + Ops.unbox_str(tc, Positionals[1]));
-                    System.err.println("No such method " + Ops.unbox_str(tc, Positionals[1]));
-                    System.exit(1);
-                    return null;
+                    throw new UnsupportedOperationException("No such method " + Ops.unbox_str(tc, Positionals[1]));
                 }
             }
         };
@@ -141,6 +138,9 @@ public class KnowHOWBootstrapper
         { // create an anonymous class
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
+                // Safe to just return a P6list instance that points at
+                // the same thing we hold internally, since a list is
+                // immutable.
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
                 RakudoObject Result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
                 ((P6list.Instance)Result).Storage = HOW.Attributes;
@@ -181,11 +181,11 @@ public class KnowHOWBootstrapper
             KnowHOWHOW.Methods.put(key, KnowHOWMeths.get(key));
 
         // We need to clone the STable.
-        SharedTable STableCopy = new SharedTable();
-        STableCopy.HOW = KnowHOWHOW;
-        STableCopy.WHAT = KnowHOW.getSTable().WHAT;
-        STableCopy.REPR = KnowHOW.getSTable().REPR;
-        KnowHOWHOW.setSTable(STableCopy);
+        SharedTable sTableCopy = new SharedTable();
+        sTableCopy.HOW = KnowHOWHOW;
+        sTableCopy.WHAT = KnowHOW.getSTable().WHAT;
+        sTableCopy.REPR = KnowHOW.getSTable().REPR;
+        KnowHOWHOW.setSTable(sTableCopy);
 
         // And put a fake FindMethod in there that just looks in the
         // dictionary.
@@ -197,10 +197,7 @@ public class KnowHOWBootstrapper
                 if (MTable.containsKey(name))
                     return MTable.get(name);
                 else {
-                    // throw new InvalidOperationException("No such method " + Name);
-                    System.err.println("No such method " + name);
-                    System.exit(1);
-                    return null;
+                    throw new UnsupportedOperationException("No such method " + name);
                 }
             }
         };
@@ -211,6 +208,42 @@ public class KnowHOWBootstrapper
 
         // And we should be done.
         return KnowHOW;
+    }
+
+    /// <summary>
+    /// Sets up the KnowHOWAttribute object/class, which actually is a
+    /// KnowHOW.
+    /// </summary>
+    /// <returns></returns>
+    public static RakudoObject SetupKnowHOWAttribute(RakudoObject knowHOW)
+    {
+        // Create a new HOW instance.
+        KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)knowHOW.getSTable().REPR.instance_of(null, knowHOW);
+
+        // We base the attribute on P6str, since we just want to store an
+        // attribute name for now.
+        RakudoObject knowHOWAttribute = REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, HOW);
+
+        // Add methods new and Str.
+        RakudoCodeRef.IFunc_Body meth_new = new RakudoCodeRef.IFunc_Body() {  // the C# version uses a lambda
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject obj, RakudoObject capture)
+            {
+                RakudoObject WHAT = CaptureHelper.GetPositional(capture, 0).getSTable().WHAT;
+                String name = Ops.unbox_str(tc, CaptureHelper.GetNamed(capture, "name"));
+                return Ops.box_str(tc, name, WHAT);
+            }
+        };
+        HOW.Methods.put("new", CodeObjectUtility.WrapNativeMethod(meth_new));
+        RakudoCodeRef.IFunc_Body meth_name = new RakudoCodeRef.IFunc_Body() {   // the C# version uses a lambda
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject obj, RakudoObject capture)
+            {
+                RakudoObject self = CaptureHelper.GetPositional(capture, 0);
+                return Ops.box_str(tc, Ops.unbox_str(tc, self), tc.DefaultStrBoxType);
+            }
+        };
+        HOW.Methods.put("name", CodeObjectUtility.WrapNativeMethod(meth_name));
+
+        return knowHOWAttribute;
     }
 }
 

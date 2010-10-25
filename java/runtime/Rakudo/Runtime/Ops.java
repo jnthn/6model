@@ -687,7 +687,7 @@ public class Ops  // public static in the C# version
     /// <param name="ReturnValue"></param>
     /// <returns></returns>
     public static RakudoObject leave_block(ThreadContext tc, RakudoObject block, RakudoObject returnValue)
-        throws LeaveStackUnwinderException
+//        throws LeaveStackUnwinderException
     {
         throw new LeaveStackUnwinderException((RakudoCodeRef.Instance)block, returnValue);
     }

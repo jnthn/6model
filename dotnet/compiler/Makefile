@@ -24,5 +24,8 @@ NQPSetting.dll: ../../common/NQP/NQPSetting.pm  gen_actions.pir gen_grammar.pir 
 test: all
 	prove -r --exec try ..\..\t\nqp
 
+test-unixy: all
+	prove -r --exec ./try.sh ../../t/nqp
+
 clean:
 	perl -MExtUtils::Command -e rm_f gen_*.pir *.dll *.pdb *.exe *.cs

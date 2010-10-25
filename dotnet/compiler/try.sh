@@ -1,9 +1,8 @@
 #!/bin/sh
-# this version of try for use on Linux
+# this version of try for use with Mono 2.4 on Linux
 cp ../runtime/bin/Debug/RakudoRuntime.dll .
-cp ../runtime/bin/Debug/RakudoRuntime.pdb .
 make
-parrot compile.pir $1 > x.cs
-gmcs x.cs /reference:RakudoRuntime.dll
+parrot compile.pir $1 > RakudoOutput.cs
+gmcs -nowarn:162,168,219 RakudoOutput.cs /reference:RakudoRuntime.dll
 echo ---
-./x.exe
+./RakudoOutput.exe

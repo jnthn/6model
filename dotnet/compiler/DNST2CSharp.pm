@@ -103,7 +103,7 @@ our multi sub cs_for(DNST::TryCatch $tc) {
                 cs_for((@($tc))[0]);
     $code := $code ~
                 "        $try_result = $*LAST_TEMP;\n" ~
-                "        } catch(" ~ $tc.exception_type ~ " " ~ $tc.exception_var  ~ ")\{\n" ~
+                "        } catch(" ~ $tc.exception_type ~ " " ~ $tc.exception_var ~ ")\{\n" ~
                 cs_for((@($tc))[1]) ~
                 "        $try_result = $*LAST_TEMP;\n" ~
                 "        }\n";
@@ -120,19 +120,63 @@ our multi sub cs_for(DNST::MethodCall $mc) {
         @arg_names.push($*LAST_TEMP);
     }
 
-    # What'we we calling it on?
+    # What're we calling it on?
     my $invocant := $mc.on || @arg_names.shift;
 
     # Code-gen the call.
     $code := $code ~ '        ';
     unless $mc.void {
-        $*LAST_TEMP := get_unique_id('result');
         my $ret_type := $mc.type || 'var';
+        $*LAST_TEMP := get_unique_id('result');
+        my $method_name := "$invocant." ~ $mc.name;
+        # the next bit is very hacky, should be handled upstream in
+        # PAST2DNSTCompiler.pm
+        if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
+        {
+            $ret_type := 'string';
+        }
+        if $ret_type eq 'var' && (
+            $method_name eq 'CaptureHelper.FormWith' ||
+            $method_name eq 'Ops.add_int' ||
+            $method_name eq 'Ops.box_str' ||
+            $method_name eq 'Ops.coerce_int_to_num' ||
+            $method_name eq 'Ops.coerce_int_to_str' ||
+            $method_name eq 'Ops.coerce_num_to_int' ||
+            $method_name eq 'Ops.coerce_num_to_str' ||
+            $method_name eq 'Ops.coerce_str_to_int' ||
+            $method_name eq 'Ops.coerce_str_to_num' ||
+            $method_name eq 'Ops.concat' ||
+            $method_name eq 'Ops.div_int' ||
+            $method_name eq 'Ops.equal_ints' ||
+            $method_name eq 'Ops.equal_nums' ||
+            $method_name eq 'Ops.equal_refs' ||
+            $method_name eq 'Ops.equal_strs' ||
+            $method_name eq 'Ops.get_how' ||
+            $method_name eq 'Ops.get_what' ||
+            $method_name eq 'Ops.instance_of' ||
+            $method_name eq 'Ops.leave_block' ||
+            $method_name eq 'Ops.lllist_bind_at_pos' ||
+            $method_name eq 'Ops.lllist_elems' ||
+            $method_name eq 'Ops.lllist_get_at_pos' ||
+            $method_name eq 'Ops.llmapping_bind_at_key' ||
+            $method_name eq 'Ops.llmapping_elems' ||
+            $method_name eq 'Ops.llmapping_get_at_key' ||
+            $method_name eq 'Ops.logical_not_int' ||
+            $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
+            $method_name eq 'Ops.mod_int' ||
+            $method_name eq 'Ops.mul_int' ||
+            $method_name eq 'Ops.sub_int' ||
+            $method_name eq 'Ops.throw_dynamic' ||
+            $method_name eq 'Ops.type_object_for' ||
+            $method_name eq 'StaticBlockInfo[1].StaticLexPad.SetByName' # WTF?
+        ) {
+            $ret_type := 'RakudoObject';
+        }
         $code := $code ~ "$ret_type $*LAST_TEMP = ";
+        if $ret_type eq 'var' { $code := $code ~ "// var from " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";
-
     return $code;
 }
 
@@ -149,7 +193,7 @@ our multi sub cs_for(DNST::Call $mc) {
     $code := $code ~ '        ';
     unless $mc.void {
         $*LAST_TEMP := get_unique_id('result');
-        $code := $code ~ "var $*LAST_TEMP = ";
+        $code := $code ~ "RakudoObject $*LAST_TEMP = ";
     }
     $code := $code ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";
@@ -168,7 +212,7 @@ our multi sub cs_for(DNST::New $new) {
 
     # Code-gen the constructor call.
     $*LAST_TEMP := get_unique_id('new');
-    $code := $code ~ "        var $*LAST_TEMP = new " ~
+    $code := $code ~ "        " ~ $new.type ~ " $*LAST_TEMP = new " ~
         $new.type ~ "(" ~ pir::join(', ', @arg_names) ~ ");\n";
 
     return $code;
@@ -213,7 +257,7 @@ our multi sub cs_for(DNST::Temp $tmp) {
     unless +@($tmp) == 1 { pir::die('A DNST::Temp must have exactly one child') }
     my $code := cs_for((@($tmp))[0]);
     my $name := $tmp.name;
-    $code := $code ~ "        var $name = $*LAST_TEMP;\n";
+    $code := $code ~ "        " ~ $tmp.type ~ " $name = $*LAST_TEMP;\n";
     $*LAST_TEMP := $name;
     return $code;
 }
@@ -257,7 +301,7 @@ our multi sub cs_for(DNST::ArrayLiteral $al) {
 
     # Code-gen the array.
     $*LAST_TEMP := get_unique_id('arr');
-    return $code ~ "        var $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
+    return $code ~ "        " ~ $al.type ~ "[] $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
         pir::join(',', @item_names) ~ "};\n";
 }
 
@@ -276,7 +320,7 @@ our multi sub cs_for(DNST::DictionaryLiteral $dl) {
 
     # Code-gen the dictionary.
     $*LAST_TEMP := get_unique_id('dic');
-    return $code ~ "        var $*LAST_TEMP = new Dictionary<" ~
+    return $code ~ "        Dictionary<" ~ $dl.key_type ~ ', ' ~ $dl.value_type ~ "> $*LAST_TEMP = new Dictionary<" ~
         $dl.key_type ~ ', ' ~ $dl.value_type ~ '>() { ' ~
         pir::join(',', @items) ~ " };\n";
 }

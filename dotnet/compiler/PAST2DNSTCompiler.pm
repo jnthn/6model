@@ -353,7 +353,8 @@ our multi sub dnst_for(PAST::Block $block) {
 
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
-        :name('C'), :type('var'),
+        :name('C'), :type('Context'),
+#       :name('C'), :type('var'),
         DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext", "Capture" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
@@ -479,13 +480,15 @@ our multi sub dnst_for(PAST::Op $op) {
         
         # Invocant.
         my $inv := DNST::Temp.new(
-            :name(get_unique_id('inv')), :type('var'),
+            :name(get_unique_id('inv')), :type('RakudoObject'),
+#           :name(get_unique_id('inv')), :type('var'),
             dnst_for(@args.shift)
         );
 
         # Method lookup.
         my $callee := DNST::Temp.new(
-            :name(get_unique_id('callee')), :type('var'),
+            :name(get_unique_id('callee')), :type('RakudoObject'),
+#           :name(get_unique_id('callee')), :type('var'),
             DNST::MethodCall.new(
                 :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
                 'TC',
@@ -544,7 +547,8 @@ our multi sub dnst_for(PAST::Op $op) {
             }
             $callee := dnst_for(@args.shift);
         }
-        $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('var'), $callee );
+        $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
+#       $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('var'), $callee );
 
         # How is capture formed?
         my $capture := DNST::MethodCall.new(

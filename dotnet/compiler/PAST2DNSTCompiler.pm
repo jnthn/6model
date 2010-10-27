@@ -94,7 +94,7 @@ method compile(PAST::Node $node) {
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
             DNST::MethodCall.new(
-                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'), :void(1),
+                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'), :void(1), :type('RakudoObject'),
                 DNST::Literal.new( :value('NQPStr'), :escape(1) ),
                 'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null)'
             ),
@@ -354,7 +354,6 @@ our multi sub dnst_for(PAST::Block $block) {
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
         :name('C'), :type('Context'),
-#       :name('C'), :type('var'),
         DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext", "Capture" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
@@ -481,14 +480,12 @@ our multi sub dnst_for(PAST::Op $op) {
         # Invocant.
         my $inv := DNST::Temp.new(
             :name(get_unique_id('inv')), :type('RakudoObject'),
-#           :name(get_unique_id('inv')), :type('var'),
             dnst_for(@args.shift)
         );
 
         # Method lookup.
         my $callee := DNST::Temp.new(
             :name(get_unique_id('callee')), :type('RakudoObject'),
-#           :name(get_unique_id('callee')), :type('var'),
             DNST::MethodCall.new(
                 :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
                 'TC',
@@ -548,7 +545,6 @@ our multi sub dnst_for(PAST::Op $op) {
             $callee := dnst_for(@args.shift);
         }
         $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
-#       $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('var'), $callee );
 
         # How is capture formed?
         my $capture := DNST::MethodCall.new(
@@ -593,7 +589,7 @@ our multi sub dnst_for(PAST::Op $op) {
         # Just a call on the Ops class. Always pass thread context
         # as the first parameter.
         my $result := DNST::MethodCall.new(
-            :on('Ops'), :name($op.name), 'TC'
+            :on('Ops'), :name($op.name), :type('RakudoObject'), 'TC'
         );
         for @($op) {
             $result.push(dnst_for($_));
@@ -684,7 +680,7 @@ our multi sub dnst_for(PAST::Op $op) {
         my $i := 0;
         for @($op) {
             $result.push(DNST::MethodCall.new(
-                :on('Ops'), :name('lllist_bind_at_pos'), :void(1),
+                :on('Ops'), :name('lllist_bind_at_pos'), :void(1), :type('RakudoObject'),
                 'TC',
                 $tmp_name,
                 dnst_for(PAST::Val.new( :value($i) )),

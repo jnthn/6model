@@ -128,7 +128,7 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     unless $mc.void {
         my $ret_type := $mc.type || 'var';
         $*LAST_TEMP := get_unique_id('result');
-        my $method_name := "$invocant." ~ $mc.name;
+        my $method_name := $invocant ~ '.' ~ $mc.name;
         # the next bit is very hacky, should be handled upstream in
         # PAST2DNSTCompiler.pm
         if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
@@ -136,39 +136,8 @@ our multi sub cs_for(DNST::MethodCall $mc) {
             $ret_type := 'string';
         }
         if $ret_type eq 'var' && (
-            $method_name eq 'CaptureHelper.FormWith' ||
-            $method_name eq 'Ops.add_int' ||
-            $method_name eq 'Ops.box_str' ||
-            $method_name eq 'Ops.coerce_int_to_num' ||
-            $method_name eq 'Ops.coerce_int_to_str' ||
-            $method_name eq 'Ops.coerce_num_to_int' ||
-            $method_name eq 'Ops.coerce_num_to_str' ||
-            $method_name eq 'Ops.coerce_str_to_int' ||
-            $method_name eq 'Ops.coerce_str_to_num' ||
-            $method_name eq 'Ops.concat' ||
-            $method_name eq 'Ops.div_int' ||
-            $method_name eq 'Ops.equal_ints' ||
-            $method_name eq 'Ops.equal_nums' ||
-            $method_name eq 'Ops.equal_refs' ||
-            $method_name eq 'Ops.equal_strs' ||
-            $method_name eq 'Ops.get_how' ||
-            $method_name eq 'Ops.get_what' ||
-            $method_name eq 'Ops.instance_of' ||
-            $method_name eq 'Ops.leave_block' ||
-            $method_name eq 'Ops.lllist_bind_at_pos' ||
-            $method_name eq 'Ops.lllist_elems' ||
-            $method_name eq 'Ops.lllist_get_at_pos' ||
-            $method_name eq 'Ops.llmapping_bind_at_key' ||
-            $method_name eq 'Ops.llmapping_elems' ||
-            $method_name eq 'Ops.llmapping_get_at_key' ||
-            $method_name eq 'Ops.logical_not_int' ||
             $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
-            $method_name eq 'Ops.mod_int' ||
-            $method_name eq 'Ops.mul_int' ||
-            $method_name eq 'Ops.sub_int' ||
-            $method_name eq 'Ops.throw_dynamic' ||
-            $method_name eq 'Ops.type_object_for' ||
-            $method_name eq 'StaticBlockInfo[1].StaticLexPad.SetByName' # WTF?
+            $method_name eq 'Ops.throw_dynamic'
         ) {
             $ret_type := 'RakudoObject';
         }

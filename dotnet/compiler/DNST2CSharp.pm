@@ -200,10 +200,12 @@ our multi sub cs_for(DNST::If $if) {
              "        if ($*LAST_TEMP != 0) \{\n";
 
     # Compile branch(es).
+    $*LAST_TEMP := 'null';
     $code := $code ~ cs_for((@($if))[1]);
     $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
                      "        }\n";
     if +@($if) == 3 {
+        $*LAST_TEMP := 'null';
         $code := $code ~ "        else \{\n";
         $code := $code ~ cs_for((@($if))[2]);
         $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~

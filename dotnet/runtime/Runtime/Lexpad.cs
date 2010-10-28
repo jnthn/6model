@@ -33,7 +33,7 @@ namespace Rakudo.Runtime
         {
             SlotMapping = new Dictionary<string, int>(SlotNames.Length);
             int Slot = 0;
-            foreach (string Name in SlotNames)
+            foreach (var Name in SlotNames)
                 SlotMapping.Add(Name, Slot++);
             Storage = new RakudoObject[SlotNames.Length];
         }
@@ -70,11 +70,11 @@ namespace Rakudo.Runtime
             // was shared before, but add the extra entry.
             SlotMapping = new Dictionary<string, int>(SlotMapping);
             int NewSlot = Storage.Length;
-            foreach (string Name in Names)
+            foreach (var Name in Names)
                 SlotMapping.Add(Name, NewSlot++);
 
             // Reallocate enlarged storage.
-            RakudoObject[] NewStorage = new RakudoObject[Storage.Length + Names.Length];
+            var NewStorage = new RakudoObject[Storage.Length + Names.Length];
             for (int i = 0; i < Storage.Length; i++)
                 NewStorage[i] = Storage[i];
             Storage = NewStorage;

@@ -27,17 +27,17 @@ namespace Rakudo.Metamodel.KnowHOW
         {
             // Create our KnowHOW type object. Note we don't have a HOW
             // just yet, so pass in null.
-            Representation REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-            RakudoObject KnowHOW = REPR.type_object_for(null, null);
+            var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
+            var KnowHOW = REPR.type_object_for(null, null);
 
             // We'll set up a dictionary of our various methods to go into
             // KnowHOW's HOW, since we'll want to work with them a bit.
-            Dictionary<string,RakudoObject> KnowHOWMeths = new Dictionary<string, RakudoObject>();
+            var KnowHOWMeths = new Dictionary<string, RakudoObject>();
             KnowHOWMeths.Add("new_type", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
                     // We first create a new HOW instance.
-                    RakudoObject KnowHOWTypeObj = CaptureHelper.GetPositional(Cap, 0);
-                    RakudoObject HOW = KnowHOWTypeObj.STable.REPR.instance_of(TC, KnowHOWTypeObj.STable.WHAT);
+                    var KnowHOWTypeObj = CaptureHelper.GetPositional(Cap, 0);
+                    var HOW = KnowHOWTypeObj.STable.REPR.instance_of(TC, KnowHOWTypeObj.STable.WHAT);
 
                     // Now create a new type object to go with it of the
                     // desired REPR; we default to P6opaque (note that the
@@ -45,11 +45,11 @@ namespace Rakudo.Metamodel.KnowHOW
                     // methods and attributes, it can't be used for an
                     // instance object that actually wants to store some
                     // instance data).
-                    RakudoObject REPRName = CaptureHelper.GetNamed(Cap, "repr");
+                    var REPRName = CaptureHelper.GetNamed(Cap, "repr");
                     if (REPRName != null)
                     {
                         // Look up the REPR.
-                        Representation REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(null, REPRName));
+                        var REPRToUse = REPRRegistry.get_REPR_by_name(Ops.unbox_str(null, REPRName));
                         return REPRToUse.type_object_for(null, HOW);
                     }
                     else
@@ -60,16 +60,16 @@ namespace Rakudo.Metamodel.KnowHOW
                 }));
             KnowHOWMeths.Add("add_attribute", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
-                    KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                    RakudoObject Attr = CaptureHelper.GetPositional(Cap, 2);
+                    var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                    var Attr = CaptureHelper.GetPositional(Cap, 2);
                     HOW.Attributes.Add(Attr);
                     return CaptureHelper.Nil();
                 }));
             KnowHOWMeths.Add("add_method", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
-                    KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                    string Name = CaptureHelper.GetPositionalAsString(Cap, 2);
-                    RakudoObject Method = CaptureHelper.GetPositional(Cap, 3);
+                    var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                    var Name = CaptureHelper.GetPositionalAsString(Cap, 2);
+                    var Method = CaptureHelper.GetPositional(Cap, 3);
                     HOW.Methods.Add(Name, Method);
                     return CaptureHelper.Nil();
                 }));
@@ -77,8 +77,8 @@ namespace Rakudo.Metamodel.KnowHOW
             {
                 // We go to some effort to be really fast in here, 'cus it's a
                 // hot path for dynamic dispatches.
-                RakudoObject[] Positionals = (Cap as P6capture.Instance).Positionals;
-                KnowHOWREPR.KnowHOWInstance HOW = Positionals[0] as KnowHOWREPR.KnowHOWInstance;
+                var Positionals = (Cap as P6capture.Instance).Positionals;
+                var HOW = Positionals[0] as KnowHOWREPR.KnowHOWInstance;
                 RakudoObject Method;
                 if (HOW.Methods.TryGetValue(Ops.unbox_str(TC, Positionals[2]), out Method))
                     return Method;
@@ -87,7 +87,7 @@ namespace Rakudo.Metamodel.KnowHOW
             }));
             KnowHOWMeths.Add("compose", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {
-                    RakudoObject Obj = CaptureHelper.GetPositional(Cap, 1);
+                    var Obj = CaptureHelper.GetPositional(Cap, 1);
                     return Obj;
                 }));
             KnowHOWMeths.Add("attributes", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
@@ -95,16 +95,16 @@ namespace Rakudo.Metamodel.KnowHOW
                 // Safe to just return a P6list instance that points at
                 // the same thing we hold internally, since a list is
                 // immutable.
-                KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                RakudoObject Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
                 ((P6list.Instance)Result).Storage = HOW.Attributes;
                 return Result;
             }));
             KnowHOWMeths.Add("methods", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 // Return the methods list.
-                KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                RakudoObject Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
+                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
                 ((P6list.Instance)Result).Storage.AddRange(HOW.Methods.Values);
                 return Result;
             }));
@@ -117,12 +117,12 @@ namespace Rakudo.Metamodel.KnowHOW
             // We create a KnowHOW instance that can describe itself. This
             // means .HOW.HOW.HOW.HOW etc will always return that, which
             // closes the model up.
-            KnowHOWREPR.KnowHOWInstance KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(null, KnowHOW);
-            foreach (System.Collections.Generic.KeyValuePair<string,Rakudo.Metamodel.RakudoObject> Method in KnowHOWMeths)
+            var KnowHOWHOW = (KnowHOWREPR.KnowHOWInstance)REPR.instance_of(null, KnowHOW);
+            foreach (var Method in KnowHOWMeths)
                 KnowHOWHOW.Methods.Add(Method.Key, Method.Value);
 
             // We need to clone the STable.
-            SharedTable STableCopy = new SharedTable();
+            var STableCopy = new SharedTable();
             STableCopy.HOW = KnowHOWHOW;
             STableCopy.WHAT = KnowHOW.STable.WHAT;
             STableCopy.REPR = KnowHOW.STable.REPR;
@@ -132,7 +132,7 @@ namespace Rakudo.Metamodel.KnowHOW
             // dictionary.
             KnowHOWHOW.STable.FindMethod = (TC, Obj, Name, Hint) =>
                 {
-                    Dictionary<string,RakudoObject> MTable = ((KnowHOWREPR.KnowHOWInstance)Obj).Methods;
+                    var MTable = ((KnowHOWREPR.KnowHOWInstance)Obj).Methods;
                     if (MTable.ContainsKey(Name))
                         return MTable[Name];
                     else
@@ -154,22 +154,22 @@ namespace Rakudo.Metamodel.KnowHOW
         public static RakudoObject SetupKnowHOWAttribute(RakudoObject KnowHOW)
         {
             // Create a new HOW instance.
-            KnowHOWREPR.KnowHOWInstance HOW = KnowHOW.STable.REPR.instance_of(null, KnowHOW) as KnowHOWREPR.KnowHOWInstance;
+            var HOW = KnowHOW.STable.REPR.instance_of(null, KnowHOW) as KnowHOWREPR.KnowHOWInstance;
 
             // We base the attribute on P6str, since we just want to store an
             // attribute name for now.
-            RakudoObject KnowHOWAttribute = REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, HOW);
+            var KnowHOWAttribute = REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, HOW);
 
             // Add methods new and Str.
             HOW.Methods.Add("new", CodeObjectUtility.WrapNativeMethod((TC, Code, Cap) =>
                 {
-                    RakudoObject WHAT = CaptureHelper.GetPositional(Cap, 0).STable.WHAT;
-                    string Name = Ops.unbox_str(TC, CaptureHelper.GetNamed(Cap, "name"));
+                    var WHAT = CaptureHelper.GetPositional(Cap, 0).STable.WHAT;
+                    var Name = Ops.unbox_str(TC, CaptureHelper.GetNamed(Cap, "name"));
                     return Ops.box_str(TC, Name, WHAT);
                 }));
             HOW.Methods.Add("name", CodeObjectUtility.WrapNativeMethod((TC, Code, Cap) =>
                 {
-                    RakudoObject self = CaptureHelper.GetPositional(Cap, 0);
+                    var self = CaptureHelper.GetPositional(Cap, 0);
                     return Ops.box_str(TC, Ops.unbox_str(TC, self), TC.DefaultStrBoxType);
                 }));
 

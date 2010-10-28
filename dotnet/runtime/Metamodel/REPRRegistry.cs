@@ -30,7 +30,7 @@ namespace Rakudo.Metamodel
         public static int register_REPR(string Name, Representation REPR)
         {
             Registry.Add(REPR);
-            int ID = Registry.Count - 1;
+            var ID = Registry.Count - 1;
             NamedToIDMapper.Add(Name, ID);
             return ID;
         }

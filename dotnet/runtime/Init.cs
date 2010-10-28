@@ -28,8 +28,8 @@ namespace Rakudo
         {
             // Bootstrap the meta-model.
             RegisterRepresentations();
-            RakudoObject KnowHOW = KnowHOWBootstrapper.Bootstrap();
-            RakudoObject KnowHOWAttribute = KnowHOWBootstrapper.SetupKnowHOWAttribute(KnowHOW);
+            var KnowHOW = KnowHOWBootstrapper.Bootstrap();
+            var KnowHOWAttribute = KnowHOWBootstrapper.SetupKnowHOWAttribute(KnowHOW);
 
             // See if we're to load a setting or use the fake bootstrapping one.
             Context SettingContext;
@@ -47,8 +47,8 @@ namespace Rakudo
             CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)SettingContext.LexPad.GetByName("NQPCode");
 
             // Create an execution domain and a thread context for it.
-            ExecutionDomain ExecDom = new ExecutionDomain();
-            ThreadContext Thread = new ThreadContext();
+            var ExecDom = new ExecutionDomain();
+            var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
             Thread.CurrentContext = SettingContext;
             Thread.DefaultBoolBoxType = SettingContext.LexPad.GetByName("NQPInt");
@@ -89,7 +89,7 @@ namespace Rakudo
         /// <returns></returns>
         private static Context BootstrapSetting(RakudoObject KnowHOW, RakudoObject KnowHOWAttribute)
         {
-            Context SettingContext = new Context();
+            var SettingContext = new Context();
             SettingContext.LexPad = new Lexpad(new string[]
                 { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
             SettingContext.LexPad.Storage = new RakudoObject[]
@@ -104,10 +104,10 @@ namespace Rakudo
                     REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null, KnowHOW.STable.REPR.instance_of(null, KnowHOW)),
                     CodeObjectUtility.WrapNativeMethod((TC, self, C) =>
                         {
-                            RakudoObject NQPList = Ops.get_lex(TC, "NQPList");
-                            P6list.Instance List = NQPList.STable.REPR.instance_of(TC, NQPList) as P6list.Instance;
-                            P6capture.Instance NativeCapture = C as P6capture.Instance;
-                            foreach (RakudoObject Obj in NativeCapture.Positionals)
+                            var NQPList = Ops.get_lex(TC, "NQPList");
+                            var List = NQPList.STable.REPR.instance_of(TC, NQPList) as P6list.Instance;
+                            var NativeCapture = C as P6capture.Instance;
+                            foreach (var Obj in NativeCapture.Positionals)
                                 List.Storage.Add(Obj);
                             return List;
                         })
@@ -124,19 +124,19 @@ namespace Rakudo
         public static Context LoadSetting(string Name, RakudoObject KnowHOW, RakudoObject KnowHOWAttribute)
         {
             // Load the assembly.
-            System.Reflection.Assembly SettingAssembly = AppDomain.CurrentDomain.Load(Name);
+            var SettingAssembly = AppDomain.CurrentDomain.Load(Name);
 
             // Find the setting type and its LoadSetting method.
-            System.Type Class = SettingAssembly.GetType("NQPSetting");
-            System.Reflection.MethodInfo Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
-
+            var Class = SettingAssembly.GetType("NQPSetting");
+            var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
+            
             // Run it to get the context we want.
-            Context SettingContext = (Context)Method.Invoke(null, new object[] { });
+            var SettingContext = (Context)Method.Invoke(null, new object[] { });
 
             // Fudge a few more things in.
             // XXX Should be able to toss all of thse but KnowHOW.
             SettingContext.LexPad.Extend(new string[]
-                { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture", "LLCode" });
+                { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture" });
             SettingContext.LexPad.SetByName("KnowHOW", KnowHOW);
             SettingContext.LexPad.SetByName("KnowHOWAttribute", KnowHOWAttribute);
             SettingContext.LexPad.SetByName("print",
@@ -144,9 +144,9 @@ namespace Rakudo
                     {
                         for (int i = 0; i < CaptureHelper.NumPositionals(C); i++)
                         {
-                            RakudoObject Value = CaptureHelper.GetPositional(C, i);
-                            RakudoObject StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                            RakudoObject StrVal = StrMeth.STable.Invoke(TC, StrMeth,
+                            var Value = CaptureHelper.GetPositional(C, i);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth,
                                 CaptureHelper.FormWith( new RakudoObject[] { Value }));
                             Console.Write(Ops.unbox_str(null, StrVal));
                         }
@@ -157,9 +157,9 @@ namespace Rakudo
                     {
                         for (int i = 0; i < CaptureHelper.NumPositionals(C); i++)
                         {
-                            RakudoObject Value = CaptureHelper.GetPositional(C, i);
-                            RakudoObject StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
-                            RakudoObject StrVal = StrMeth.STable.Invoke(TC, StrMeth,
+                            var Value = CaptureHelper.GetPositional(C, i);
+                            var StrMeth = self.STable.FindMethod(TC, Value, "Str", 0);
+                            var StrVal = StrMeth.STable.Invoke(TC, StrMeth,
                                 CaptureHelper.FormWith( new RakudoObject[] { Value }));
                             Console.Write(Ops.unbox_str(null, StrVal));
                         }

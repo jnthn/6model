@@ -22,7 +22,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject type_object_for(ThreadContext TC, RakudoObject HOW, RakudoObject REPRName)
         {
-            string REPRNameStr = Ops.unbox_str(TC, REPRName);
+            var REPRNameStr = Ops.unbox_str(TC, REPRName);
             return REPRRegistry.get_REPR_by_name(REPRNameStr).type_object_for(TC, HOW);
         }
 
@@ -158,8 +158,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject box_int(ThreadContext TC, int Value, RakudoObject To)
         {
-            Representation REPR = To.STable.REPR;
-            RakudoObject Result = REPR.instance_of(TC, To);
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(TC, To);
             REPR.set_int(TC, Result, Value);
             return Result;
         }
@@ -171,8 +171,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject box_num(ThreadContext TC, double Value, RakudoObject To)
         {
-            Representation REPR = To.STable.REPR;
-            RakudoObject Result = REPR.instance_of(TC, To);
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(TC, To);
             REPR.set_num(TC, Result, Value);
             return Result;
         }
@@ -184,8 +184,8 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject box_str(ThreadContext TC, string Value, RakudoObject To)
         {
-            Representation REPR = To.STable.REPR;
-            RakudoObject Result = REPR.instance_of(TC, To);
+            var REPR = To.STable.REPR;
+            var Result = REPR.instance_of(TC, To);
             REPR.set_str(TC, Result, Value);
             return Result;
         }
@@ -304,7 +304,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject get_lex(ThreadContext TC, string Name)
         {
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 int Index;
@@ -323,7 +323,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject bind_lex(ThreadContext TC, string Name, RakudoObject Value)
         {
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 int Index;
@@ -345,7 +345,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject get_dynamic(ThreadContext TC, string Name)
         {
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 int Index;
@@ -364,7 +364,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject bind_dynamic(ThreadContext TC, string Name, RakudoObject Value)
         {
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 int Index;
@@ -523,7 +523,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext TC, RakudoObject Name)
         {
-            RakudoObject Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
+            var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
                 MultiDispatch.LexicalCandidateFinder.FindCandidates(
                     TC.CurrentContext.Caller,
                     TC.CurrentContext.Outer,
@@ -564,8 +564,8 @@ namespace Rakudo.Runtime
         {
             if (LLList is P6list.Instance)
             {
-                List<RakudoObject> Storage = ((P6list.Instance)LLList).Storage;
-                int Index = Ops.unbox_int(TC, IndexObj);
+                var Storage = ((P6list.Instance)LLList).Storage;
+                var Index = Ops.unbox_int(TC, IndexObj);
                 if (Index < Storage.Count)
                 {
                     Storage[Index] = Value;
@@ -617,8 +617,8 @@ namespace Rakudo.Runtime
         {
             if (LLMapping is P6mapping.Instance)
             {
-                Dictionary<string,RakudoObject> Storage = ((P6mapping.Instance)LLMapping).Storage;
-                string StrKey = Ops.unbox_str(TC, Key);
+                var Storage = ((P6mapping.Instance)LLMapping).Storage;
+                var StrKey = Ops.unbox_str(TC, Key);
                 if (Storage.ContainsKey(StrKey))
                     return Storage[StrKey];
                 else
@@ -643,8 +643,8 @@ namespace Rakudo.Runtime
         {
             if (LLMapping is P6mapping.Instance)
             {
-                Dictionary<string,RakudoObject> Storage = ((P6mapping.Instance)LLMapping).Storage;
-                string StrKey = Ops.unbox_str(TC, Key);
+                var Storage = ((P6mapping.Instance)LLMapping).Storage;
+                var StrKey = Ops.unbox_str(TC, Key);
                 if (Storage.ContainsKey(StrKey))
                     Storage[StrKey] = Value;
                 else
@@ -700,12 +700,12 @@ namespace Rakudo.Runtime
         public static RakudoObject throw_dynamic(ThreadContext TC, RakudoObject ExceptionObject, RakudoObject ExceptionType)
         {
             int WantType = Ops.unbox_int(TC, ExceptionType);
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 if (CurContext.StaticCodeObject != null)
                 {
-                    Exceptions.Handler[] Handlers = CurContext.StaticCodeObject.Handlers;
+                    var Handlers = CurContext.StaticCodeObject.Handlers;
                     if (Handlers != null)
                         for (int i = 0; i < Handlers.Length; i++)
                             if (Handlers[i].Type == WantType)
@@ -729,12 +729,12 @@ namespace Rakudo.Runtime
         public static RakudoObject throw_lexical(ThreadContext TC, RakudoObject ExceptionObject, RakudoObject ExceptionType)
         {
             int WantType = Ops.unbox_int(TC, ExceptionType);
-            Context CurContext = TC.CurrentContext;
+            var CurContext = TC.CurrentContext;
             while (CurContext != null)
             {
                 if (CurContext.StaticCodeObject != null)
                 {
-                    Exceptions.Handler[] Handlers = CurContext.StaticCodeObject.Handlers;
+                    var Handlers = CurContext.StaticCodeObject.Handlers;
                     if (Handlers != null)
                         for (int i = 0; i < Handlers.Length; i++)
                             if (Handlers[i].Type == WantType)

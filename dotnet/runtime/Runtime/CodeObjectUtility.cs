@@ -27,8 +27,8 @@ namespace Rakudo.Runtime
         /// <param name="Code"></param>
         public static RakudoObject WrapNativeMethod(Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Code)
         {
-            Representation REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
-            RakudoObject Wrapper = REPR.type_object_for(null, null);
+            var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
+            var Wrapper = REPR.type_object_for(null, null);
             Wrapper.STable.Invoke = Code;
             return Wrapper;
         }
@@ -43,7 +43,7 @@ namespace Rakudo.Runtime
             RakudoCodeRef.Instance Outer, string[] LexNames)
         {
             // Create code wrapper object.
-            RakudoCodeRef.Instance Result = (RakudoCodeRef.Instance)LLCodeTypeObject.STable.REPR.instance_of(null, LLCodeTypeObject);
+            var Result = (RakudoCodeRef.Instance)LLCodeTypeObject.STable.REPR.instance_of(null, LLCodeTypeObject);
             
             // Put body, outer and signature in place.
             Result.Body = Code;

@@ -67,7 +67,7 @@ namespace Rakudo.Metamodel.Representations
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
             // Do the usual bits of setup for the type-object.
-            SharedTable STable = new SharedTable();
+            var STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = this;
             STable.WHAT = new Instance(STable);
@@ -87,7 +87,7 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject instance_of(ThreadContext TC, RakudoObject WHAT)
         {
-            RakudoObject Object = new Instance(WHAT.STable);
+            var Object = new Instance(WHAT.STable);
             return Object;
         }
 

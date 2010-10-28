@@ -32,10 +32,10 @@ namespace Rakudo.Metamodel.Representations
         /// <returns></returns>
         public override RakudoObject type_object_for(ThreadContext TC, RakudoObject MetaPackage)
         {
-            SharedTable STable = new SharedTable();
+            var STable = new SharedTable();
             STable.HOW = MetaPackage;
             STable.REPR = this;
-            Instance WHAT = new Instance(STable);
+            var WHAT = new Instance(STable);
             WHAT.Undefined = true;
             STable.WHAT = WHAT;
             return STable.WHAT;

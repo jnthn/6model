@@ -413,7 +413,12 @@ our multi sub dnst_for(PAST::Block $block) {
         );
     }
     else {
-        return "StaticBlockInfo[$our_sbi]";
+        return DNST::MethodCall.new(
+            :on('Ops'), :name($block.closure ?? 'new_closure' !! 'capture_outer'),
+            :type('RakudoObject'),
+            'TC',
+            "StaticBlockInfo[$our_sbi]"
+        );
     }
 }
 

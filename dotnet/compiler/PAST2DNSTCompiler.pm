@@ -697,6 +697,15 @@ our multi sub dnst_for(PAST::Op $op) {
         return $result;
     }
 
+    elsif $op.pasttype eq 'return' {
+        return DNST::MethodCall.new(
+            :on('Ops'), :name('throw_lexical'),
+            'TC',
+            dnst_for((@($op))[0]),
+            dnst_for(PAST::Val.new( :value(57) ))
+        );
+    }
+
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }

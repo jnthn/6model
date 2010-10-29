@@ -50,9 +50,10 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="StaticCodeObject"></param>
         /// <param name="Caller"></param>
-        public Context(RakudoCodeRef.Instance StaticCodeObject, Context Caller, RakudoObject Capture)
+        public Context(RakudoObject StaticCodeObject_Uncast, Context Caller, RakudoObject Capture)
         {
             // Set up static code object and caller pointers.
+            var StaticCodeObject = (RakudoCodeRef.Instance)StaticCodeObject_Uncast;
             this.StaticCodeObject = StaticCodeObject;
             this.Caller = Caller;
             this.Capture = Capture;
@@ -69,16 +70,20 @@ namespace Rakudo.Runtime
             this.LexPad.Storage = (RakudoObject[])StaticCodeObject.StaticLexPad.Storage.Clone();
 
             // Set outer context.
-            var OuterBlock = StaticCodeObject.OuterBlock;
-            if (OuterBlock.CurrentContext != null)
+            if (StaticCodeObject.OuterForNextInvocation != null)
             {
-                this.Outer = OuterBlock.CurrentContext;
+                this.Outer = StaticCodeObject.OuterForNextInvocation;
+            }
+            else if (StaticCodeObject.OuterBlock.CurrentContext != null)
+            {
+                this.Outer = StaticCodeObject.OuterBlock.CurrentContext;
             }
             else
             {
                 // Auto-close. In this we go setting up fake contexts
                 // that use the static lexpad until we find a real one.
                 var CurContext = this;
+                var OuterBlock = StaticCodeObject.OuterBlock;
                 while (OuterBlock != null)
                 {
                     // If we found a block with a context, we're done.

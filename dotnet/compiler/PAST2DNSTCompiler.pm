@@ -354,7 +354,7 @@ our multi sub dnst_for(PAST::Block $block) {
     # Wrap in block prelude/postlude.
     $result.push(DNST::Temp.new(
         :name('C'), :type('Context'),
-        DNST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext", "Capture" )
+        DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", "Capture" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
     $result.push(DNST::TryFinally.new(

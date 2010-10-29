@@ -746,5 +746,42 @@ namespace Rakudo.Runtime
             Exceptions.ExceptionDispatcher.DieFromUnhandledException(TC, ExceptionObject);
             return null; // Unreachable; above call exits always.
         }
+
+        /// <summary>
+        /// Makes the outer context of the provided block be set to the current
+        /// context.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Block"></param>
+        /// <returns></returns>
+        public static RakudoObject capture_outer(ThreadContext TC, RakudoCodeRef.Instance Block)
+        {
+            Block.OuterForNextInvocation = TC.CurrentContext;
+            return Block;
+        }
+
+        /// <summary>
+        /// Creates a clone of the given code object, and makes its outer context
+        /// be set to the current context.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Block"></param>
+        /// <returns></returns>
+        public static RakudoObject new_closure(ThreadContext TC, RakudoCodeRef.Instance Block)
+        {
+            // Clone all but OuterForNextInvocation and SC (since it's a new
+            // object and doesn't live in any SC yet).
+            var NewBlock = new RakudoCodeRef.Instance(Block.STable);
+            NewBlock.Body = Block.Body;
+            NewBlock.CurrentContext = Block.CurrentContext;
+            NewBlock.Handlers = Block.Handlers;
+            NewBlock.OuterBlock = Block.OuterBlock;
+            NewBlock.Sig = Block.Sig;
+            NewBlock.StaticLexPad = Block.StaticLexPad;
+
+            // Set the outer for next invocation and return the cloned block.
+            NewBlock.OuterForNextInvocation = TC.CurrentContext;
+            return NewBlock;
+        }
     }
 }

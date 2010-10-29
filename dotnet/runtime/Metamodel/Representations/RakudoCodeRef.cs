@@ -45,6 +45,11 @@ namespace Rakudo.Metamodel.Representations
             public Context CurrentContext;
 
             /// <summary>
+            /// The outer context to use for the next invocation, if any.
+            /// </summary>
+            public Context OuterForNextInvocation;
+
+            /// <summary>
             /// Exception handlers this block has, if any.
             /// </summary>
             public Handler[] Handlers;

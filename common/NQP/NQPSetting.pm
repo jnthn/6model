@@ -21,6 +21,9 @@ knowhow NQPStr is repr('P6str') {
     method Stringy() {
         self
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
 }
 
 knowhow NQPInt is repr('P6int') {
@@ -44,6 +47,9 @@ knowhow NQPInt is repr('P6int') {
     }
     method Stringy() {
         nqp::coerce_int_to_str(self, NQPStr)
+    }
+    method defined() {
+        nqp::repr_defined(self)
     }
 }
 
@@ -69,6 +75,9 @@ knowhow NQPNum is repr('P6num') {
     method Stringy() {
         nqp::coerce_num_to_str(self, NQPStr)
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
 }
 
 knowhow NQPList is repr('P6list') {
@@ -83,6 +92,9 @@ knowhow NQPList is repr('P6list') {
     }
     method at_pos($idx) {
         nqp::lllist_get_at_pos(self, $idx.Int)
+    }
+    method defined() {
+        nqp::repr_defined(self)
     }
 }
 
@@ -102,6 +114,9 @@ knowhow NQPArray is repr('P6list') {
     method bind_pos($idx, $value) {
         nqp::lllist_bind_at_pos(self, $idx.Int, $value)
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
 }
 
 knowhow NQPHash is repr('P6mapping') {
@@ -120,11 +135,17 @@ knowhow NQPHash is repr('P6mapping') {
     method bind_key($key, $value) {
         nqp::llmapping_bind_at_key(self, $key.Str, $value)
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
 }
 
 knowhow NQPCode is repr('RakudoCodeRef') {
     method leave($with) {
         nqp::leave_block(self, $with)
+    }
+    method defined() {
+        nqp::repr_defined(self)
     }
 }
 
@@ -230,6 +251,10 @@ knowhow NQPException {
         $!message := $message;
         $!resumable := 0;
         self;
+    }
+
+    method defined() {
+        nqp::repr_defined(self)
     }
 
     method resumable() {
@@ -349,6 +374,10 @@ knowhow NQPClassHOW {
 
     method method_table($obj) {
         %!methods
+    }
+
+    method defined() {
+        nqp::repr_defined(self)
     }
 
     ##

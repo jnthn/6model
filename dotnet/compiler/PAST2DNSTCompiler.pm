@@ -172,7 +172,8 @@ sub make_blocks_init_method($name) {
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 :type('RakudoCodeRef.Instance'),
                 'null', 'null',
-                DNST::ArrayLiteral.new( :type('String') )
+                DNST::ArrayLiteral.new( :type('String') ),
+                'null'
             )
         ),
         DNST::Bind.new(
@@ -205,7 +206,8 @@ sub make_constants_init_method($name) {
                     :type('RakudoCodeRef.Instance'),
                     'null',
                     'StaticBlockInfo[1]',
-                    DNST::ArrayLiteral.new( :type('string') )
+                    DNST::ArrayLiteral.new( :type('string') ),
+                    'null'
                 ),
                 'TC.CurrentContext',
                 'null'
@@ -246,6 +248,7 @@ our multi sub dnst_for(PAST::Block $block) {
     # We'll collect all the parameter nodes and lexical declarations.
     my @*PARAMS;
     my @*LEXICALS;
+    my @*HANDLERS;
 
     # Update namespace.
     my @*CURRENT_NS;
@@ -331,7 +334,8 @@ our multi sub dnst_for(PAST::Block $block) {
                     :type('RakudoCodeRef.Instance'),
                     'null',
                     "StaticBlockInfo[$our_sbi]",
-                    DNST::ArrayLiteral.new( :type('string') )
+                    DNST::ArrayLiteral.new( :type('string') ),
+                    'null'
                 ),
                 'TC.CurrentContext',
                 'null'
@@ -382,7 +386,7 @@ our multi sub dnst_for(PAST::Block $block) {
         @*INNER_BLOCKS.push($_);
     }
 
-    # Finish geneating code setup block call.
+    # Set up body, static outer and lexicals in the code setup block call.
     $our_sbi_setup.push(DNST::New.new(
         :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
         $result.name
@@ -393,6 +397,17 @@ our multi sub dnst_for(PAST::Block $block) {
         $lex_setup.push(DNST::Literal.new( :value($_), :escape(1) ));
     }
     $our_sbi_setup.push($lex_setup);
+
+    # Add handlers.
+    if +@*HANDLERS {
+        my $handler_node := DNST::ArrayLiteral.new( :type('Exception.Handler') );
+        for @*HANDLERS {
+        }
+        $our_sbi_setup.push($handler_node);
+    }
+    else {
+        $our_sbi_setup.push('null');
+    }
 
     # Clear up this PAST::Block from the blocks list.
     @*PAST_BLOCKS.shift;

@@ -493,50 +493,44 @@ method routine_def($/) {
         $past.name($name);
         if $*SCOPE eq '' || $*SCOPE eq 'my' {
             if $*MULTINESS eq 'multi' {
-                my $chname := '!' ~ $name ~ '-candidates';
-                my $cholder;
                 # Does the current block have a candidate holder in place?
-                my %sym := @BLOCK[0].symbol($chname);
-                if %sym {
+                my $cholder;
+                my %sym := @BLOCK[0].symbol($name);
+                if %sym<cholder> {
                     $cholder := %sym<cholder>;
                 }
                 
                 # Otherwise, no candidate holder, so add one.
                 else {
                     # Check we have a proto in scope.
-                    my $found := 0;
-                    for @BLOCK {
-                        my %sym := $_.symbol($name);
-                        if %sym {
-                            if %sym<proto> {
-                                $found := 1;
-                                last;
-                            }
-                            else {
-                                $/.CURSOR.panic("multi cannot be declared when only in scope");
-                            }
-                        }
-                    }
-                    unless $found {
-                        $/.CURSOR.panic("multi cannot be declared without a proto in scope");
+                    # XXX We need to get the proto clone from outer in place
+                    # but for now just handle it being in the same block.
+                    unless %sym<proto> {
+                        $/.CURSOR.panic("Sorry, can only declare multis in the same block as a proto so far");
                     }
 
                     # Valid to add a candidate holder, so do so.
-                    $cholder := PAST::Op.new(
-                        :pasttype('call'), :name('list'),
-                    );
-                    @BLOCK[0][0].push(PAST::Var.new( :name($chname), :isdecl(1),
-                                      :viviself($cholder), :scope('lexical') ) );
-                    @BLOCK[0].symbol($chname, :cholder($cholder) );
+                    $cholder := PAST::Op.new( :pasttype('list') );
+                    @BLOCK[0][0].push(PAST::Op.new(
+                        :pasttype('nqpop'), :name('set_dispatchees'),
+                        PAST::Var.new( :name($name) ),
+                        $cholder
+                    ));
+                    @BLOCK[0].symbol($name, :cholder($cholder));
                 }
 
                 # Add this candidate to the holder.
                 $cholder.push($past);
             }
+            elsif $*MULTINESS eq 'proto' {
+                @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
+                                      :viviself($past), :scope('lexical') ) );
+                @BLOCK[0].symbol($name, :scope('lexical'), :proto(1) );
+            }
             else {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
-                @BLOCK[0].symbol($name, :scope('lexical'), :proto($*MULTINESS eq 'proto') );
+                @BLOCK[0].symbol($name, :scope('lexical') );
             }
             $past := PAST::Var.new( :name($name) );
         }

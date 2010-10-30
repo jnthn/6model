@@ -74,7 +74,6 @@
     <Compile Include="Runtime\CaptureHelper.cs" />
     <Compile Include="Runtime\Lexpad.cs" />
     <Compile Include="Runtime\MultiDispatch\DispatchCache.cs" />
-    <Compile Include="Runtime\MultiDispatch\LexicalCandidateFinder.cs" />
     <Compile Include="Runtime\MultiDispatch\MultiDispatcher.cs" />
     <Compile Include="Runtime\Ops.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

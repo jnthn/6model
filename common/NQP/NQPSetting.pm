@@ -152,7 +152,7 @@ knowhow NQPCode is repr('RakudoCodeRef') {
 ## XXX Need coercive Any fallbacks too.
 
 proto sub &infix:<==>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<==>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<==>(NQPInt $x, NQPInt $y) {
     nqp::equal_ints($x, $y)
@@ -162,7 +162,7 @@ multi sub &infix:<==>(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:<!=>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<!=>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<!=>(NQPInt $x, NQPInt $y) {
     nqp::logical_not_int(nqp::equal_ints($x, $y))
@@ -200,35 +200,35 @@ sub &prefix:<+>($x) {
 }
 
 proto sub &infix:<+>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<+>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<+>(NQPInt $x, NQPInt $y) {
     nqp::add_int($x, $y);
 }
 
 proto sub &infix:<->($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<->");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<->(NQPInt $x, NQPInt $y) {
     nqp::sub_int($x, $y);
 }
 
 proto sub &infix:<*>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<*>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<*>(NQPInt $x, NQPInt $y) {
     nqp::mul_int($x, $y);
 }
 
 proto sub &infix:</>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:</>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:</>(NQPInt $x, NQPInt $y) {
     nqp::div_int($x, $y);
 }
 
 proto sub &infix:<%>($x, $y) {
-    nqp::multi_dispatch_over_lexical_candidates("&infix:<%>");
+    nqp::multi_dispatch_over_lexical_candidates();
 }
 multi sub &infix:<%>(NQPInt $x, NQPInt $y) {
     nqp::mod_int($x, $y);

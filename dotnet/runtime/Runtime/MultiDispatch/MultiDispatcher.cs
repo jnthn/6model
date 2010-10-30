@@ -20,7 +20,7 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <param name="Candidates"></param>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static RakudoCodeRef.Instance FindBestCandidate(List<RakudoCodeRef.Instance> Candidates, RakudoObject Capture)
+        public static RakudoCodeRef.Instance FindBestCandidate(RakudoObject[] Candidates, RakudoObject Capture)
         {
             // Sort the candidates.
             // XXX Cache this in the future.
@@ -33,7 +33,7 @@ namespace Rakudo.Runtime.MultiDispatch
             // Now go through the sorted candidates and find the first one that
             // matches.
             var PossiblesList = new List<RakudoCodeRef.Instance>();
-            foreach (var Candidate in SortedCandidates)
+            foreach (RakudoCodeRef.Instance Candidate in SortedCandidates)
             {
                 // If we hit a null, we're at the end of a group.
                 if (Candidate == null)
@@ -81,9 +81,9 @@ namespace Rakudo.Runtime.MultiDispatch
         /// </summary>
         /// <param name="Unsorted"></param>
         /// <returns></returns>
-        private static List<RakudoCodeRef.Instance> Sort(List<RakudoCodeRef.Instance> Unsorted)
+        private static List<RakudoObject> Sort(RakudoObject[] Unsorted)
         {
-            var Sorted = new List<RakudoCodeRef.Instance>(Unsorted);
+            var Sorted = new List<RakudoObject>(Unsorted);
             Sorted.Add(null);
             return Sorted;
         }

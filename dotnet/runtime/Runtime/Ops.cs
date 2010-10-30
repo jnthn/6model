@@ -516,20 +516,48 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Entry point to multi-dispatch over the candidates in the inner
-        /// dispatcher.
+        /// Entry point to multi-dispatch over the current dispatchee list.
         /// </summary>
         /// <param name="TC"></param>
         /// <returns></returns>
-        public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext TC, RakudoObject Name)
+        public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext TC)
         {
-            var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
-                MultiDispatch.LexicalCandidateFinder.FindCandidates(
-                    TC.CurrentContext.Caller,
-                    TC.CurrentContext.Outer,
-                    "!" + Ops.unbox_str(TC, Name) + "-candidates"),
-                TC.CurrentContext.Capture);
-            return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);
+            var CurOuter = TC.CurrentContext;
+            while (CurOuter != null)
+            {
+                var Dispatchees = CurOuter.StaticCodeObject.Dispatchees;
+                if (Dispatchees != null)
+                {
+                    var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
+                        Dispatchees, TC.CurrentContext.Capture);
+                    return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);
+                }
+                CurOuter = CurOuter.Outer;
+            }
+            throw new Exception("Could not find dispatchee list!");
+        }
+
+        /// <summary>
+        /// Sets the dispatches of the given code object. Expects something with
+        /// RakudoCodeRef and P6list representation respectively.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="CodeObject"></param>
+        /// <param name="Dispatchees"></param>
+        /// <returns></returns>
+        public static RakudoObject set_dispatchees(ThreadContext TC, RakudoObject CodeObject, RakudoObject Dispatchees)
+        {
+            var Code = CodeObject as RakudoCodeRef.Instance;
+            var DispatchList = Dispatchees as P6list.Instance;
+            if (Code != null && DispatchList != null)
+            {
+                Code.Dispatchees = DispatchList.Storage.ToArray();
+                return Code;
+            }
+            else
+            {
+                throw new Exception("set_dispatchees must be passed a RakudoCodeRef and a P6list.");
+            }
         }
 
         /// <summary>
@@ -774,7 +802,8 @@ namespace Rakudo.Runtime
             var NewBlock = new RakudoCodeRef.Instance(Block.STable);
             NewBlock.Body = Block.Body;
             NewBlock.CurrentContext = Block.CurrentContext;
-            NewBlock.Handlers = Block.Handlers;
+            NewBlock.Dispatchees = Block.Dispatchees;
+            NewBlock.Handlers = Block.Handlers;            
             NewBlock.OuterBlock = Block.OuterBlock;
             NewBlock.Sig = Block.Sig;
             NewBlock.StaticLexPad = Block.StaticLexPad;

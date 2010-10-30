@@ -8,14 +8,16 @@ using Rakudo.Runtime.Exceptions;
 namespace Rakudo.Metamodel.Representations
 {
     /// <summary>
-    /// A representation for low-level code references. This is something
-    /// specific to this Rakudo backend, not something standard accross all
-    /// Rakudo backends.
+    /// A representation for a low-level code object (something that actually
+    /// references a piece of code that we'll run). This is used for things
+    /// that serve the role of an only sub (that has a body) and a dispatcher
+    /// (which has a body as well as a list of candidates that it operates
+    /// on).
     /// </summary>
     public sealed class RakudoCodeRef : Representation
     {
         /// <summary>
-        /// This is how the boxed form of a P6str looks.
+        /// Instance that uses the RakudoCodeRef representation.
         /// </summary>
         public sealed class Instance : RakudoObject
         {
@@ -40,6 +42,17 @@ namespace Rakudo.Metamodel.Representations
             public Signature Sig;
 
             /// <summary>
+            /// Exception handlers this block has, if any.
+            /// </summary>
+            public Handler[] Handlers;
+
+            /// <summary>
+            /// If this is a dispatcher, this is the list of dispatchees that
+            /// it will operate over.
+            /// </summary>
+            public RakudoObject[] Dispatchees;
+
+            /// <summary>
             /// The context currently using this sub.
             /// </summary>
             public Context CurrentContext;
@@ -48,11 +61,6 @@ namespace Rakudo.Metamodel.Representations
             /// The outer context to use for the next invocation, if any.
             /// </summary>
             public Context OuterForNextInvocation;
-
-            /// <summary>
-            /// Exception handlers this block has, if any.
-            /// </summary>
-            public Handler[] Handlers;
             
             /// <summary>
             /// Creates a new instance with the given S-Table.

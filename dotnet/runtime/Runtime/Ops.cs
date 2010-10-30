@@ -545,11 +545,11 @@ namespace Rakudo.Runtime
             var CurOuter = TC.CurrentContext;
             while (CurOuter != null)
             {
-                var Dispatchees = CurOuter.StaticCodeObject.Dispatchees;
-                if (Dispatchees != null)
+                var CodeObj = CurOuter.StaticCodeObject;
+                if (CodeObj.Dispatchees != null)
                 {
                     var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
-                        Dispatchees, TC.CurrentContext.Capture);
+                        CodeObj, TC.CurrentContext.Capture);
                     return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);
                 }
                 CurOuter = CurOuter.Outer;

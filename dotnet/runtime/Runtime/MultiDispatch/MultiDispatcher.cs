@@ -20,11 +20,11 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <param name="Candidates"></param>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static RakudoCodeRef.Instance FindBestCandidate(RakudoObject[] Candidates, RakudoObject Capture)
+        public static RakudoCodeRef.Instance FindBestCandidate(RakudoCodeRef.Instance DispatchRoutine, RakudoObject Capture)
         {
             // Sort the candidates.
             // XXX Cache this in the future.
-            var SortedCandidates = Sort(Candidates);
+            var SortedCandidates = Sort(DispatchRoutine.Dispatchees);
 
             // Extract the native capture.
             // XXX Handle non-native captures too.

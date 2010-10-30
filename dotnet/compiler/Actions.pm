@@ -485,9 +485,18 @@ method routine_declarator:sym<sub>($/) { make $<routine_def>.ast; }
 method routine_declarator:sym<method>($/) { make $<method_def>.ast; }
 
 method routine_def($/) {
-    my $past := $<blockoid>.ast;
-    $past.blocktype('declaration');
-    $past.control('return_pir');
+    # If it's just got * as a body, make a multi-dispatch enterer.
+    # Otherwise, need to build a sub.
+    my $past;
+    if $<onlystar> {
+        $past := only_star_block();
+    }
+    else {
+        $past := $<blockoid>.ast;
+        $past.blocktype('declaration');
+        $past.control('return_pir');
+    }
+
     if $<deflongname> {
         my $name := ~$<sigil>[0] ~ $<deflongname>[0].ast;
         $past.name($name);
@@ -569,13 +578,19 @@ method routine_def($/) {
 
 
 method method_def($/) {
-    # Build method block PAST.
-    my $past := $<blockoid>.ast;
-    $past.blocktype('declaration');
-    if $*SCOPE eq 'our' {
-        $past.pirflags(':nsentry');
+    # If it's just got * as a body, make a multi-dispatch enterer.
+    # Otherwise, build method block PAST.
+    my $past;
+    if $<onlystar> {
+        $past := only_star_block();
     }
-    $past.control('return_pir');
+    else {
+        $past := $<blockoid>.ast;
+        $past.blocktype('declaration');
+        $past.control('return_pir');
+    }
+
+    # Always need an invocant.
     $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
     $past.symbol('self', :scope('lexical') );
     
@@ -598,6 +613,14 @@ method method_def($/) {
     make $past;
 }
 
+sub only_star_block() {
+    my $past := @BLOCK.shift;
+    $past.closure(1);
+    $past.push(PAST::Op.new(
+        :pasttype('nqpop'), :name('multi_dispatch_over_lexical_candidates')
+    ));
+    $past
+}
 
 method signature($/) {
     my $BLOCKINIT := @BLOCK[0][0];

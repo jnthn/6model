@@ -328,7 +328,10 @@ rule routine_def {
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
-    <blockoid>
+    [
+    | <onlystar>
+    | <blockoid>
+    ]
 }
 
 rule method_def {
@@ -336,7 +339,17 @@ rule method_def {
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
-    <blockoid>
+    [
+    | <onlystar>
+    | <blockoid>
+    ]
+}
+
+token onlystar {
+    <?{ $*MULTINESS eq 'proto' }>
+    '{' <.ws> '*' <.ws> '}'
+    <?ENDSTMT>
+    <.finishpad>
 }
 
 proto token multi_declarator { <...> }

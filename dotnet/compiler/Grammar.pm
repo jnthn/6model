@@ -437,6 +437,11 @@ token term:sym<nqp::op> {
     'nqp::' $<op>=[\w+] <args>?
 }
 
+token term:sym<onlystar> {
+    '{*}' <?ENDSTMT>
+    [ <?{ $*MULTINESS eq 'proto' }> || <.panic: '{*} may only appear in proto'> ]
+}
+
 token args {
     | '(' <arglist> ')'
 }

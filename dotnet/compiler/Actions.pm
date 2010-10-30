@@ -848,6 +848,12 @@ method term:sym<nqp::op>($/) {
     make $past;
 }
 
+method term:sym<onlystar>($/) {
+    make PAST::Op.new(
+        :pasttype('nqpop'), :name('multi_dispatch_over_lexical_candidates')
+    );
+}
+
 method args($/) { make $<arglist>.ast; }
 
 method arglist($/) {

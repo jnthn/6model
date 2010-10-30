@@ -17,5 +17,17 @@ namespace Rakudo.Runtime.Exceptions
         /// Something invokable that will handle the exception.
         /// </summary>
         public RakudoObject HandleBlock;
+
+        /// <summary>
+        /// Set up a handler of the given type and with the given block as
+        /// the handler to run.
+        /// </summary>
+        /// <param name="Type"></param>
+        /// <param name="HandleBlock"></param>
+        public Handler(int Type, RakudoObject HandleBlock)
+        {
+            this.Type = Type;
+            this.HandleBlock = HandleBlock;
+        }
     }
 }

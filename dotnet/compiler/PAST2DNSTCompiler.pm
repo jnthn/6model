@@ -172,8 +172,7 @@ sub make_blocks_init_method($name) {
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 :type('RakudoCodeRef.Instance'),
                 'null', 'null',
-                DNST::ArrayLiteral.new( :type('String') ),
-                'null'
+                DNST::ArrayLiteral.new( :type('String') )
             )
         ),
         DNST::Bind.new(
@@ -206,8 +205,7 @@ sub make_constants_init_method($name) {
                     :type('RakudoCodeRef.Instance'),
                     'null',
                     'StaticBlockInfo[1]',
-                    DNST::ArrayLiteral.new( :type('string') ),
-                    'null'
+                    DNST::ArrayLiteral.new( :type('string') )
                 ),
                 'TC.CurrentContext',
                 'null'
@@ -316,8 +314,33 @@ our multi sub dnst_for(PAST::Block $block) {
         }
     }
 
+    # If we have a return handler, add it.
+    if $block.control eq 'return_pir' {
+        my $*OUTER_SBI := $our_sbi;
+        my @*INNER_BLOCKS;
+        my %handler;
+        %handler<type> := 57;
+        %handler<code> := dnst_for(PAST::Block.new(PAST::Stmts.new(
+            PAST::Var.new( :name('$!'), :scope('parameter') ),
+            DNST::MethodCall.new(
+                :on('Ops'), :name('leave_block'),
+                'TC',
+                DNST::Literal.new( :value('TC.CurrentContext.Outer.StaticCodeObject') ),
+                dnst_for(PAST::Var.new( :name('$!'), :scope('lexical') ))
+            )
+        )));
+        $stmts.unshift(%handler<code>); # To get the right lexical context.
+        for @*INNER_BLOCKS {
+            @inner_blocks.push($_);
+        }
+        @*HANDLERS.push(%handler);
+    }
+
+
     # Add signature generation/setup. We need to do this in the
-    # correct lexical scope.
+    # correct lexical scope. Also this is handy place to set up
+    # the handlers; keep a placeholder for that.
+    my $handlers_setup_placeholder := DNST::Stmts.new();
     my $sig_setup_block := get_unique_id('block');
     my @params;
     @params.push('ThreadContext TC');
@@ -335,7 +358,6 @@ our multi sub dnst_for(PAST::Block $block) {
                     'null',
                     "StaticBlockInfo[$our_sbi]",
                     DNST::ArrayLiteral.new( :type('string') ),
-                    'null'
                 ),
                 'TC.CurrentContext',
                 'null'
@@ -346,6 +368,7 @@ our multi sub dnst_for(PAST::Block $block) {
             "StaticBlockInfo[$our_sbi].Sig",
             compile_signature(@*PARAMS)
         ),
+        $handlers_setup_placeholder,
         DNST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
     @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), 'TC' ));
@@ -369,7 +392,7 @@ our multi sub dnst_for(PAST::Block $block) {
             DNST::Stmts.new(
                 DNST::If.new(
                     DNST::Literal.new(
-                        :value("(exc.TargetBlock != StaticBlockInfo[$our_sbi] ? 1 : 0)")
+                        :value("(exc.TargetBlock != Block ? 1 : 0)")
                     ),
                     DNST::Throw.new()
                 ),
@@ -400,13 +423,18 @@ our multi sub dnst_for(PAST::Block $block) {
 
     # Add handlers.
     if +@*HANDLERS {
-        my $handler_node := DNST::ArrayLiteral.new( :type('Exception.Handler') );
+        my $handler_node := DNST::ArrayLiteral.new( :type('Rakudo.Runtime.Exceptions.Handler') );
         for @*HANDLERS {
+            $handler_node.push(DNST::New.new(
+                :type('Rakudo.Runtime.Exceptions.Handler'),
+                DNST::Literal.new( :value($_<type>) ),
+                $_<code>
+            ));
         }
-        $our_sbi_setup.push($handler_node);
-    }
-    else {
-        $our_sbi_setup.push('null');
+        $handlers_setup_placeholder.push(DNST::Bind.new(
+            "StaticBlockInfo[$our_sbi].Handlers",
+            $handler_node
+        ));
     }
 
     # Clear up this PAST::Block from the blocks list.

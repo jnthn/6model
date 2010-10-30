@@ -299,7 +299,7 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Gets a lexical variable of the given name.
         /// </summary>
-        /// <param name="i"></param>
+        /// <param name="TC"></param>
         /// <param name="name"></param>
         /// <returns></returns>
         public static RakudoObject get_lex(ThreadContext TC, string Name)
@@ -316,9 +316,29 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Gets a lexical variable of the given name, but skips the current
+        /// scope.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static RakudoObject get_lex_skip_current(ThreadContext TC, string Name)
+        {
+            var CurContext = TC.CurrentContext.Outer;
+            while (CurContext != null)
+            {
+                int Index;
+                if (CurContext.LexPad.SlotMapping.TryGetValue(Name, out Index))
+                    return CurContext.LexPad.Storage[Index];
+                CurContext = CurContext.Outer;
+            }
+            throw new InvalidOperationException("No variable " + Name + " found in the lexical scope");
+        }
+
+        /// <summary>
         /// Binds the given value to a lexical variable of the given name.
         /// </summary>
-        /// <param name="i"></param>
+        /// <param name="TC"></param>
         /// <param name="name"></param>
         /// <returns></returns>
         public static RakudoObject bind_lex(ThreadContext TC, string Name, RakudoObject Value)

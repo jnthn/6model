@@ -832,6 +832,14 @@ our multi sub dnst_for(PAST::Var $var) {
             return emit_lexical_lookup($var.name);
         }
     }
+    elsif $scope eq 'outer' {
+        if $var.isdecl {
+            pir::die("Cannot use isdecl when scope is 'outer'.");
+        }
+        else {
+            return emit_outer_lexical_lookup($var.name);
+        }
+    }
     elsif $scope eq 'contextual' {
         if $var.isdecl {
             return declare_lexical($var);
@@ -1022,6 +1030,20 @@ sub emit_lexical_lookup($name) {
     if $*BIND_CONTEXT {
         $lookup.push($*BIND_VALUE);
     }
+    $lookup
+}
+
+# Emits a lookup of a lexical in a scope outside the present one.
+sub emit_outer_lexical_lookup($name) {
+    if $*BIND_CONTEXT {
+        pir::die("Cannot bind to something using scope 'outer'.");
+    }
+    my $lookup := DNST::MethodCall.new(
+        :on('Ops'), :name('get_lex_skip_current'),
+        :type('RakudoObject'),
+        'TC',
+        DNST::Literal.new( :value($name), :escape(1) )
+    );
     $lookup
 }
 

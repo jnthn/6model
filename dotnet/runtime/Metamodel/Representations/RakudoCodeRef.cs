@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rakudo.Runtime;
+using Rakudo.Runtime.MultiDispatch;
 using Rakudo.Runtime.Exceptions;
 
 namespace Rakudo.Metamodel.Representations
@@ -51,6 +52,11 @@ namespace Rakudo.Metamodel.Representations
             /// it will operate over.
             /// </summary>
             public RakudoObject[] Dispatchees;
+
+            /// <summary>
+            /// Multiple dispatch cache, if we have one.
+            /// </summary>
+            internal DispatchCache MultiDispatchCache;
 
             /// <summary>
             /// The context currently using this sub.

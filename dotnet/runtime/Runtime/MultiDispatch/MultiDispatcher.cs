@@ -20,15 +20,23 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <param name="Candidates"></param>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static RakudoCodeRef.Instance FindBestCandidate(RakudoCodeRef.Instance DispatchRoutine, RakudoObject Capture)
+        public static RakudoObject FindBestCandidate(RakudoCodeRef.Instance DispatchRoutine, RakudoObject Capture)
         {
-            // Sort the candidates.
-            // XXX Cache this in the future.
-            var SortedCandidates = Sort(DispatchRoutine.Dispatchees);
-
             // Extract the native capture.
             // XXX Handle non-native captures too.
             var NativeCapture = Capture as P6capture.Instance;
+
+            // First, try the dispatch cache.
+            if (DispatchRoutine.MultiDispatchCache != null && NativeCapture.Nameds == null)
+            {
+                var CacheResult = DispatchRoutine.MultiDispatchCache.Lookup(NativeCapture.Positionals);
+                if (CacheResult != null)
+                    return CacheResult;
+            }
+
+            // Sort the candidates.
+            // XXX Cache this in the future.
+            var SortedCandidates = Sort(DispatchRoutine.Dispatchees);
 
             // Now go through the sorted candidates and find the first one that
             // matches.
@@ -39,12 +47,26 @@ namespace Rakudo.Runtime.MultiDispatch
                 if (Candidate == null)
                 {
                     if (PossiblesList.Count == 1)
+                    {
+                        // We have an unambiguous first candidate. Cache if possible and
+                        // return it.
+                        if (NativeCapture.Nameds == null)
+                        {
+                            if (DispatchRoutine.MultiDispatchCache == null)
+                                DispatchRoutine.MultiDispatchCache = new DispatchCache();
+                            DispatchRoutine.MultiDispatchCache.Add(NativeCapture.Positionals, PossiblesList[0]);
+                        }
                         return PossiblesList[0];
+                    }
                     else if (PossiblesList.Count > 1)
+                    {
                         // Here is where you'd handle constraints.
                         throw new Exception("Ambiguous dispatch: more than one candidate matches");
+                    }
                     else
+                    {
                         continue;
+                    }
                 }
                 
                 /* Check if it's admissable by arity. */

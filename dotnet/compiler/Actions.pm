@@ -503,29 +503,55 @@ method routine_def($/) {
                 # Otherwise, no candidate holder, so add one.
                 else {
                     # Check we have a proto in scope.
-                    # XXX We need to get the proto clone from outer in place
-                    # but for now just handle it being in the same block.
-                    unless %sym<proto> {
-                        $/.CURSOR.panic("Sorry, can only declare multis in the same block as a proto so far");
+                    if %sym<proto> {
+                        # WTF, a proto is in this scope, but didn't set up a
+                        # candidate holder?!
+                        $/.CURSOR.panic('Internal Error: Current scope has a proto, but no candidate list holder was set up. (This should never happen.)');
+                    }
+                    my $found_proto;
+                    for @BLOCK {
+                        my %sym := $_.symbol($name);
+                        if %sym<proto> || %sym<cholder> {
+                            $found_proto := 1;
+                        }
+                        elsif %sym {
+                            $/.CURSOR.panic("Cannot declare a multi when an only is already in scope.");
+                        }
                     }
 
-                    # Valid to add a candidate holder, so do so.
+                    # If we didn't find a proto, error for now.
+                    unless $found_proto {
+                        $/.CURSOR.panic("Sorry, no proto sub in scope, and auto-generation of protos is not yet implemented.");
+                    }
+
+                    # Set up dispatch routine in this scope.
                     $cholder := PAST::Op.new( :pasttype('list') );
-                    @BLOCK[0][0].push(PAST::Op.new(
-                        :pasttype('nqpop'), :name('set_dispatchees'),
-                        PAST::Var.new( :name($name) ),
+                    my $dispatch_setup := PAST::Op.new(
+                        :pasttype('nqpop'), :name('create_dispatch_and_add_candidates'),
+                        PAST::Var.new( :name($name), :scope('outer') ),
                         $cholder
-                    ));
-                    @BLOCK[0].symbol($name, :cholder($cholder));
+                    );
+                    @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
+                                      :viviself($dispatch_setup), :scope('lexical') ) );
+                    @BLOCK[0].symbol($name, :scope('lexical'), :cholder($cholder) );
                 }
 
                 # Add this candidate to the holder.
                 $cholder.push($past);
             }
             elsif $*MULTINESS eq 'proto' {
+                # Create a candidate list holder for the dispatchees
+                # this proto will work over, and install them along
+                # with the proto.
+                my $cholder := PAST::Op.new( :pasttype('list') );
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
-                @BLOCK[0].symbol($name, :scope('lexical'), :proto(1) );
+                @BLOCK[0][0].push(PAST::Op.new(
+                    :pasttype('nqpop'), :name('set_dispatchees'),
+                    PAST::Var.new( :name($name) ),
+                    $cholder
+                ));
+                @BLOCK[0].symbol($name, :scope('lexical'), :proto(1), :cholder($cholder) );
             }
             else {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),

@@ -549,8 +549,8 @@ namespace Rakudo.Runtime
                 if (CodeObj.Dispatchees != null)
                 {
                     var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
-                        CodeObj, TC.CurrentContext.Capture);
-                    return Candidate.STable.Invoke(TC, Candidate, TC.CurrentContext.Capture);
+                        CodeObj, CurOuter.Capture);
+                    return Candidate.STable.Invoke(TC, Candidate, CurOuter.Capture);
                 }
                 CurOuter = CurOuter.Outer;
             }

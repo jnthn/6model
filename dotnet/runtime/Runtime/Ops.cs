@@ -625,6 +625,49 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Adds a single new candidate to the end of a dispatcher's candidate
+        /// list.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Dispatcher"></param>
+        /// <param name="Dispatchee"></param>
+        /// <returns></returns>
+        public static RakudoObject push_dispatchee(ThreadContext TC, RakudoObject Dispatcher, RakudoObject Dispatchee)
+        {
+            // Validate that we've got something we can push a new dispatchee on to.
+            var Target = Dispatcher as RakudoCodeRef.Instance;
+            if (Target == null)
+                throw new Exception("push_dispatchee expects a RakudoCodeRef");
+            if (Target.Dispatchees == null)
+                throw new Exception("push_dispatchee passed something that is not a dispatcher");
+
+            // Add it.
+            var NewList = new RakudoObject[Target.Dispatchees.Length + 1];
+            for (int i = 0; i < Target.Dispatchees.Length; i++)
+                NewList[i] = Target.Dispatchees[i];
+            NewList[Target.Dispatchees.Length] = Dispatchee;
+            Target.Dispatchees = NewList;
+
+            return Target;
+        }
+
+        /// <summary>
+        /// Checks if a routine is considered a dispatcher (that is, if it has a
+        /// candidate list).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Check"></param>
+        /// <returns></returns>
+        public static RakudoObject is_dispatcher(ThreadContext TC, RakudoObject Check)
+        {
+            var Checkee = Check as RakudoCodeRef.Instance;
+            if (Checkee != null && Checkee.Dispatchees != null)
+                return Ops.box_int(TC, 1, TC.DefaultBoolBoxType);
+            else
+                return Ops.box_int(TC, 0, TC.DefaultBoolBoxType);
+        }
+
+        /// <summary>
         /// Gets a value at a given positional index from a low level list
         /// (something that uses the P6list representation).
         /// </summary>

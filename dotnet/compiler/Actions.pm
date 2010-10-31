@@ -687,6 +687,11 @@ method parameter($/) {
         $past.multitype($<typename>[0].ast);
     }
 
+    # Set definedness flag (XXX perhaps want a better way to do this).
+    if $<definedness> {
+        $past<definedness> := ~$<definedness>[0];
+    }
+
     make $past;
 }
 

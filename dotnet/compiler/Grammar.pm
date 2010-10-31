@@ -371,7 +371,7 @@ token multi_declarator:sym<null> {
 token signature { [ [<.ws><parameter><.ws>] ** ',' ]? }
 
 token parameter {
-    [ <typename> <.ws> ]*                   # <type_constraint>
+    [ <typename> [ ':' $<definedness>=<[_DU]> ]? <.ws> ]*                   # <type_constraint>
     [
     | $<quant>=['*'] <param_var>
     | [ <param_var> | <named_param> ] $<quant>=['?'|'!'|<?>]

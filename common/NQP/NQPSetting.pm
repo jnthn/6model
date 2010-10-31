@@ -288,7 +288,7 @@ knowhow NQPClassHOW {
     has $!name;
 
     # Attributes, methods, parents and roles directly added.
-    has %!attributes;
+    has @!attributes;
     has %!methods;
     has @!parents;
     has @!roles;
@@ -315,9 +315,15 @@ knowhow NQPClassHOW {
         nqp::instance_of(self).BUILD()
     }
 
+    method CREATE($obj) {
+        nqp::instance_of($obj)
+    }
+
     method BUILD() {
         $!composed := 0;
         %!methods := NQPHash.new;
+        @!attributes := NQPArray.new;
+        @!parents := NQPArray.new;
         self;
     }
 
@@ -337,6 +343,34 @@ knowhow NQPClassHOW {
         %!methods{$name} := $code_obj;
     }
 
+    method add_attribute($obj, $meta_attr) {
+        if $!composed {
+            die("NQPClassHOW does not support adding attributes after being composed.");
+        }
+        my $i := 0;
+        while $i != +@!attributes {
+            if @!attributes[$i].name eq $meta_attr.name {
+                die("Already have an attribute named " ~ $meta_attr.name);
+            }
+            $i := $i + 1;
+        }
+        @!attributes[+@!attributes] := $meta_attr;
+    }
+
+    method add_parent($obj, $parent) {
+        if $!composed {
+            pir::die("NQPClassHOW does not support adding parents after being composed.");
+        }
+        my $i := 0;
+        while $i != +@!parents {
+            if @!parents[$i] =:= $parent {
+                die("Already have " ~ $parent ~ " as a parent class.");
+            }
+            $i := $i + 1;
+        }
+        @!parents[+@!parents] := $parent;
+    }
+
     method compose($obj) {
         # XXX TODO: Compose roles, compose attributes.
 
@@ -351,10 +385,27 @@ knowhow NQPClassHOW {
     }
 
     # XXX TODO: Get enough working to bring over the C3 implementation that
-    # we run on 6model on Parrot.
+    # we run on 6model on Parrot. For now, we only build it for single
+    # inheritance since it's obvious how to do it.
     sub compute_c3_mro($obj) {
+        # MRO starts with this object.
         my @mro;
         @mro[0] := $obj;
+        
+        # Now add all parents until we have none.
+        my $cur_obj := $obj;
+        my @parents := $cur_obj.HOW.parents($cur_obj, :local(1));
+        while +@parents {
+            if +@parents == 1 {
+                @mro[+@mro] := $cur_obj := @parents[0];
+                @parents := $cur_obj.HOW.parents($cur_obj, :local(1));
+            }
+            else {
+                die("Sorry, multiple inheritance is not yet implemented.");
+            }
+        }
+
+        # Return MRO.
         @mro;
     }
 
@@ -362,8 +413,16 @@ knowhow NQPClassHOW {
     ## Introspecty
     ##
 
+    method attributes($obj, :$local!) {
+        @!attributes
+    }
+
     method method_table($obj) {
         %!methods
+    }
+
+    method parents($obj, :$local!) {
+        @!parents
     }
 
     method defined() {
@@ -375,10 +434,33 @@ knowhow NQPClassHOW {
     ##
 
     method find_method($obj, $name) {
-        # XXX TODO Epic cheat, replace with that's in the ClassHOW that we
-        # run on Parrot. Needs auto-viv, .defined, return.
-        my %meths := @!mro[0].HOW.method_table($obj);
-        %meths{$name}
+        my $i := 0;
+        my $mro_length := +@!mro;
+        while $i != $mro_length {
+            my %meths := @!mro[$i].HOW.method_table($obj);
+            my $found := %meths{$name};
+            if $found.defined {
+                return $found;
+            }
+            $i := $i + 1;
+        }
+        die("Could not find method " ~ $name);
+    }
+}
+
+# A simple attribute meta-object.
+knowhow NQPAttribute {
+    has $!name;
+    method new(:$name) {
+        my $obj := nqp::instance_of(self);
+        $obj.BUILD(:name($name));
+        $obj
+    }
+    method BUILD(:$name) {
+        $!name := $name
+    }
+    method name() {
+        $!name
     }
 }
 

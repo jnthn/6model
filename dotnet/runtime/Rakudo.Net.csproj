@@ -78,6 +78,7 @@
     <Compile Include="Runtime\Ops.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime\CodeObjectUtility.cs" />
+    <Compile Include="Runtime\Signatures\DefinednessConstraint.cs" />
     <Compile Include="Runtime\Signatures\Parameter.cs" />
     <Compile Include="Runtime\Signatures\Signature.cs" />
     <Compile Include="Runtime\Signatures\SignatureBinder.cs" />

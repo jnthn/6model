@@ -501,6 +501,11 @@ sub compile_signature(@params) {
             $_.named                ?? 'Parameter.NAMED_FLAG'                           !!
             'Parameter.POS_FLAG');
 
+        # Definedness constraint.
+        $param.push($_<definedness> eq 'D' ?? 'DefinednessConstraint.DefinedOnly' !!
+                    $_<definedness> eq 'U' ?? 'DefinednessConstraint.UndefinedOnly' !!
+                    'DefinednessConstraint.None');
+
         $params.push($param);
     }
 

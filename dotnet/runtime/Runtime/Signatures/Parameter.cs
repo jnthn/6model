@@ -18,19 +18,26 @@ namespace Rakudo.Runtime
         /// <param name="VariableName"></param>
         /// <param name="Name"></param>
         /// <param name="Flags"></param>
-        public Parameter(RakudoObject Type, string VariableName, int VariableLexpadPosition, string Name, int Flags)
+        public Parameter(RakudoObject Type, string VariableName, int VariableLexpadPosition,
+            string Name, int Flags, DefinednessConstraint Definedness)
         {
             this.Type = Type;
             this.VariableName = VariableName;
             this.VariableLexpadPosition = VariableLexpadPosition;
             this.Name = Name;
             this.Flags = Flags;
+            this.Definedness = Definedness;
         }
 
         /// <summary>
         /// The type of the parameter.
         /// </summary>
         public RakudoObject Type;
+
+        /// <summary>
+        /// Whether a defined or undefined value is required.
+        /// </summary>
+        public DefinednessConstraint Definedness;
 
         /// <summary>
         /// The name of the lexical to bind the parameter to.

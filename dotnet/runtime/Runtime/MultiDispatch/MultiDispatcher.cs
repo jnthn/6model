@@ -75,7 +75,7 @@ namespace Rakudo.Runtime.MultiDispatch
                     NumArgs > Candidate.Sig.NumPositionals)
                     continue;
 
-                /* Check if it's admissable by type. */
+                /* Check if it's admissable by types and definedness. */
                 var TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals);
                 var TypeMismatch = false;
                 for (int i = 0; i < TypeCheckCount; i++) {
@@ -85,6 +85,17 @@ namespace Rakudo.Runtime.MultiDispatch
                     {
                         TypeMismatch = true;
                         break;
+                    }
+                    var Definedness = Candidate.Sig.Parameters[i].Definedness;
+                    if (Definedness != DefinednessConstraint.None)
+                    {
+                        var ArgDefined = Arg.STable.REPR.defined(null, Arg);
+                        if (Definedness == DefinednessConstraint.DefinedOnly && !ArgDefined ||
+                            Definedness == DefinednessConstraint.UndefinedOnly && ArgDefined)
+                        {
+                            TypeMismatch = true;
+                            break;
+                        }
                     }
                 }
                 if (TypeMismatch)

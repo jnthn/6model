@@ -696,6 +696,7 @@ sub is_lexical($name) {
     %setting_names<NQPList>          := 1;
     %setting_names<NQPArray>         := 1;
     %setting_names<NQPHash>          := 1;
+    %setting_names<Any>              := 1;
     if %setting_names{$name} {
         return 1;
     }

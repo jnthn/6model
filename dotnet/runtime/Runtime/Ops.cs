@@ -769,6 +769,21 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// If the first passed object reference is not null, returns it. Otherwise,
+        /// returns the second passed object reference. (Note, we should one day drop
+        /// this and implement it as a compiler transformation, to avoid having to
+        /// look up the thing to vivify).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Check"></param>
+        /// <param name="VivifyWith"></param>
+        /// <returns></returns>
+        public static RakudoObject vivify(ThreadContext TC, RakudoObject Check, RakudoObject VivifyWith)
+        {
+            return Check ?? VivifyWith;
+        }
+
+        /// <summary>
         /// Leaves the specified block, returning the specified value from it. This
         /// unwinds the stack.
         /// </summary>

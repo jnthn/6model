@@ -80,6 +80,11 @@ knowhow NQPNum is repr('P6num') {
     }
 }
 
+# XXX Bad hack, we'll replace this later.
+knowhow Any {
+    method defined() { 0 }
+}
+
 knowhow NQPList is repr('P6list') {
     method new() {
         nqp::instance_of(self.WHAT)
@@ -91,7 +96,7 @@ knowhow NQPList is repr('P6list') {
         self.elems
     }
     method at_pos($idx) {
-        nqp::lllist_get_at_pos(self, $idx.Int)
+        nqp::vivify(nqp::lllist_get_at_pos(self, $idx.Int), Any)
     }
     method defined() {
         nqp::repr_defined(self)
@@ -109,7 +114,7 @@ knowhow NQPArray is repr('P6list') {
         nqp::lllist_elems(self)
     }
     method at_pos($idx) {
-        nqp::lllist_get_at_pos(self, $idx.Int)
+        nqp::vivify(nqp::lllist_get_at_pos(self, $idx.Int), Any)
     }
     method bind_pos($idx, $value) {
         nqp::lllist_bind_at_pos(self, $idx.Int, $value)
@@ -130,7 +135,7 @@ knowhow NQPHash is repr('P6mapping') {
         nqp::llmapping_elems(self)
     }
     method at_key($key) {
-        nqp::llmapping_get_at_key(self, $key.Str)
+        nqp::vivify(nqp::llmapping_get_at_key(self, $key.Str), Any)
     }
     method bind_key($key, $value) {
         nqp::llmapping_bind_at_key(self, $key.Str, $value)
@@ -326,10 +331,9 @@ knowhow NQPClassHOW {
     }
 
     method add_method($obj, $name, $code_obj) {
-        # XXX TODO This crashes due to lack of auto-viv. :/
-        #if %!methods{$name} {
-        #    die("This class already has a method named " ~ $name);
-        #}
+        if %!methods{$name}.defined {
+            die("This class already has a method named " ~ $name);
+        }
         %!methods{$name} := $code_obj;
     }
 
@@ -376,10 +380,6 @@ knowhow NQPClassHOW {
         my %meths := @!mro[0].HOW.method_table($obj);
         %meths{$name}
     }
-}
-
-# XXX Bad hack, we'll replace this later.
-knowhow Any {
 }
 
 # GLOBAL stash.

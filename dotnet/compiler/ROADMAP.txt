@@ -1,42 +1,79 @@
 Roadmap for NQP and Rakudo on .Net
 
-At the moment, all that exists is some very tentative early work on a .Net runtime for Rakudo. What follows is the roadmap as I see it from here. I've broken it down into a set of landmarks, with the near-term ones having some more detail on the tasks that need to be done.
+This document lays out the near-term and long-term things that need to be
+done to get NQP, and later Rakudo, running on .Net. The near-term things are
+good guesses. The more distant things are hand-waving. :-)
 
-Last Updated: August 2010
+Last Updated: 31st October 2010
 
+=== Add missing NQP features
+We support quite a few bits of NQP so far, but some important things are
+missing. These are in rough priority order. There's no reason the regex
+step that follows this can't start before all of these are done; somre early
+ones are hard dependencies though.
 
-=== Fundementals
-These are things to make work in the really near future.
+* Get packages sorted out a bit more, especially for the purpose of putting
+  package declarations really into the package.
 
-* Basic multiple dispatch
+* Some initial support for module compilation / loading, and GLOBAL merging
 
-* Re-work operators to use multi-dispatch
+* Write a class NQPMu { ... } in a module and load that (we'll start to build
+  out other core classes in here too, e.g. for the regex engine)
 
-* Check our closures work (should be able to run man or boy test by this point)
+* new, bless, CREATE, BUILDALL, BUILD
 
-* Make attributes in knowhow work
+* Make NQPMu the default class everything else inherits from
 
-
-=== Compile NQPClassHOW and friends
-These are features that we need in order to reach the landmark of compiling/running NQPClassHOW.
-
-* Support for arrays and hashes
-
-* Slurpy parameters
-
-* Optional parameters with and without defaults properly supported
+* Defaults on optional parameters
 
 * Support PAST::Op with pasttype for
 
-* return (and stuff for control exceptions and exceptions in general)
+* Support PAST::Op with pasttype try
 
-* any ops that NQPClassHOW.pm needs now
+* CATCH and CONTROL
 
-* Whatever else we're missing to compile NQPClassHOW and NQPAttribute
+* Flattened arguments
+
+* Comparative operators
+
+* viviself and vivibase review and updates
+
+* Other types of loop
+
+* Advanced loop flow control bits
+
+* INIT { ... }
 
 
 === Port PAST::Regex compilation
-This will mean that grammars can run.
+This mostly invovles getting regexes, then grammars to compile and run. This
+is mostly a guess at an ordering.
+
+* Stub in basic bits of Capture, Cursor, Match
+
+* pasttype concat, scan, literal and pass (should make /foo/ work)
+
+* pasttype quant
+
+* pasttype alt
+
+* Built-in character classes
+
+* Captures (named and positional)
+
+* Built-in rules
+
+* token/rule/regex declarations work
+
+* Protoregexen
+
+* User-defined character classes
+
+* Variable declarations, if they don't Just Work
+
+* Code blocks in regexes
+
+* Assertions (including lookahead)
 
 
 === Pass NQP-RX test suite
@@ -48,7 +85,10 @@ Debugging, fixing and infrastructure.
 
 
 === Serialization contexts supported and fully used by the bootstrap
-Once bootstrapped, do the same refactors that should already been in Parrot's NQP. Note that we'll snapshot the implementation before this point, as that will be what others will need to port first (e.g. all porting efforts will probably start with cross-compiling).
+Once bootstrapped, do the same refactors that should already been in
+Parrot's NQP. Note that we'll snapshot the implementation before this
+point, as that will be what others will need to port first (e.g. all
+porting efforts will probably start with cross-compiling).
 
 
 === Rakudo's parser and actions run on .Net
@@ -56,7 +96,8 @@ At this stage, we should be able to parse many of the Rakudo spectests.
 
 
 === Compiling Rakudo's setting and get a working Rakudo
-It'll be buggy, most likely, but this will be a real landmark: when we have a rakudo.exe that runs on .Net.
+It'll be buggy, most likely, but this will be a real landmark: when we have
+a rakudo.exe that runs on .Net.
 
 
 === Rakudo on .NET

@@ -311,15 +311,16 @@ knowhow NQPClassHOW {
     ##
 
     # Creates a new instance of this meta-class.
-    method new() {
-        nqp::instance_of(self).BUILD()
+    method new(:$name) {
+        nqp::instance_of(self).BUILD(:name($name))
     }
 
     method CREATE($obj) {
         nqp::instance_of($obj)
     }
 
-    method BUILD() {
+    method BUILD(:$name) {
+        $!name := $name;
         $!composed := 0;
         %!methods := NQPHash.new;
         @!attributes := NQPArray.new;
@@ -331,8 +332,8 @@ knowhow NQPClassHOW {
     # to go with it, and return that.
     # XXX TODO :$repr named parameter defaulting to P6opaque (don't
     # have default values yet implemented).
-    method new_type() {
-        my $metaclass := self.new();
+    method new_type(:$name = '<anon>', :$repr = 'P6opaque') {
+        my $metaclass := self.new(:name($name));
         nqp::type_object_for($metaclass, 'P6opaque');
     }
 
@@ -419,6 +420,10 @@ knowhow NQPClassHOW {
 
     method method_table($obj) {
         %!methods
+    }
+
+    method name($obj) {
+        $!name
     }
 
     method parents($obj, :$local!) {

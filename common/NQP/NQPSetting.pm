@@ -428,7 +428,31 @@ knowhow NQPClassHOW {
                 }
             }
             else {
-                die("Can't yet instantiate proto from a parent class.");
+                # Go hunting in the MRO for a proto.
+                my $j := 1;
+                my $found := 0;
+                while $j != +@!mro && !$found {
+                    my $parent := @!mro[$j];
+                    my %meths := $parent.HOW.method_table($parent);
+                    my $dispatcher := %meths{$name};
+                    if $dispatcher.defined {
+                        # Found a possible - make sure it's a dispatcher, not
+                        # an only.
+                        if nqp::is_dispatcher($dispatcher) {
+                            # Clone it and install it in our method table.
+                            my @new_dispatchees;
+                            @new_dispatchees[0] := $code;
+                            %!methods{$name} := nqp::create_dispatch_and_add_candidates($dispatcher, @new_dispatchees);
+                            $found := 1;
+                        }
+                        else {
+                            die("Could not find a proto for multi $name (it may exist, but an only is hiding it if so)");
+                        }
+                    }
+                }
+                unless $found {
+                    die("Could not find a proto for multi $name, and proto generation is NYI");
+                }
             }
             $i := $i + 1;
         }

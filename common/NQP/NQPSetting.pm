@@ -290,6 +290,7 @@ knowhow NQPClassHOW {
     # Attributes, methods, parents and roles directly added.
     has @!attributes;
     has %!methods;
+    has @!multi_methods_to_incorporate;
     has @!parents;
     has @!roles;
 
@@ -323,6 +324,7 @@ knowhow NQPClassHOW {
         $!name := $name;
         $!composed := 0;
         %!methods := NQPHash.new;
+        @!multi_methods_to_incorporate := NQPArray.new;
         @!attributes := NQPArray.new;
         @!parents := NQPArray.new;
         self;
@@ -342,6 +344,19 @@ knowhow NQPClassHOW {
             die("This class already has a method named " ~ $name);
         }
         %!methods{$name} := $code_obj;
+    }
+
+    method add_multi_method($obj, $name, $code_obj) {
+        # We can't incorporate these right away as we don't know all
+        # parents yet, maybe, which influences whether we even can
+        # have multis, need to generate a proto or worreva. So just
+        # queue them up in a todo list and we handle it at class
+        # composition time.
+        my %todo;
+        %todo<name> := $name;
+        %todo<code> := $code_obj;
+        @!multi_methods_to_incorporate[+@!multi_methods_to_incorporate] := %todo;
+        $code_obj;
     }
 
     method add_attribute($obj, $meta_attr) {
@@ -373,8 +388,9 @@ knowhow NQPClassHOW {
     }
 
     method compose($obj) {
-        # XXX TODO: Compose roles, compose attributes.
-
+        # XXX TODO: Compose roles (must come before we make MRO,
+        # and may provide multi candidates.)
+        
         # Some things we only do if we weren't already composed once, like
         # building the MRO.
         unless $!composed {
@@ -382,7 +398,40 @@ knowhow NQPClassHOW {
             $!composed := 1;
         }
 
+        # Incorporate any new multi candidates (needs MRO built).
+        self.incorporate_multi_candidates($obj);
+        
+        # XXX TODO: Compose attributes.
+
         $obj
+    }
+
+    method incorporate_multi_candidates($obj) {
+        my $num_todo := +@!multi_methods_to_incorporate;
+        my $i := 0;
+        while $i != $num_todo {
+            # Get method name and code.
+            my $name := @!multi_methods_to_incorporate[$i]<name>;
+            my $code := @!multi_methods_to_incorporate[$i]<code>;
+
+            # Do we have anything in the methods table already in
+            # this class?
+            my $dispatcher := %!methods{$name};
+            if $dispatcher.defined {
+                # Yes. Only or dispatcher, though? If only, error. If
+                # dispatcher, simply add new dispatchee.
+                if nqp::is_dispatcher($dispatcher) {
+                    nqp::push_dispatchee($dispatcher, $code);
+                }
+                else {
+                    die("Cannot have a multi candidate for $name when an only method is also in the class");
+                }
+            }
+            else {
+                die("Can't yet instantiate proto from a parent class.");
+            }
+            $i := $i + 1;
+        }
     }
 
     # XXX TODO: Get enough working to bring over the C3 implementation that

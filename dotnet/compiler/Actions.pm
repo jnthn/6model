@@ -609,8 +609,19 @@ method method_def($/) {
     
     # Provided it's named, install it in the methods table.
     if $<deflongname> {
+        # Set name.
         my $name := ~$<deflongname>[0].ast;
         $past.name($name);
+
+        # If it's a proto, we'll mark it as such by giving it an empty candidate
+        # list.
+        my $to_add := $*MULTINESS ne 'proto' ??
+            PAST::Val.new( :value($past) )   !!
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('set_dispatchees'),
+                PAST::Val.new( :value($past) ),
+                PAST::Op.new( :pasttype('list') )
+            );
         $*PACKAGE-SETUP.push(PAST::Op.new(
             :pasttype('callmethod'), :name($*MULTINESS eq 'multi' ?? 'add_multi_method' !! 'add_method'),
             PAST::Op.new(
@@ -619,7 +630,7 @@ method method_def($/) {
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
             PAST::Val.new( :value($name) ),
-            PAST::Val.new( :value($past) )
+            $to_add
         ));
     }
     

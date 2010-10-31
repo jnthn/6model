@@ -370,7 +370,8 @@ sub package($/) {
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
-                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') )
+                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') ),
+                PAST::Val.new( :value($name), :named('name') )
             )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -380,8 +381,7 @@ sub package($/) {
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('$?CLASS') ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
-        ),
-        # XXX name
+        )
     ));
     if $<package_def><repr> {
         my $repr_name := $<package_def><repr>[0].ast;

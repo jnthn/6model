@@ -382,12 +382,25 @@ sub package($/) {
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         # XXX name
-        # XXX is parent
     ));
     if $<package_def><repr> {
         my $repr_name := $<package_def><repr>[0].ast;
         $repr_name.named('repr');
         $*PACKAGE-SETUP[0][0][1].push($repr_name);
+    }
+
+    # Parent class, if any. (XXX need to handle package vs lexical scope
+    # properly, nested packages, etc).
+    if $<package_def><parent> {
+        $*PACKAGE-SETUP.push(PAST::Op.new(
+            :pasttype('callmethod'), :name('add_parent'),
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('get_how'),
+                PAST::Var.new( :name('type_obj'), :scope('register') )
+            ),
+            PAST::Var.new( :name('type_obj'), :scope('register') ),
+            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('lexical') )
+        ));
     }
 
     # Postfix it with a call to compose.

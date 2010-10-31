@@ -172,6 +172,38 @@ multi sub &infix:<!=>(NQPNum $x, NQPNum $y) {
     nqp::logical_not_int(nqp::equal_nums($x, $y))
 }
 
+proto sub &infix:«<=»($x, $y) { * }
+multi sub &infix:«<=»(NQPInt $x, NQPInt $y) {
+    nqp::less_than_or_equal_ints($x, $y)
+}
+multi sub &infix:«<=»(NQPNum $x, NQPNum $y) {
+    nqp::less_than_or_equal_nums($x, $y)
+}
+
+proto sub &infix:«<»($x, $y) { * }
+multi sub &infix:«<»(NQPInt $x, NQPInt $y) {
+    nqp::less_than_ints($x, $y)
+}
+multi sub &infix:«<»(NQPNum $x, NQPNum $y) {
+    nqp::less_than_nums($x, $y)
+}
+
+proto sub &infix:«>=»($x, $y) { * }
+multi sub &infix:«>=»(NQPInt $x, NQPInt $y) {
+    nqp::greater_than_or_equal_ints($x, $y)
+}
+multi sub &infix:«>=»(NQPNum $x, NQPNum $y) {
+    nqp::greater_than_or_equal_nums($x, $y)
+}
+
+proto sub &infix:«>»($x, $y) { * }
+multi sub &infix:«>»(NQPInt $x, NQPInt $y) {
+    nqp::greater_than_ints($x, $y)
+}
+multi sub &infix:«>»(NQPNum $x, NQPNum $y) {
+    nqp::greater_than_nums($x, $y)
+}
+
 sub &infix:<eq>($x, $y) {
     nqp::equal_strs($x.Str, $y.Str)
 }

@@ -99,14 +99,9 @@ public final class P6opaque implements Representation
 
         // Try the slot allocation first.
         if (SlotAllocation != null && SlotAllocation.containsKey(classHandle)) {
-        // (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
-            HashMap<String, Integer> classAllocation;
-            classAllocation = SlotAllocation.get(classHandle);
+            HashMap<String, Integer> classAllocation = SlotAllocation.get(classHandle);
             if (classAllocation.containsKey(name)) {
-            // (classAllocation.TryGetValue(name, out position))
-                int position;
-                position = classAllocation.get(name);
-                return I.SlotStorage[position];
+                return I.SlotStorage[classAllocation.get(name)];
             }
         }
         // Fall back to the spill storage.
@@ -159,13 +154,10 @@ public final class P6opaque implements Representation
 
         // Try the slot allocation first.
         if (SlotAllocation != null && SlotAllocation.containsKey(classHandle)) {
-        // (SlotAllocation != null && SlotAllocation.TryGetValue(classHandle, out classAllocation))
             HashMap<String, Integer> classAllocation = SlotAllocation.get(classHandle);
             if (classAllocation.containsKey(name))
-            // (classAllocation.TryGetValue(name, out position))
             {
-                int position;
-                position = classAllocation.get(name);
+                int position = classAllocation.get(name);
                 I.SlotStorage[position] = value;
                 return;
             }
@@ -223,10 +215,10 @@ public final class P6opaque implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public int hint_for(ThreadContext tc, RakudoObject ClassHandle, String Name)
+    public int hint_for(ThreadContext tc, RakudoObject classHandle, String name)
     {
-        if (SlotAllocation.containsKey(ClassHandle) && SlotAllocation.get(ClassHandle).containsKey(Name))
-            return SlotAllocation.get(ClassHandle).get(Name); // C# SlotAllocation[ClassHandle][Name];
+        if (SlotAllocation.containsKey(classHandle) && SlotAllocation.get(classHandle).containsKey(name))
+            return SlotAllocation.get(classHandle).get(name);
         else
             return Hints.NO_HINT;
     }
@@ -262,61 +254,60 @@ public final class P6opaque implements Representation
     }
     private void ComputeSlotAllocation(ThreadContext tc, RakudoObject WHAT)
     {
-
         // Allocate slot mapping table.
         SlotAllocation = new HashMap<RakudoObject, HashMap<String, Integer>>();
 
         // Walk through the parents list.
         RakudoObject currentClass = WHAT;
-        int CurrentSlot = 0;
+        int currentSlot = 0;
         while (currentClass != null)
         {
             // Get attributes and iterate over them.
             RakudoObject HOW = currentClass.getSTable().HOW;
-            RakudoObject AttributesMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
+            RakudoObject attributesMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
             HashMap<String, RakudoObject> localBoxInt1 = new HashMap<String, RakudoObject>();
             localBoxInt1.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
-            RakudoObject Attributes = AttributesMeth.getSTable().Invoke.Invoke(tc, AttributesMeth, CaptureHelper.FormWith(
+            RakudoObject attributes = attributesMeth.getSTable().Invoke.Invoke(tc, attributesMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, currentClass },
                 localBoxInt1)); // new HashMap<String, RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
-            RakudoObject AttributesElemsMeth = Attributes.getSTable().FindMethod.FindMethod(tc, Attributes, "elems", Hints.NO_HINT);
-            int AttributesElems = Ops.unbox_int(tc, AttributesElemsMeth.getSTable().Invoke.Invoke(tc, AttributesElemsMeth,
-                CaptureHelper.FormWith(new RakudoObject[] { Attributes })));
-            RakudoObject AttrAtPosMeth = Attributes.getSTable().FindMethod.FindMethod(tc, Attributes, "at_pos", Hints.NO_HINT);
-            for (int i = 0; i < AttributesElems; i++)
+            RakudoObject attributesElemsMeth = attributes.getSTable().FindMethod.FindMethod(tc, attributes, "elems", Hints.NO_HINT);
+            int attributesElems = Ops.unbox_int(tc, attributesElemsMeth.getSTable().Invoke.Invoke(tc, attributesElemsMeth,
+                CaptureHelper.FormWith(new RakudoObject[] { attributes })));
+            RakudoObject attrAtPosMeth = attributes.getSTable().FindMethod.FindMethod(tc, attributes, "at_pos", Hints.NO_HINT);
+            for (int i = 0; i < attributesElems; i++)
             {
                 // Get the attribute, then get its name.
-                RakudoObject attr = AttrAtPosMeth.getSTable().Invoke.Invoke(tc, AttrAtPosMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { Attributes, Ops.box_int(tc, i, tc.DefaultIntBoxType) }));
+                RakudoObject attr = attrAtPosMeth.getSTable().Invoke.Invoke(tc, attrAtPosMeth, CaptureHelper.FormWith(
+                    new RakudoObject[] { attributes, Ops.box_int(tc, i, tc.DefaultIntBoxType) }));
                 RakudoObject nameMeth = attr.getSTable().FindMethod.FindMethod(tc, attr, "name", Hints.NO_HINT);
-                String Name = Ops.unbox_str(tc, attr.getSTable().Invoke.Invoke(tc, nameMeth, CaptureHelper.FormWith(
+                String name = Ops.unbox_str(tc, attr.getSTable().Invoke.Invoke(tc, nameMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { attr })));
 
                 // Allocate a slot.
                 if (!SlotAllocation.containsKey(currentClass))
                     SlotAllocation.put(currentClass, new HashMap<String, Integer>());
-                SlotAllocation.get(currentClass).put(Name, CurrentSlot);
-                CurrentSlot++;
+                SlotAllocation.get(currentClass).put(name, currentSlot);
+                currentSlot++;
             }
 
             // Find the next parent(s).
-            RakudoObject ParentsMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "parents", Hints.NO_HINT);
+            RakudoObject parentsMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "parents", Hints.NO_HINT);
             HashMap<String,RakudoObject> localBoxInt2 = new HashMap<String,RakudoObject>();
             localBoxInt2.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
-            RakudoObject Parents = ParentsMeth.getSTable().Invoke.Invoke(tc, ParentsMeth, CaptureHelper.FormWith(
+            RakudoObject parents = parentsMeth.getSTable().Invoke.Invoke(tc, parentsMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, currentClass },
                 localBoxInt2)); // new HashMap<String,RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
             // Check how many parents we have.
-            RakudoObject ParentElemsMeth = Parents.getSTable().FindMethod.FindMethod(tc, Parents, "elems", Hints.NO_HINT);
-            int ParentElems = Ops.unbox_int(tc, ParentElemsMeth.getSTable().Invoke.Invoke(tc, ParentElemsMeth,
-                CaptureHelper.FormWith(new RakudoObject[] { Parents })));
-            if (ParentElems == 0)
+            RakudoObject parentElemsMeth = parents.getSTable().FindMethod.FindMethod(tc, parents, "elems", Hints.NO_HINT);
+            int parentElems = Ops.unbox_int(tc, parentElemsMeth.getSTable().Invoke.Invoke(tc, parentElemsMeth,
+                CaptureHelper.FormWith(new RakudoObject[] { parents })));
+            if (parentElems == 0)
             {
                 // We're done. \o/
-                Slots = CurrentSlot;
+                Slots = currentSlot;
                 break;
             }
-            else if (ParentElems > 1)
+            else if (parentElems > 1)
             {
                 // Multiple inheritance, so we can't compute this hierarchy.
                 SlotAllocation = new HashMap<RakudoObject, HashMap<String, Integer>>();
@@ -325,9 +316,9 @@ public final class P6opaque implements Representation
             else
             {
                 // Just one. Get next parent.
-                RakudoObject AtPosMeth = Parents.getSTable().FindMethod.FindMethod(tc, Parents, "at_pos", Hints.NO_HINT);
-                currentClass = AtPosMeth.getSTable().Invoke.Invoke(tc, AtPosMeth, CaptureHelper.FormWith(
-                    new RakudoObject[] { Parents, Ops.box_int(tc, 0, tc.DefaultIntBoxType) }));
+                RakudoObject atPosMeth = parents.getSTable().FindMethod.FindMethod(tc, parents, "at_pos", Hints.NO_HINT);
+                currentClass = atPosMeth.getSTable().Invoke.Invoke(tc, atPosMeth, CaptureHelper.FormWith(
+                    new RakudoObject[] { parents, Ops.box_int(tc, 0, tc.DefaultIntBoxType) }));
             }
         }
     }

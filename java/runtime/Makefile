@@ -14,9 +14,9 @@
 #        |                    |       |  |     |               |
 #        |                    |  Handler |     |               |
 #        |                    |        | |     |               |
-#        |                   Signature | |   Representation    |
-#        |                         |   | |    |     |    |     |
-#        |  +--+----------------> RakudoCodeRef     |    |     |
+#        |    DispatchCache  Signature | |   Representation    |
+#        |            |            |   | |    |     |    |     |
+#        |  +--+------+---------> RakudoCodeRef     |    |     |
 #        |  |  |                           |        |    |     |
 #        1  2  3         ExecutionDomain  Context   |    |     |
 #        |  |  |                      |      |      |    |     |
@@ -58,6 +58,7 @@ ALL_BUILD_TARGETS = \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6str.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class \
 	$(CLASSES)Rakudo/Runtime/CodeObjectUtility.class \
+	$(CLASSES)Rakudo/Runtime/DefinednessConstraint.class \
 	$(CLASSES)Rakudo/Runtime/SignatureBinder.class \
 	$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class \
 	$(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.class \
@@ -65,6 +66,7 @@ ALL_BUILD_TARGETS = \
 
 OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
+	$(CLASSES)Rakudo/Runtime/Exceptions/ExceptionDispatcher.class \
 	$(CLASSES)Rakudo/Runtime/Exceptions/Handler.class \
 	$(CLASSES)Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.class \
 	$(CLASSES)Rakudo/Runtime/Lexpad.class \
@@ -76,7 +78,7 @@ OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6mapping.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
 	$(CLASSES)Rakudo/Runtime/Context.class \
-	$(CLASSES)Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.class \
+	$(CLASSES)Rakudo/Runtime/MultiDispatch/DispatchCache.class \
 	$(CLASSES)Rakudo/Runtime/MultiDispatch/MultiDispatcher.class \
 	$(CLASSES)Rakudo/Runtime/Ops.class \
 	$(CLASSES)Rakudo/Runtime/ThreadContext.class \
@@ -96,13 +98,16 @@ $(CLASSES):
 RakudoRuntime.jar: $(ALL_BUILD_TARGETS) $(OTHER_DEPENDENT_TARGETS) $(INNER_CLASSES)
 	jar cf RakudoRuntime.jar -C $(CLASSES) .
 # For troubleshooting, use `jar cvf RakudoRuntime.jar` instead.
-# Use `jar tvf RakudoRuntime.jar` to tell what was done.
+# Use `jar tvf RakudoRuntime.jar` to tell what's in the jar.
 
 $(CLASSES)Rakudo/Metamodel/Hints.class: Rakudo/Metamodel/Hints.java
 	$(JAVAC) Rakudo/Metamodel/Hints.java
 
 $(CLASSES)Rakudo/Serialization/SerializationContext.class: Rakudo/Serialization/SerializationContext.java
 	$(JAVAC) Rakudo/Serialization/SerializationContext.java
+
+$(CLASSES)Rakudo/Runtime/DefinednessConstraint.class: Rakudo/Runtime/DefinednessConstraint.java
+	$(JAVAC) Rakudo/Runtime/DefinednessConstraint.java
 
 $(CLASSES)Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.class: Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java
 	$(JAVAC) Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java
@@ -114,6 +119,7 @@ $(CLASSES)Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.j
 # Handle it by compiling all the interdependent files in a single step.
 # Thanks jnthn++ for the suggestion.
 $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.java \
+		$(CLASSES)Rakudo/Runtime/DefinednessConstraint.class \
 		Rakudo/Serialization/SerializationContext.java \
 		Rakudo/Metamodel/Representation.java \
 		Rakudo/Runtime/CaptureHelper.java \
@@ -126,9 +132,10 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/Exceptions/ExceptionDispatcher.java \
 		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
-		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
+		Rakudo/Runtime/MultiDispatch/DispatchCache.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
 		Rakudo/Runtime/Ops.java \
 		Rakudo/Runtime/ThreadContext.java \
@@ -147,9 +154,10 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/Exceptions/ExceptionDispatcher.java \
 		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
-		Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
+		Rakudo/Runtime/MultiDispatch/DispatchCache.java \
 		Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
 		Rakudo/Runtime/Ops.java \
 		Rakudo/Runtime/ThreadContext.java \
@@ -283,9 +291,12 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Runtime/CaptureHelper.java \
 	Rakudo/Runtime/CodeObjectUtility.java \
 	Rakudo/Runtime/Context.java \
+	Rakudo/Runtime/DefinednessConstraint.java \
+	Rakudo/Runtime/Exceptions/ExceptionDispatcher.java \
+	Rakudo/Runtime/Exceptions/Handler.java \
 	Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
 	Rakudo/Runtime/Lexpad.java \
-	Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java \
+	Rakudo/Runtime/MultiDispatch/DispatchCache.java \
 	Rakudo/Runtime/MultiDispatch/MultiDispatcher.java \
 	Rakudo/Runtime/Ops.java \
 	Rakudo/Runtime/Parameter.java \
@@ -353,6 +364,12 @@ Rakudo/Runtime/CodeObjectUtility.java: ../../dotnet/runtime/Runtime/CodeObjectUt
 Rakudo/Runtime/Context.java: ../../dotnet/runtime/Runtime/Context.cs
 	@echo "todo: Rakudo/Runtime/Context.java is older than ../../dotnet/runtime/Runtime/Context.cs"
 
+Rakudo/Runtime/DefinednessConstraint.java: ../../dotnet/runtime/Runtime/Signatures/DefinednessConstraint.cs
+	@echo "todo: $@ is older than $<"
+
+Rakudo/Runtime/Exceptions/ExceptionDispatcher.java: ../../dotnet/runtime/Runtime/Exceptions/ExceptionDispatcher.cs
+	@echo "todo: Rakudo/Runtime/Exceptions/ExceptionDispatcher.java is older than ../../dotnet/runtime/Runtime/Exceptions/ExceptionDispatcher.cs"
+
 Rakudo/Runtime/Exceptions/Handler.java: ../../dotnet/runtime/Runtime/Exceptions/Handler.cs
 	@echo "todo: Rakudo/Runtime/Exceptions/Handler.java is older than ../../dotnet/runtime/Runtime/Exceptions/Handler.cs"
 
@@ -365,8 +382,8 @@ Rakudo/Runtime/ExecutionDomain.java: ../../dotnet/runtime/Runtime/ExecutionDomai
 Rakudo/Runtime/Lexpad.java: ../../dotnet/runtime/Runtime/Lexpad.cs
 	@echo "todo: Rakudo/Runtime/Lexpad.java is older than ../../dotnet/runtime/Runtime/Signatures/Lexpad.cs"
 
-Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java: ../../dotnet/runtime/Runtime/MultiDispatch/LexicalCandidateFinder.cs
-	@echo "todo: Rakudo/Runtime/MultiDispatch/LexicalCandidateFinder.java is older than ../../dotnet/runtime/Runtime/MultiDispatch/LexicalCandidateFinder.cs"
+Rakudo/Runtime/MultiDispatch/DispatchCache.java: ../../dotnet/runtime/Runtime/MultiDispatch/DispatchCache.cs
+	@echo "todo: Rakudo/Runtime/MultiDispatch/DispatchCache.java is older than ../../dotnet/runtime/Runtime/MultiDispatch/DispatchCache.cs"
 
 Rakudo/Runtime/MultiDispatch/MultiDispatcher.java: ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs
 	@echo "todo: Rakudo/Runtime/MultiDispatch/MultiDispatcher.java is older than ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs"
@@ -392,6 +409,10 @@ Rakudo/Serialization/SerializationContext.java: ../../dotnet/runtime/Serializati
 # To show java files that are older than their dotnet equivalents, run:
 # make todolist
 todolist: $(TRANSLATED_SOURCE_FILES)
+
+test: RakudoRuntime.jar
+	@perl -MExtUtils::Command -e rm_rf t/*.class
+	@prove -r --exec ./javarun.sh t/*.java
 
 clean:
 	perl -MExtUtils::Command -e rm_f RakudoRuntime.jar \

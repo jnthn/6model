@@ -48,7 +48,7 @@ public final class SharedTable  // public sealed in the C# version
             {
                 // Find the find_method method.
                 RakudoObject HOW = obj.getSTable().HOW;
-                RakudoObject meth = CachedFindMethod;
+                RakudoObject meth = obj.getSTable().CachedFindMethod;
                 if (meth == null)
                     obj.getSTable().CachedFindMethod = meth = HOW.getSTable().FindMethod.FindMethod(
                         tc, HOW, "find_method", Hints.NO_HINT);
@@ -101,14 +101,15 @@ public final class SharedTable  // public sealed in the C# version
     /// is deserialized. Thus never, ever serialize this ID anywhere; it's
     /// for strictly for per-run scoped caches _only_. You have been warned.
     /// </summary>
-    public long TypeCacheID () {
+    public long getTypeCacheID () {
         long id;
         synchronized(this) {   // is locking the entire SharedTable too coarse?
             TypeCacheIDSource += 4;
             id = TypeCacheIDSource;
-        }
+        } // TODO: replace synchronized with java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
+
         return id;
-    } // public long TypeCacheID = Interlocked.Increment(ref TypeIDSource); // the C# version
+    }
 
     /// <summary>
     /// Source of type IDs. The lowest one is 4. This is to make the lower

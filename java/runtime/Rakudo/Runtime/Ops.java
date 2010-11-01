@@ -1,4 +1,5 @@
 package Rakudo.Runtime;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import Rakudo.Metamodel.Hints;
@@ -9,15 +10,19 @@ import Rakudo.Metamodel.Representations.P6mapping;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
+import Rakudo.Runtime.Exceptions.ExceptionDispatcher;
+import Rakudo.Runtime.Exceptions.Handler;
 import Rakudo.Runtime.Exceptions.LeaveStackUnwinderException;
-import Rakudo.Runtime.MultiDispatch.LexicalCandidateFinder;
 import Rakudo.Runtime.MultiDispatch.MultiDispatcher;
+
 /// <summary>
 /// This class implements the various vm::op options that are available.
 /// </summary>
 public class Ops  // public static in the C# version
 {
-    /// <summary>Creates a type object associated with the given HOW and of the given representation.
+    /// <summary>
+    /// Creates a type object associated with the given HOW and of the
+    /// given representation.
     /// </summary>
     /// <param name="HOW"></param>
     /// <param name="REPRName"></param>
@@ -43,9 +48,9 @@ public class Ops  // public static in the C# version
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static boolean repr_defined(ThreadContext tc, RakudoObject obj)
+    public static RakudoObject repr_defined(ThreadContext tc, RakudoObject obj)
     {
-        return obj.getSTable().REPR.defined(tc, obj);
+        return Ops.box_int(tc, obj.getSTable().REPR.defined(tc, obj) ? 1 : 0, tc.DefaultBoolBoxType );
     }
 
     /// <summary>
@@ -55,9 +60,9 @@ public class Ops  // public static in the C# version
     /// <param name="Class"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static RakudoObject get_attr(ThreadContext tc, RakudoObject object, RakudoObject Class, String name)
+    public static RakudoObject get_attr(ThreadContext tc, RakudoObject object, RakudoObject classObj, String name)
     {
-        return object.getSTable().REPR.get_attribute(tc, object, Class, name);
+        return object.getSTable().REPR.get_attribute(tc, object, classObj, name);
     }
 
     /// <summary>
@@ -68,9 +73,9 @@ public class Ops  // public static in the C# version
     /// <param name="name"></param>
     /// <param name="hint"></param>
     /// <returns></returns>
-    public static RakudoObject get_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint)
+    public static RakudoObject get_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classObj, String name, int hint)
     {
-        return object.getSTable().REPR.get_attribute_with_hint(tc, object, Class, name, Hint);
+        return object.getSTable().REPR.get_attribute_with_hint(tc, object, classObj, name, hint);
     }
 
     /// <summary>
@@ -79,9 +84,9 @@ public class Ops  // public static in the C# version
     /// <param name="object"></param>
     /// <param name="Class"></param>
     /// <param name="name"></param>
-    public static RakudoObject bind_attr(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, RakudoObject value)
+    public static RakudoObject bind_attr(ThreadContext tc, RakudoObject object, RakudoObject classObj, String name, RakudoObject value)
     {
-        object.getSTable().REPR.bind_attribute(tc, object, Class, name, value);
+        object.getSTable().REPR.bind_attribute(tc, object, classObj, name, value);
         return value;
     }
 
@@ -93,9 +98,9 @@ public class Ops  // public static in the C# version
     /// <param name="Class"></param>
     /// <param name="name"></param>
     /// <param name="Hint"></param>
-    public static RakudoObject bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject Class, String name, int Hint, RakudoObject value)
+    public static RakudoObject bind_attr_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classObj, String name, int hint, RakudoObject value)
     {
-        object.getSTable().REPR.bind_attribute_with_hint(tc, object, Class, name, Hint, value);
+        object.getSTable().REPR.bind_attribute_with_hint(tc, object, classObj, name, hint, value);
         return value;
     }
 
@@ -273,7 +278,7 @@ public class Ops  // public static in the C# version
     /// <summary>
     /// Coerces a string into an integer.
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="Str"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
@@ -287,7 +292,7 @@ public class Ops  // public static in the C# version
     /// <summary>
     /// Coerces a string into an number.
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="Str"></param>
     /// <param name="TargetType"></param>
     /// <returns></returns>
@@ -318,6 +323,27 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
+    /// Gets a lexical variable of the given name, but skips the current
+    /// scope.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject get_lex_skip_current(ThreadContext tc, String name)
+    {
+        Context curContext = tc.CurrentContext.Outer;
+        while (curContext != null)
+        {
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
+            }
+            curContext = curContext.Outer;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
+    }
+
+    /// <summary>
     /// Binds the given value to a lexical variable of the given name.
     /// </summary>
     /// <param name="i"></param>
@@ -330,7 +356,7 @@ public class Ops  // public static in the C# version
         {
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
-                int index = curContext.LexPad.SlotMapping.get(name);
+                int index = curContext.LexPad.SlotMapping.get(name);                        
                 curContext.LexPad.Storage[index] = value;
                 return value;
             }
@@ -425,7 +451,7 @@ public class Ops  // public static in the C# version
     /// <summary>
     /// Compares reference equality.
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <returns></returns>
@@ -434,6 +460,124 @@ public class Ops  // public static in the C# version
         return Ops.box_int(tc, x == y ? 1 : 0, tc.DefaultBoolBoxType);
     }
 
+    /// <summary>
+    /// Compares two floating point numbers for less-than inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject less_than_nums(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_num(tc, x) < Ops.unbox_num(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two integers for less-than inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject less_than_ints(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_int(tc, x) < Ops.unbox_int(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two floating point numbers for less-than-or-equal inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject less_than_or_equal_nums(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_num(tc, x) <= Ops.unbox_num(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two integers for less-than-or-equal inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject less_than_or_equal_ints(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_int(tc, x) <= Ops.unbox_int(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two floating point numbers for greater-than inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject greater_than_nums(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_num(tc, x) > Ops.unbox_num(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two integers for greater-than inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject greater_than_ints(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_int(tc, x) > Ops.unbox_int(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two floating point numbers for greater-than-or-equal inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject greater_than_or_equal_nums(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_num(tc, x) >= Ops.unbox_num(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Compares two integers for greater-than-or-equal inequality.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
+    public static RakudoObject greater_than_or_equal_ints(ThreadContext tc, RakudoObject x, RakudoObject y)
+    {
+        return Ops.box_int(tc,
+            (Ops.unbox_int(tc, x) >= Ops.unbox_int(tc, y) ? 1 : 0),
+            tc.DefaultBoolBoxType);
+    }
+
+    /// <summary>
+    /// Logical not.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="ResultType"></param>
+    /// <returns></returns>
     /// <summary>
     /// Logical not.
     /// </summary>
@@ -525,13 +669,133 @@ public class Ops  // public static in the C# version
     /// <returns></returns>
     public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext tc, RakudoObject name)
     {
-        RakudoObject candidate = MultiDispatcher.FindBestCandidate(
-            LexicalCandidateFinder.FindCandidates(
-                tc.CurrentContext.Caller,
-                tc.CurrentContext.Outer,
-                "!" + Ops.unbox_str(tc, name) + "-candidates"),
-            tc.CurrentContext.Capture);
-        return candidate.getSTable().Invoke.Invoke(tc, candidate, tc.CurrentContext.Capture);
+        Context curOuter = tc.CurrentContext;
+        while (curOuter != null)
+        {
+            RakudoCodeRef.Instance codeObj = curOuter.StaticCodeObject;
+            if (codeObj.Dispatchees != null)
+            {
+                RakudoObject candidate = MultiDispatcher.FindBestCandidate(
+                    codeObj, curOuter.Capture);
+                return candidate.getSTable().Invoke.Invoke(tc, candidate, curOuter.Capture);
+            }
+            curOuter = curOuter.Outer;
+        }
+        throw new UnsupportedOperationException("Could not find dispatchee list!");
+    }
+
+    /// <summary>
+    /// Sets the dispatches of the given code object. Expects something with
+    /// RakudoCodeRef and P6list representation respectively.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="CodeObject"></param>
+    /// <param name="Dispatchees"></param>
+    /// <returns></returns>
+    public static RakudoObject set_dispatchees(ThreadContext tc, RakudoObject codeObject, RakudoObject dispatchees)
+    {
+        RakudoCodeRef.Instance code = (RakudoCodeRef.Instance)codeObject;
+        P6list.Instance dispatchList = (P6list.Instance)dispatchees;
+        if (code != null && dispatchList != null)
+        {
+            code.Dispatchees = (RakudoObject[])dispatchList.Storage.toArray();
+            return code;
+        }
+        else
+        {
+            throw new UnsupportedOperationException("set_dispatchees must be passed a RakudoCodeRef and a P6list.");
+        }
+    }
+
+    /// <summary>
+    /// Creates an instantiation of the dispatch routine (or proto, which may
+    /// serve as one) supplied and augments it with the provided candidates.
+    /// It relies on being passed the instantiation of the dispatcher from the
+    /// last outer scope that had an instantiation, and we thus take its
+    /// candidates. This may or may not hold up in the long run; it works out
+    /// in the Perl 6-y "you can make a new instance from any object" sense
+    /// though, and seems more likely to get the closure semantics right than
+    /// any of the other approaches I've considered so far.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="ToInstantiate"></param>
+    /// <param name="ExtraDispatchees"></param>
+    /// <returns></returns>
+    public static RakudoObject create_dispatch_and_add_candidates(ThreadContext tc, RakudoObject toInstantiate, RakudoObject extraDispatchees)
+    {
+        // Make sure we got the right things.
+        RakudoCodeRef.Instance source = (RakudoCodeRef.Instance)toInstantiate;
+        P6list.Instance additionalDispatchList = (P6list.Instance)extraDispatchees;
+        if (source == null || additionalDispatchList == null)
+            throw new UnsupportedOperationException("create_dispatch_and_add_candidates expects a RakudoCodeRef and a P6list");
+
+        // Clone all but SC (since it's a new object and doesn't live in any
+        // SC yet) and dispatchees (which we want to munge).
+        RakudoCodeRef.Instance newDispatch = (RakudoCodeRef.Instance)source.getSTable().REPR.instance_of(tc,source.getSTable().WHAT);
+        // XXX the above line works differently in the C# version, more
+        // like the line below, but that got a compiler error: an enclosing instance ... is required
+        // RakudoCodeRef.Instance newDispatch = new RakudoCodeRef.Instance(source.getSTable());
+        newDispatch.Body = source.Body;
+        newDispatch.CurrentContext = source.CurrentContext;
+        newDispatch.Handlers = source.Handlers;
+        newDispatch.OuterBlock = source.OuterBlock;
+        newDispatch.OuterForNextInvocation = source.OuterForNextInvocation;
+        newDispatch.Sig = source.Sig;
+        newDispatch.StaticLexPad = source.StaticLexPad;
+
+        // Take existing candidates and add new ones.
+        newDispatch.Dispatchees = new RakudoObject[source.Dispatchees.length + additionalDispatchList.Storage.size()];
+        int i = 0;
+        for (int j = 0; j < source.Dispatchees.length; j++)
+            newDispatch.Dispatchees[i++] = source.Dispatchees[j];
+        for (int j = 0; j < additionalDispatchList.Storage.size(); j++)
+            newDispatch.Dispatchees[i++] = additionalDispatchList.Storage.get(j);
+
+        return newDispatch;
+    }
+
+    /// <summary>
+    /// Adds a single new candidate to the end of a dispatcher's candidate
+    /// list.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="Dispatcher"></param>
+    /// <param name="Dispatchee"></param>
+    /// <returns></returns>
+    public static RakudoObject push_dispatchee(ThreadContext tc, RakudoObject dispatcher, RakudoObject dispatchee)
+    {
+        // Validate that we've got something we can push a new dispatchee on to.
+        RakudoCodeRef.Instance target = (RakudoCodeRef.Instance)dispatcher;
+        if (target == null)
+            throw new UnsupportedOperationException("push_dispatchee expects a RakudoCodeRef");
+        if (target.Dispatchees == null)
+            throw new UnsupportedOperationException("push_dispatchee passed something that is not a dispatcher");
+
+        // Add it.
+        RakudoObject[] newList = new RakudoObject[target.Dispatchees.length + 1];
+        for (int i = 0; i < target.Dispatchees.length; i++)
+            newList[i] = target.Dispatchees[i];
+        newList[target.Dispatchees.length] = dispatchee;
+        target.Dispatchees = newList;
+
+        return target;
+    }
+
+    /// <summary>
+    /// Checks if a routine is considered a dispatcher (that is, if it has a
+    /// candidate list).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="Check"></param>
+    /// <returns></returns>
+    public static RakudoObject is_dispatcher(ThreadContext tc, RakudoObject check)
+    {
+        RakudoCodeRef.Instance checkee = (RakudoCodeRef.Instance)check;
+        return Ops.box_int(
+            tc,
+            (checkee != null && checkee.Dispatchees != null) ? 1 : 0,
+            tc.DefaultBoolBoxType
+        );
     }
 
     /// <summary>
@@ -608,10 +872,105 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
+    /// Pushes a value to a low level list (something that
+    /// uses the P6list representation).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="LLList"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_push(ThreadContext tc, RakudoObject LLList, RakudoObject item)
+    {
+        if (LLList instanceof P6list.Instance)
+        {
+            ((P6list.Instance)LLList).Storage.add(item);
+            return item;
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use lllist_push if representation is not P6list");
+        }
+    }
+
+    /// <summary>
+    /// Pops a value from a low level list (something that
+    /// uses the P6list representation).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="LLList"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_pop(ThreadContext tc, RakudoObject lowlevelList)
+    {
+        if (lowlevelList instanceof P6list.Instance)
+        {
+            ArrayList<RakudoObject> store = ((P6list.Instance)lowlevelList).Storage;
+            int idx = store.size() - 1;
+            if (idx < 0)
+            {
+                throw new IndexOutOfBoundsException("Cannot pop from an empty list");
+            }
+            RakudoObject item = store.get(idx);
+            store.remove(idx);
+            return item;
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Cannot use lllist_pop if representation is not P6list");
+        }
+    }
+
+    /// <summary>
+    /// Shifts a value from a low level list (something that
+    /// uses the P6list representation).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="LLList"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_shift(ThreadContext tc, RakudoObject lowlevelList)
+    {
+        if (lowlevelList instanceof P6list.Instance)
+        {
+            ArrayList<RakudoObject> store = ((P6list.Instance)lowlevelList).Storage;
+            int idx = store.size() - 1;
+            if (idx < 0)
+            {
+                throw new IndexOutOfBoundsException("Cannot shift from an empty list");
+            }
+            RakudoObject item = store.get(0);
+            store.remove(0);
+            return item;
+        }
+        else
+        {
+            throw new RuntimeException("Cannot use lllist_shift if representation is not P6list");
+        }
+    }
+
+    /// <summary>
+    /// Unshifts a value to a low level list (something that
+    /// uses the P6list representation).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="LLList"></param>
+    /// <returns></returns>
+    public static RakudoObject lllist_unshift(ThreadContext tc, RakudoObject lowlevelList, RakudoObject item)
+    {
+        if (lowlevelList instanceof P6list.Instance)
+        {
+            ArrayList<RakudoObject> store = ((P6list.Instance)lowlevelList).Storage;
+            store.add(0, item);
+            return item;
+        }
+        else
+        {
+            throw new RuntimeException("Cannot use lllist_unshift if representation is not P6list");
+        }
+    }
+
+    /// <summary>
     /// Gets a value at a given key from a low level mapping (something that
     /// uses the P6mapping representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
     /// <param name="Key"></param>
     /// <returns></returns>
@@ -628,7 +987,7 @@ public class Ops  // public static in the C# version
         }
         else
         {
-            throw new UnsupportedOperationException("Cannot use llmapping_get_at_key if representation is not P6mapping");
+            throw new RuntimeException("Cannot use llmapping_get_at_key if representation is not P6mapping");
         }
     }
 
@@ -636,7 +995,7 @@ public class Ops  // public static in the C# version
     /// Binds a value at a given key from a low level mapping (something that
     /// uses the P6mapping representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
     /// <param name="Key"></param>
     /// <param name="Value"></param>
@@ -663,7 +1022,7 @@ public class Ops  // public static in the C# version
     /// Gets the number of elements in a low level mapping (something that
     /// uses the P6mapping representation).
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
     /// <returns></returns>
     public static RakudoObject llmapping_elems(ThreadContext tc, RakudoObject lowlevelMapping)
@@ -679,17 +1038,129 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
+    /// If the first passed object reference is not null, returns it. Otherwise,
+    /// returns the second passed object reference. (Note, we should one day drop
+    /// this and implement it as a compiler transformation, to avoid having to
+    /// look up the thing to vivify).
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="Check"></param>
+    /// <param name="VivifyWith"></param>
+    /// <returns></returns>
+    public static RakudoObject vivify(ThreadContext tc, RakudoObject check, RakudoObject vivifyWith)
+    {
+        return (check != null) ? check : vivifyWith;
+    }
+
+    /// <summary>
     /// Leaves the specified block, returning the specified value from it. This
     /// unwinds the stack.
     /// </summary>
-    /// <param name="TC"></param>
+    /// <param name="tc"></param>
     /// <param name="Block"></param>
     /// <param name="ReturnValue"></param>
     /// <returns></returns>
     public static RakudoObject leave_block(ThreadContext tc, RakudoObject block, RakudoObject returnValue)
-//        throws LeaveStackUnwinderException
     {
         throw new LeaveStackUnwinderException((RakudoCodeRef.Instance)block, returnValue);
+    }
+
+    /// <summary>
+    /// Throws the specified exception, looking for an exception handler in the
+    /// dynmaic scope.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="ExceptionObject"></param>
+    /// <param name="ExceptionType"></param>
+    /// <returns></returns>
+    public static RakudoObject throw_dynamic(ThreadContext tc, RakudoObject exceptionObject, RakudoObject exceptionType)
+    {
+        int wantType = Ops.unbox_int(tc, exceptionType);
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
+        {
+            if (curContext.StaticCodeObject != null)
+            {
+                Handler[] handlers = curContext.StaticCodeObject.Handlers;
+                if (handlers != null)
+                    for (int i = 0; i < handlers.length; i++)
+                        if (handlers[i].Type == wantType)
+                            return ExceptionDispatcher.CallHandler(tc,
+                                handlers[i].HandleBlock, exceptionObject);
+            }
+            curContext = curContext.Caller;
+        }
+        ExceptionDispatcher.DieFromUnhandledException(tc, exceptionObject);
+        return null; // Unreachable; above call exits always.
+    }
+
+    /// <summary>
+    /// Throws the specified exception, looking for an exception handler in the
+    /// lexical scope.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="ExceptionObject"></param>
+    /// <param name="ExceptionType"></param>
+    /// <returns></returns>
+    public static RakudoObject throw_lexical(ThreadContext tc, RakudoObject exceptionObject, RakudoObject exceptionType)
+    {
+        int wantType = Ops.unbox_int(tc, exceptionType);
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
+        {
+            if (curContext.StaticCodeObject != null)
+            {
+                Handler[] handlers = curContext.StaticCodeObject.Handlers;
+                if (handlers != null)
+                    for (int i = 0; i < handlers.length; i++)
+                        if (handlers[i].Type == wantType)
+                            return ExceptionDispatcher.CallHandler(tc,
+                                handlers[i].HandleBlock, exceptionObject);
+            }
+            curContext = curContext.Outer;
+        }
+        ExceptionDispatcher.DieFromUnhandledException(tc, exceptionObject);
+        return null; // Unreachable; above call exits always.
+    }
+
+    /// <summary>
+    /// Makes the outer context of the provided block be set to the current
+    /// context.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="Block"></param>
+    /// <returns></returns>
+    public static RakudoObject capture_outer(ThreadContext tc, RakudoCodeRef.Instance block)
+    {
+        block.OuterForNextInvocation = tc.CurrentContext;
+        return block;
+    }
+
+    /// <summary>
+    /// Creates a clone of the given code object, and makes its outer context
+    /// be set to the current context.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="Block"></param>
+    /// <returns></returns>
+    public static RakudoObject new_closure(ThreadContext tc, RakudoCodeRef.Instance block)
+    {
+        // Clone all but OuterForNextInvocation and SC (since it's a new
+        // object and doesn't live in any SC yet).
+        RakudoCodeRef.Instance newBlock = (RakudoCodeRef.Instance)block.getSTable().REPR.instance_of(tc,block.getSTable().WHAT);
+        // XXX the above line works differently in the C# version, more
+        // like the line below, but that got a compiler error: an enclosing instance ... is required
+        // RakudoCodeRef.Instance newBlock = new RakudoCodeRef.Instance(block.getSTable());
+        newBlock.Body = block.Body;
+        newBlock.CurrentContext = block.CurrentContext;
+        newBlock.Handlers = block.Handlers;
+        newBlock.OuterBlock = block.OuterBlock;
+        newBlock.Sig = block.Sig;
+        newBlock.StaticLexPad = block.StaticLexPad;
+
+        // Set the outer for next invocation and return the cloned block.
+        newBlock.OuterForNextInvocation = tc.CurrentContext;
+        return newBlock;
     }
 }
 

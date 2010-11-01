@@ -5,6 +5,8 @@ import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 
+
+
 /// <summary>
 /// This contains various utility methods that let us wrap up .Net
 /// methods into static method info.
@@ -36,12 +38,9 @@ public final class CodeObjectUtility
     /// </summary>
     /// <param name="Code"></param>
     /// <returns></returns>
-    public static RakudoCodeRef.Instance BuildStaticBlockInfo
-    (
+    public static RakudoCodeRef.Instance BuildStaticBlockInfo(
         RakudoCodeRef.IFunc_Body code,
-        RakudoCodeRef.Instance outer,
-        String[] lexNames
-    )
+        RakudoCodeRef.Instance outer, String[] lexNames)
     {
         // Create code wrapper object.
         RakudoCodeRef.Instance result = (RakudoCodeRef.Instance)LLCodeTypeObject.getSTable().REPR.instance_of(null,LLCodeTypeObject);

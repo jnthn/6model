@@ -1,5 +1,4 @@
 package Rakudo.Metamodel.Representations;
-
 import java.util.ArrayList;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;

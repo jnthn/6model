@@ -6,6 +6,7 @@ import Rakudo.Runtime.Context;
 import Rakudo.Runtime.Exceptions.Handler;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
+import Rakudo.Runtime.MultiDispatch.DispatchCache;
 import Rakudo.Runtime.Parameter;
 import Rakudo.Runtime.Signature;
 import Rakudo.Metamodel.SharedTable;
@@ -26,7 +27,7 @@ public final class RakudoCodeRef implements Representation
     // Used in for example: CodeObjectUtility
     public interface IFunc_Body {
         public RakudoObject Invoke(ThreadContext tc, RakudoObject meth, RakudoObject capt);
-    }  // C# has public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>; // TODO: why 4 parameters and not 3?
+    }  // C# has public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>; // TODO: why 4 parameters and not 3? Is the last one the return type?
 
     /// <summary>
     /// This is how the boxed form of a P6str looks.
@@ -54,14 +55,30 @@ public final class RakudoCodeRef implements Representation
         public Signature Sig;
 
         /// <summary>
+        /// Exception handlers this block has, if any.
+        /// </summary>
+        public Handler[] Handlers;
+        
+        /// <summary>
+        /// If this is a dispatcher, this is the list of dispatchees that
+        /// it will operate over.
+        /// </summary>
+        public RakudoObject[] Dispatchees;
+
+        /// <summary>
+        /// Multiple dispatch cache, if we have one.
+        /// </summary>
+        public DispatchCache MultiDispatchCache;
+
+        /// <summary>
         /// The context currently using this sub.
         /// </summary>
         public Context CurrentContext;
 
         /// <summary>
-        /// Exception handlers this block has, if any.
+        /// The outer context to use for the next invocation, if any.
         /// </summary>
-        public Handler[] Handlers;
+        public Context OuterForNextInvocation;
         
         /// <summary>
         /// Constructor.
@@ -77,23 +94,23 @@ public final class RakudoCodeRef implements Representation
     /// </summary>
     /// <param name="MetaPackage"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
         // Do the usual bits of setup for the type-object.
-        SharedTable sTable = new SharedTable();
-        sTable.HOW = MetaPackage;
-        sTable.REPR = this;
-        sTable.WHAT = new Instance(sTable);
+        SharedTable sharedTable = new SharedTable();
+        sharedTable.HOW = metaPackage;
+        sharedTable.REPR = this;
+        sharedTable.WHAT = new Instance(sharedTable);
 
         // Also twiddle the S-Table's Invoke to invoke the contained
         // function.
-        sTable.Invoke = new IFunc_Body() { // the C# version has a lambda
-            public RakudoObject Invoke( ThreadContext tci, RakudoObject meth, RakudoObject capt )
+        sharedTable.Invoke = new IFunc_Body() { // the C# version has a lambda
+            public RakudoObject Invoke(ThreadContext tci, RakudoObject methObj, RakudoObject capture)
             {
-                return ((RakudoCodeRef.Instance)meth).Body.Invoke(tci, meth, capt);
+                return ((RakudoCodeRef.Instance)methObj).Body.Invoke(tci, methObj, capture);
             }
         };
-        return sTable.WHAT;
+        return sharedTable.WHAT;
     }
 
     /// <summary>

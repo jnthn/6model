@@ -36,58 +36,58 @@ public class SignatureBinder // static class in the C# version
     /// </summary>
     /// <param name="C"></param>
     /// <param name="Capture"></param>
-    public static void Bind(Context C, RakudoObject Capture)
+    public static void Bind(Context C, RakudoObject capture)
     {
         // Make sure the object is really a low level capture (don't handle
         // otherwise yet) and grab the pieces.
-        P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
-        if (NativeCapture == null)
+        P6capture.Instance nativeCapture = (P6capture.Instance)capture;
+        if (nativeCapture == null)
             throw new UnsupportedOperationException("Can only deal with native captures at the moment");
-        RakudoObject[] Positionals = NativeCapture.Positionals != null ? NativeCapture.Positionals : EmptyPos;
-        HashMap<String,RakudoObject> Nameds = NativeCapture.Nameds != null ? NativeCapture.Nameds : EmptyNamed;
+        RakudoObject[] positionals = nativeCapture.Positionals != null ? nativeCapture.Positionals : EmptyPos;
+        HashMap<String,RakudoObject> nameds = nativeCapture.Nameds != null ? nativeCapture.Nameds : EmptyNamed;
 
         // If we have no signature, that's same as an empty signature.
-        Signature Sig = C.StaticCodeObject.Sig;
-        if (Sig == null)
+        Signature sig = C.StaticCodeObject.Sig;
+        if (sig == null)
             return;
 
         // Current positional.
-        int CurPositional = 0;
+        int curPositional = 0;
 
         // Iterate over the parameters.
-        Parameter[] Params = Sig.Parameters;
-        int NumParams = Params.length;
-        for (int i = 0; i < NumParams; i++)
+        Parameter[] params = sig.Parameters;
+        int numParams = params.length;
+        for (int i = 0; i < numParams; i++)
         {
-            Parameter Param = Params[i];
+            Parameter param = params[i];
 
             // Positional required?
-            if (Param.Flags == Parameter.POS_FLAG)
+            if (param.Flags == Parameter.POS_FLAG)
             {
-                if (CurPositional < Positionals.length)
+                if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
+                    C.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
                 }
                 else
                 {
                     throw new UnsupportedOperationException("Not enough positional parameters; got " +
-                        Integer.toString(CurPositional) + " but needed " +
+                        Integer.toString(curPositional) + " but needed " +
                         Integer.toString(NumRequiredPositionals(C.StaticCodeObject.Sig)));
                 }
 
                 // Increment positional counter.
-                CurPositional++;
+                curPositional++;
             }
 
-            // Positonal optional?
-            else if (Param.Flags == Parameter.OPTIONAL_FLAG)
+            // Positional optional?
+            else if (param.Flags == Parameter.OPTIONAL_FLAG)
             {
-                if (CurPositional < Positionals.length)
+                if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    C.LexPad.Storage[Param.VariableLexpadPosition] = Positionals[CurPositional];
-                    CurPositional++;
+                    C.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
+                    curPositional++;
                 }
                 else
                 {
@@ -96,33 +96,33 @@ public class SignatureBinder // static class in the C# version
             }
 
             // Named slurpy?
-            else if ((Param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
+            else if ((param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
             {
                 throw new UnsupportedOperationException("Named slurpy parameters are not yet implemented.");
             }
 
             // Named positional?
-            else if ((Param.Flags & Parameter.POS_SLURPY_FLAG) != 0)
+            else if ((param.Flags & Parameter.POS_SLURPY_FLAG) != 0)
             {
                 throw new UnsupportedOperationException("Positional slurpy parameters are not yet implemented.");
             }
 
             // Named?
-            else if (Param.Name != null)
+            else if (param.Name != null)
             {
                 // Yes, try and get argument.
-                if (Nameds.containsKey(Param.Name))
+                if (nameds.containsKey(param.Name))
                 {
                     // We have an argument, just bind it.
-                    RakudoObject Value = Nameds.get(Param.Name);
-                    C.LexPad.Storage[Param.VariableLexpadPosition] = Value;
+                    RakudoObject value = nameds.get(param.Name);
+                    C.LexPad.Storage[param.VariableLexpadPosition] = value;
                 }
                 else
                 {
                     // Optional?
-                    if ((Param.Flags & Parameter.OPTIONAL_FLAG) == 0)
+                    if ((param.Flags & Parameter.OPTIONAL_FLAG) == 0)
                     {
-                        throw new UnsupportedOperationException("Required named parameter " + Param.Name + " missing");
+                        throw new UnsupportedOperationException("Required named parameter " + param.Name + " missing");
                     }
                     else
                     {
@@ -139,11 +139,11 @@ public class SignatureBinder // static class in the C# version
         }
 
         // Ensure we had enough positionals.
-        int PossiesInCapture = Positionals.length;
-        if (CurPositional != PossiesInCapture)
+        int possiesInCapture = positionals.length;
+        if (curPositional != possiesInCapture)
             throw new UnsupportedOperationException("Too many positional arguments passed; expected " +
                 Integer.toString(NumRequiredPositionals(C.StaticCodeObject.Sig)) +
-                " but got " + Integer.toString(PossiesInCapture));
+                " but got " + Integer.toString(possiesInCapture));
 
         // XXX TODO; Ensure we don't have leftover nameds.
     }
@@ -153,15 +153,14 @@ public class SignatureBinder // static class in the C# version
     /// </summary>
     /// <param name="Sig"></param>
     /// <returns></returns>
-    private static int NumRequiredPositionals(Signature Sig)
+    private static int NumRequiredPositionals(Signature sig)
     {
-        int Num = 0;
-        for (Parameter Param : Sig.Parameters)
-            if (Param.Flags != 0 || Param.Name != null)
+        int num = 0;
+        for (Parameter param : sig.Parameters)
+            if (param.Flags != 0 || param.Name != null)
                 break;
             else
-                Num++;
-        return Num;
+                num++;
+        return num;
     }
 }
-

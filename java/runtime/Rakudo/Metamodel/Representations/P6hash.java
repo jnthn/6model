@@ -26,9 +26,9 @@ public final class P6hash implements Representation
     private final class Instance extends RakudoObject
     {
         public HashMap<RakudoObject, HashMap<String, RakudoObject>> Storage;
-        public Instance(SharedTable STable)
+        public Instance(SharedTable sTable)
         {
-            this.setSTable(STable);
+            this.setSTable(sTable);
         }
     }
 
@@ -39,13 +39,13 @@ public final class P6hash implements Representation
     /// </summary>
     /// <param name="HOW"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = this;
-        STable.WHAT = new Instance(STable);
-        return STable.WHAT;
+        SharedTable sTable = new SharedTable();
+        sTable.HOW = metaPackage;
+        sTable.REPR = this;
+        sTable.WHAT = new Instance(sTable);
+        return sTable.WHAT;
     }
 
     /// <summary>
@@ -79,15 +79,15 @@ public final class P6hash implements Representation
     /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>
     /// <returns></returns>
-    public RakudoObject get_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name)
+    public RakudoObject get_attribute(ThreadContext tc, RakudoObject Object, RakudoObject classHandle, String name)
     {
         // If no storage ever allocated, trivially no value. Otherwise,
         // return what we find.
         Instance I = (Instance)Object;
-        if (I.Storage == null || !I.Storage.containsKey(ClassHandle))
+        if (I.Storage == null || !I.Storage.containsKey(classHandle))
             return null;
-        HashMap<String, RakudoObject> ClassStore = I.Storage.get(ClassHandle);
-        return ClassStore.containsKey(Name) ? ClassStore.get(Name) : null;
+        HashMap<String, RakudoObject> classStore = I.Storage.get(classHandle);
+        return classStore.containsKey(name) ? classStore.get(name) : null;
     }
 
     /// <summary>

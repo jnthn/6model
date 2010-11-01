@@ -3,6 +3,9 @@ package Rakudo.Runtime;
 import java.util.HashMap;
 import Rakudo.Metamodel.RakudoObject;
 
+
+
+
 /// <summary>
 /// Represents a lexpad - either the static version or the dynamic
 /// one.
@@ -70,8 +73,8 @@ public class Lexpad  // struct in the C# version
         // was shared before, but add the extra entry.
         SlotMapping = new HashMap<String, Integer>(SlotMapping);
         int NewSlot = Storage.length;
-        for (String Name : Names)
-            SlotMapping.put(Name, NewSlot++);
+        for (String name : Names)
+            SlotMapping.put(name, NewSlot++);
 
         // Reallocate enlarged storage.
         RakudoObject[] NewStorage = new RakudoObject[Storage.length + Names.length];

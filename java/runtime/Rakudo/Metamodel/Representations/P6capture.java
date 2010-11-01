@@ -31,13 +31,13 @@ public final class P6capture implements Representation
     /// </summary>
     /// <param name="MetaPackage"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = this;
-        STable.WHAT = new Instance(STable);
-        return STable.WHAT;
+        SharedTable sTable = new SharedTable();
+        sTable.HOW = metaPackage;
+        sTable.REPR = this;
+        sTable.WHAT = new Instance(sTable);
+        return sTable.WHAT;
     }
 
     /// <summary>

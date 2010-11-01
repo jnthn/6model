@@ -3,10 +3,10 @@ package Rakudo.Runtime.MultiDispatch;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.P6capture;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
+import Rakudo.Runtime.DefinednessConstraint;
 
 /// <summary>
 /// Very first cut implementation of a multi-dispatcher. Doesn't yet
@@ -21,31 +21,55 @@ public class MultiDispatcher
     /// <param name="Candidates"></param>
     /// <param name="Capture"></param>
     /// <returns></returns>
-    public static RakudoCodeRef.Instance FindBestCandidate(ArrayList<RakudoCodeRef.Instance> candidates, RakudoObject capture)
+    public static RakudoObject FindBestCandidate(RakudoCodeRef.Instance dispatchRoutine, RakudoObject capture)
     {
-        // Sort the candidates.
-        // XXX Cache this in the future.
-        ArrayList<RakudoCodeRef.Instance> sortedCandidates = candidateSort(candidates);
-
         // Extract the native capture.
         // XXX Handle non-native captures too.
         P6capture.Instance nativeCapture = (P6capture.Instance)capture;
 
+        // First, try the dispatch cache.
+        if (dispatchRoutine.MultiDispatchCache != null && nativeCapture.Nameds == null)
+        {
+            RakudoObject cacheResult = dispatchRoutine.MultiDispatchCache.Lookup(nativeCapture.Positionals);
+            if (cacheResult != null)
+                return cacheResult;
+        }
+
+        // Sort the candidates.
+        // XXX Cache this in the future.
+        ArrayList<RakudoObject> sortedCandidates = candidateSort(dispatchRoutine.Dispatchees);
+
         // Now go through the sorted candidates and find the first one that
         // matches.
         ArrayList<RakudoCodeRef.Instance> possiblesList = new ArrayList<RakudoCodeRef.Instance>();
-        for (RakudoCodeRef.Instance candidate : sortedCandidates)
+        for (RakudoObject candidateObject : sortedCandidates)
         {
+            // TODO: remove yukky type cast
+            RakudoCodeRef.Instance candidate = (RakudoCodeRef.Instance)candidateObject;
             // If we hit a null, we're at the end of a group.
             if (candidate == null)
             {
                 if (possiblesList.size() == 1)
+                {
+                    // We have an unambiguous first candidate. Cache if possible and
+                    // return it.
+                    if (nativeCapture.Nameds == null)
+                    {
+                        if (dispatchRoutine.MultiDispatchCache == null)
+                            dispatchRoutine.MultiDispatchCache = new DispatchCache();
+                        dispatchRoutine.MultiDispatchCache.Add(nativeCapture.Positionals, possiblesList.get(0));
+                    }
                     return possiblesList.get(0);
+                }
                 else if (possiblesList.size() > 1)
+                {
                     // Here is where you'd handle constraints.
                     throw new UnsupportedOperationException("Ambiguous dispatch: more than one candidate matches");
+                }
                 else
+                {
                     continue;
+                }
             }
             
             /* Check if it's admissable by arity. */
@@ -65,6 +89,17 @@ public class MultiDispatcher
                     typeMismatch = true;
                     break;
                 }
+                DefinednessConstraint definedness = candidate.Sig.Parameters[i].Definedness;
+                if (definedness != DefinednessConstraint.None)
+                {
+                    boolean argDefined = arg.getSTable().REPR.defined(null, arg);
+                    if (definedness == DefinednessConstraint.DefinedOnly && !argDefined ||
+                        definedness == DefinednessConstraint.UndefinedOnly && argDefined)
+                    {
+                        typeMismatch = true;
+                        break;
+                    }
+                }
             }
             if (typeMismatch)
                 continue;
@@ -82,9 +117,12 @@ public class MultiDispatcher
     /// </summary>
     /// <param name="Unsorted"></param>
     /// <returns></returns>
-    private static ArrayList<RakudoCodeRef.Instance> candidateSort(ArrayList<RakudoCodeRef.Instance> unsorted)
+    private static ArrayList<RakudoObject> candidateSort(RakudoObject[] unsorted)
     {
-        ArrayList<RakudoCodeRef.Instance> sorted = new ArrayList<RakudoCodeRef.Instance>(unsorted);
+        ArrayList<RakudoObject> sorted = new ArrayList<RakudoObject>();
+        for (RakudoObject obj : unsorted) {
+            sorted.add(obj);
+        }
         sorted.add(null); // XXX does this akshually sort?
         return sorted;
     }

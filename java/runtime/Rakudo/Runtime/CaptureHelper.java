@@ -4,6 +4,9 @@ import java.util.HashMap;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.P6capture;
 
+
+
+
 /// <summary>
 /// Provides helper methods for getting stuff into and out of captures,
 /// both native ones and user-level ones.
@@ -21,8 +24,8 @@ public class CaptureHelper   // the C# version has a static class
     /// <returns></returns>
     public static RakudoObject FormWith()
     {
-        P6capture.Instance c = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
-        return c;
+        P6capture.Instance capture = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
+        return capture;
     }
 
     /// <summary>
@@ -30,11 +33,11 @@ public class CaptureHelper   // the C# version has a static class
     /// </summary>
     /// <param name="Args"></param>
     /// <returns></returns>
-    public static RakudoObject FormWith(RakudoObject[] PosArgs)
+    public static RakudoObject FormWith(RakudoObject[] posArgs)
     {
-        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
-        C.Positionals = PosArgs;
-        return C;
+        P6capture.Instance capture = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
+        capture.Positionals = posArgs;
+        return capture;
     }
 
     /// <summary>
@@ -42,12 +45,12 @@ public class CaptureHelper   // the C# version has a static class
     /// </summary>
     /// <param name="Args"></param>
     /// <returns></returns>
-    public static RakudoObject FormWith(RakudoObject[] PosArgs, HashMap<String, RakudoObject> NamedArgs)
+    public static RakudoObject FormWith(RakudoObject[] posArgs, HashMap<String, RakudoObject> namedArgs)
     {
-        P6capture.Instance C = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
-        C.Positionals = PosArgs;
-        C.Nameds = NamedArgs;
-        return C;
+        P6capture.Instance capture = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
+        capture.Positionals = posArgs;
+        capture.Nameds = namedArgs;
+        return capture;
     }
 
     /// <summary>
@@ -56,23 +59,20 @@ public class CaptureHelper   // the C# version has a static class
     /// <param name="Capture"></param>
     /// <param name="Pos"></param>
     /// <returns></returns>
-    public static RakudoObject GetPositional(RakudoObject Capture, int Pos)
+    public static RakudoObject GetPositional(RakudoObject capture, int pos)
     {
-        P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
-        if (NativeCapture != null)
+        P6capture.Instance nativeCapture = (P6capture.Instance)capture;
+        if (nativeCapture != null)
         {
-            RakudoObject[] Possies = NativeCapture.Positionals;
-            if (Possies != null && Pos < Possies.length)
-                return Possies[Pos];
+            RakudoObject[] possies = nativeCapture.Positionals;
+            if (possies != null && pos < possies.length)
+                return possies[pos];
             else
                 return null;
         }
         else
         {
-//          throw new NoSuchMethodException("Can only deal with native captures at the moment");
-            System.err.println("Can only deal with native captures at the moment");
-            System.exit(1);
-            return null;
+            throw new UnsupportedOperationException("Can only deal with native captures at the moment");
         }
     };
 
@@ -81,20 +81,17 @@ public class CaptureHelper   // the C# version has a static class
     /// </summary>
     /// <param name="Capture"></param>
     /// <returns></returns>
-    public static int NumPositionals(RakudoObject Capture)
+    public static int NumPositionals(RakudoObject capture)
     {
-        P6capture.Instance NativeCapture = (P6capture.Instance) Capture;
-        if (NativeCapture != null)
+        P6capture.Instance nativeCapture = (P6capture.Instance) capture;
+        if (nativeCapture != null)
         {
-            RakudoObject[] Possies = NativeCapture.Positionals;
-            return Possies == null ? 0 : Possies.length;
+            RakudoObject[] possies = nativeCapture.Positionals;
+            return possies == null ? 0 : possies.length;
         }
         else
         {
-            // throw new NoSuchMethodException("Can only deal with native captures at the moment");
-            System.err.println("Can only deal with native captures at the moment");
-            System.exit(1);
-            return 0;
+            throw new UnsupportedOperationException("Can only deal with native captures at the moment");
         }
     }
 
@@ -104,25 +101,20 @@ public class CaptureHelper   // the C# version has a static class
     /// <param name="Capture"></param>
     /// <param name="Pos"></param>
     /// <returns></returns>
-    public static RakudoObject GetNamed(RakudoObject Capture, String name)
-         // throws NoSuchFieldException
+    public static RakudoObject GetNamed(RakudoObject capture, String name)
     {
-        P6capture.Instance NativeCapture = (P6capture.Instance)Capture;
-        if (NativeCapture != null)
+        P6capture.Instance nativeCapture = (P6capture.Instance)capture;
+        if (nativeCapture != null)
         {
-            HashMap<String,RakudoObject> Nameds = NativeCapture.Nameds;
-            if (Nameds != null && Nameds.containsKey(name))
-                return Nameds.get(name);
-                // return Nameds[name]; // the C# version
+            HashMap<String,RakudoObject> nameds = nativeCapture.Nameds;
+            if (nameds != null && nameds.containsKey(name))
+                return nameds.get(name);
             else
                 return null;
         }
         else
         {
-            // throw new NoSuchFieldException("Can only deal with native captures at the moment");
-            System.err.println("Can only deal with native captures at the moment");
-            System.exit(1);
-            return null;
+            throw new UnsupportedOperationException("Can only deal with native captures at the moment");
         }
     }
 
@@ -134,9 +126,9 @@ public class CaptureHelper   // the C# version has a static class
     /// <param name="Capture"></param>
     /// <param name="Pos"></param>
     /// <returns></returns>
-    public static String GetPositionalAsString(RakudoObject Capture, int Pos)
+    public static String GetPositionalAsString(RakudoObject capture, int pos)
     {
-        return Ops.unbox_str(null, GetPositional(Capture, Pos));
+        return Ops.unbox_str(null, GetPositional(capture, pos));
     }
 
     /// <summary>
@@ -148,4 +140,3 @@ public class CaptureHelper   // the C# version has a static class
         return null;
     }
 }
-

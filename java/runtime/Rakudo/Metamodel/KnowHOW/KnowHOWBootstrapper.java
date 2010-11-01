@@ -44,15 +44,12 @@ public class KnowHOWBootstrapper  // public static in the C# version
         // We'll set up a dictionary of our various methods to go into
         // KnowHOW's HOW, since we'll want to work with them a bit.
         HashMap<String, RakudoObject> KnowHOWMeths = new HashMap<String, RakudoObject>();
-
-        // The new_type method
-        RakudoCodeRef.IFunc_Body func_new_type = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        KnowHOWMeths.put("new_type", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // We first create a new HOW instance.
-                RakudoObject KnowHOWTypeObj = CaptureHelper.GetPositional(capture, 0);
-                RakudoObject HOW = KnowHOWTypeObj.getSTable().REPR.instance_of(tc, KnowHOWTypeObj.getSTable().WHAT);
+                RakudoObject knowHOWTypeObj = CaptureHelper.GetPositional(capture, 0);
+                RakudoObject HOW = knowHOWTypeObj.getSTable().REPR.instance_of(tc, knowHOWTypeObj.getSTable().WHAT);
 
                 // Now create a new type object to go with it of the
                 // desired REPR; we default to P6opaque (note that the
@@ -73,12 +70,8 @@ public class KnowHOWBootstrapper  // public static in the C# version
                     return REPRRegistry.get_REPR_by_name("P6opaque").type_object_for(tc, HOW);
                 }
             }
-        };
-        KnowHOWMeths.put("new_type", CodeObjectUtility.WrapNativeMethod(func_new_type));
-
-        // The add_attribute method
-        RakudoCodeRef.IFunc_Body func_add_attribute = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("add_attribute", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
@@ -86,92 +79,68 @@ public class KnowHOWBootstrapper  // public static in the C# version
                 HOW.Attributes.add(Attr);
                 return CaptureHelper.Nil();
             }
-        };
-        KnowHOWMeths.put("add_attribute", CodeObjectUtility.WrapNativeMethod(func_add_attribute));
-
-        // The add_method method
-        RakudoCodeRef.IFunc_Body func_add_method = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("add_method", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
-                String Name = CaptureHelper.GetPositionalAsString(capture, 2);
-                RakudoObject Method = CaptureHelper.GetPositional(capture, 3);
-                HOW.Methods.put(Name, Method);
+                String name = CaptureHelper.GetPositionalAsString(capture, 2);
+                RakudoObject method = CaptureHelper.GetPositional(capture, 3);
+                HOW.Methods.put(name, method);
                 return CaptureHelper.Nil();
             }
-        };
-        KnowHOWMeths.put("add_method", CodeObjectUtility.WrapNativeMethod(func_add_method));
-
-        // The find_method method
-        RakudoCodeRef.IFunc_Body func_find_method = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("find_method", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // We go to some effort to be really fast in here, 'cus it's a
                 // hot path for dynamic dispatches.
                 RakudoObject[] Positionals = ((P6capture.Instance)capture).Positionals;
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)Positionals[0];
-                if (HOW.Methods.containsKey(Ops.unbox_str(tc, Positionals[1])))
-                    return HOW.Methods.get(Ops.unbox_str(tc, Positionals[1]));
+                if (HOW.Methods.containsKey(Ops.unbox_str(tc, Positionals[2])))
+                    return HOW.Methods.get(Ops.unbox_str(tc, Positionals[2]));
                 else {
                     // throw new NoSuchMethodException("No such method " + Ops.unbox_str(tc, Positionals[1]));
                     throw new UnsupportedOperationException("No such method " + Ops.unbox_str(tc, Positionals[1]));
                 }
             }
-        };
-        KnowHOWMeths.put("find_method", CodeObjectUtility.WrapNativeMethod(func_find_method));
-
-        // The compose method
-        RakudoCodeRef.IFunc_Body func_compose = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("compose", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
-                RakudoObject Obj = CaptureHelper.GetPositional(capture, 1);
-                return Obj;
+                RakudoObject obj = CaptureHelper.GetPositional(capture, 1);
+                return obj;
             }
-        };
-        KnowHOWMeths.put("compose", CodeObjectUtility.WrapNativeMethod(func_compose));
-
-        // The attributes method
-        RakudoCodeRef.IFunc_Body func_attributes = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("attributes", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // Safe to just return a P6list instance that points at
                 // the same thing we hold internally, since a list is
                 // immutable.
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
-                RakudoObject Result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
-                ((P6list.Instance)Result).Storage = HOW.Attributes;
-                return Result;
+                RakudoObject result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
+                ((P6list.Instance)result).Storage = HOW.Attributes;
+                return result;
             }
-        };
-        KnowHOWMeths.put("attributes", CodeObjectUtility.WrapNativeMethod(func_attributes));
-
-        // The methods method
-        RakudoCodeRef.IFunc_Body func_methods = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("methods", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
+                // Return the methods list.
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
-                RakudoObject Result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
-                ((P6list.Instance)Result).Storage.addAll(HOW.Methods.values());
-                return Result;
+                RakudoObject result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
+                ((P6list.Instance)result).Storage.addAll(HOW.Methods.values());
+                return result;
             }
-        };
-        KnowHOWMeths.put("methods", CodeObjectUtility.WrapNativeMethod(func_methods));
-
-        // The parents method
-        RakudoCodeRef.IFunc_Body func_parents = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
+        }));
+        KnowHOWMeths.put("parents", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() { // an anonymous class
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // A pure prototype never has any parents, so return an empty list.
                 return tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
             }
-        };
-        KnowHOWMeths.put("parents", CodeObjectUtility.WrapNativeMethod(func_parents));
+        }));
 
         // We create a KnowHOW instance that can describe itself.
         // This means .HOW.HOW.HOW.HOW etc will always return that,
@@ -189,19 +158,18 @@ public class KnowHOWBootstrapper  // public static in the C# version
 
         // And put a fake FindMethod in there that just looks in the
         // dictionary.
-        IFindMethod func_FindMethod = new IFindMethod()
-        { // create an anonymous class
+        KnowHOWHOW.getSTable().FindMethod = new IFindMethod()
+        { // an anonymous class
             public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
             {
-                HashMap<String, RakudoObject> MTable = ((KnowHOWREPR.KnowHOWInstance)obj).Methods;
-                if (MTable.containsKey(name))
-                    return MTable.get(name);
+                HashMap<String, RakudoObject> mTable = ((KnowHOWREPR.KnowHOWInstance)obj).Methods;
+                if (mTable.containsKey(name))
+                    return mTable.get(name);
                 else {
                     throw new UnsupportedOperationException("No such method " + name);
                 }
             }
         };
-        KnowHOWHOW.getSTable().FindMethod = func_FindMethod;
 
         // Set this as the KnowHOW's HOW.
         KnowHOW.getSTable().HOW = KnowHOWHOW;
@@ -225,23 +193,21 @@ public class KnowHOWBootstrapper  // public static in the C# version
         RakudoObject knowHOWAttribute = REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, HOW);
 
         // Add methods new and Str.
-        RakudoCodeRef.IFunc_Body meth_new = new RakudoCodeRef.IFunc_Body() {  // the C# version uses a lambda
+        HOW.Methods.put("new", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() {  // the C# version uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject obj, RakudoObject capture)
             {
                 RakudoObject WHAT = CaptureHelper.GetPositional(capture, 0).getSTable().WHAT;
                 String name = Ops.unbox_str(tc, CaptureHelper.GetNamed(capture, "name"));
                 return Ops.box_str(tc, name, WHAT);
             }
-        };
-        HOW.Methods.put("new", CodeObjectUtility.WrapNativeMethod(meth_new));
-        RakudoCodeRef.IFunc_Body meth_name = new RakudoCodeRef.IFunc_Body() {   // the C# version uses a lambda
+        }));
+        HOW.Methods.put("name", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() { // the C# version uses a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject obj, RakudoObject capture)
             {
                 RakudoObject self = CaptureHelper.GetPositional(capture, 0);
                 return Ops.box_str(tc, Ops.unbox_str(tc, self), tc.DefaultStrBoxType);
             }
-        };
-        HOW.Methods.put("name", CodeObjectUtility.WrapNativeMethod(meth_name));
+        }));
 
         return knowHOWAttribute;
     }

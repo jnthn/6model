@@ -1,5 +1,4 @@
 package Rakudo.Metamodel.Representations;
-
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
@@ -20,9 +19,9 @@ public final class P6int implements Representation
     {
         public int Value;
         public boolean Undefined;
-        public Instance(SharedTable STable)
+        public Instance(SharedTable sTable)
         {
-            this.setSTable(STable);
+            this.setSTable(sTable);
         }
     }
 
@@ -31,14 +30,14 @@ public final class P6int implements Representation
     /// </summary>
     /// <param name="MetaPackage"></param>
     /// <returns></returns>
-    public RakudoObject type_object_for(ThreadContext tc, RakudoObject MetaPackage)
+    public RakudoObject type_object_for(ThreadContext tc, RakudoObject metaPackage)
     {
-        SharedTable STable = new SharedTable();
-        STable.HOW = MetaPackage;
-        STable.REPR = (Representation)this;
-        Instance WHAT = new Instance(STable);
+        SharedTable sTable = new SharedTable();
+        sTable.HOW = metaPackage;
+        sTable.REPR = (Representation)this;
+        Instance WHAT = new Instance(sTable);
         WHAT.Undefined = true;
-        STable.WHAT = (RakudoObject)WHAT;
+        sTable.WHAT = (RakudoObject)WHAT;
         return WHAT;
     }
 

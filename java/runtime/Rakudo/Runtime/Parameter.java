@@ -1,6 +1,7 @@
 package Rakudo.Runtime;
 
 import Rakudo.Metamodel.RakudoObject;
+import Rakudo.Runtime.DefinednessConstraint;
 
 /// <summary>
 /// Represents a parameter in a signature.
@@ -14,19 +15,26 @@ public class Parameter
     /// <param name="VariableName"></param>
     /// <param name="Name"></param>
     /// <param name="Flags"></param>
-    public Parameter(RakudoObject Type, String VariableName, int VariableLexpadPosition, String Name, int Flags)
+    public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
+        String name, int flags, DefinednessConstraint definedness)
     {
-        this.Type = Type;
-        this.VariableName = VariableName;
-        this.VariableLexpadPosition = VariableLexpadPosition;
-        this.Name = Name;
-        this.Flags = Flags;
+        this.Type = type;
+        this.VariableName = variableName;
+        this.VariableLexpadPosition = variableLexpadPosition;
+        this.Name = name;
+        this.Flags = flags;
+        this.Definedness = definedness;
     }
 
     /// <summary>
     /// The type of the parameter.
     /// </summary>
     public RakudoObject Type;
+
+    /// <summary>
+    /// Whether a defined or undefined value is required.
+    /// </summary>
+    public DefinednessConstraint Definedness;
 
     /// <summary>
     /// The name of the lexical to bind the parameter to.

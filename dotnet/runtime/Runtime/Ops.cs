@@ -853,6 +853,101 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Pushes a value to a low level list (something that
+        /// uses the P6list representation).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="LLList"></param>
+        /// <returns></returns>
+        public static RakudoObject lllist_push(ThreadContext TC, RakudoObject LLList, RakudoObject item)
+        {
+            if (LLList is P6list.Instance)
+            {
+                ((P6list.Instance)LLList).Storage.Add(item);
+                return item;
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_push if representation is not P6list");
+            }
+        }
+
+        /// <summary>
+        /// Pops a value from a low level list (something that
+        /// uses the P6list representation).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="LLList"></param>
+        /// <returns></returns>
+        public static RakudoObject lllist_pop(ThreadContext TC, RakudoObject LLList)
+        {
+            if (LLList is P6list.Instance)
+            {
+                List<RakudoObject> store = ((P6list.Instance)LLList).Storage;
+                int idx = store.Count - 1;
+                if (idx < 0)
+                {
+                    throw new ArgumentOutOfRangeException("Cannot pop from an empty list");
+                }
+                RakudoObject item = store[idx];
+                store.RemoveAt(idx);
+                return item;
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_pop if representation is not P6list");
+            }
+        }
+
+        /// <summary>
+        /// Shifts a value from a low level list (something that
+        /// uses the P6list representation).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="LLList"></param>
+        /// <returns></returns>
+        public static RakudoObject lllist_shift(ThreadContext TC, RakudoObject LLList)
+        {
+            if (LLList is P6list.Instance)
+            {
+                List<RakudoObject> store = ((P6list.Instance)LLList).Storage;
+                int idx = store.Count - 1;
+                if (idx < 0)
+                {
+                    throw new ArgumentOutOfRangeException("Cannot shift from an empty list");
+                }
+                RakudoObject item = store[0];
+                store.RemoveAt(0);
+                return item;
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_shift if representation is not P6list");
+            }
+        }
+
+        /// <summary>
+        /// Unshifts a value to a low level list (something that
+        /// uses the P6list representation).
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="LLList"></param>
+        /// <returns></returns>
+        public static RakudoObject lllist_unshift(ThreadContext TC, RakudoObject LLList, RakudoObject item)
+        {
+            if (LLList is P6list.Instance)
+            {
+                List<RakudoObject> store = ((P6list.Instance)LLList).Storage;
+                store.Insert(0, item);
+                return item;
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_unshift if representation is not P6list");
+            }
+        }
+
+        /// <summary>
         /// Gets a value at a given key from a low level mapping (something that
         /// uses the P6mapping representation).
         /// </summary>

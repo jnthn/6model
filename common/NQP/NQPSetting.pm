@@ -113,6 +113,18 @@ knowhow NQPArray is repr('P6list') {
     method elems() {
         nqp::lllist_elems(self)
     }
+    method pop() {
+        nqp::lllist_pop(self)
+    }
+    method push($item) {
+        nqp::lllist_push(self, $item)
+    }
+    method shift() {
+        nqp::lllist_shift(self)
+    }
+    method unshift($item) {
+        nqp::lllist_unshift(self, $item)
+    }
     method at_pos($idx) {
         nqp::vivify(nqp::lllist_get_at_pos(self, $idx.Int), Any)
     }

@@ -681,19 +681,26 @@ our multi sub dnst_for(PAST::Op $op) {
         return $result;
     }
 
-    elsif $op.pasttype eq 'while' {
+    elsif $op.pasttype eq 'while' || $op.pasttype eq 'until' {
         # Need labels for start and end.
         my $test_label := get_unique_id('while_lab');
         my $end_label := get_unique_id('while_end_lab');
         my $cond_result := get_unique_id('cond');
         
         # Compile the condition.
-        my $cond := DNST::Temp.new(
-            :name($cond_result), :type('RakudoObject'),
-            dnst_for(PAST::Op.new(
+        
+        my $cop := $op.pasttype eq 'until'
+          ?? PAST::Op.new(
+                :pasttype('call'), :name('&prefix:<!>'),
+                (@($op))[0]
+            )
+          !! PAST::Op.new(
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
-            ))
+            );
+        my $cond := DNST::Temp.new(
+            :name($cond_result), :type('RakudoObject'),
+            dnst_for($cop)
         );
 
         # Compile the body.
@@ -716,6 +723,49 @@ our multi sub dnst_for(PAST::Op $op) {
             ),
             DNST::Goto.new( :label($test_label) ),
             DNST::Label.new( :name($end_label) )
+        );
+    }
+
+    elsif $op.pasttype eq 'repeat_while' || $op.pasttype eq 'repeat_until' {
+        # Need labels for start and end.
+        my $test_label := get_unique_id('while_lab');
+        my $block_label := get_unique_id('block_lab');
+        my $cond_result := get_unique_id('cond');
+        
+        # Compile the condition.
+        
+        my $cop := $op.pasttype eq 'repeat_until'
+          ?? PAST::Op.new(
+                :pasttype('call'), :name('&prefix:<!>'),
+                (@($op))[0]
+            )
+          !! PAST::Op.new(
+                :pasttype('callmethod'), :name('Bool'),
+                (@($op))[0]
+            );
+        my $cond := DNST::Temp.new(
+            :name($cond_result), :type('RakudoObject'),
+            dnst_for($cop)
+        );
+
+        # Compile the body.
+        my $body := dnst_for((@($op))[1]);
+
+        # Build up result.
+        return DNST::Stmts.new(
+            DNST::Label.new( :name($block_label) ),
+            $body,
+            $cond,
+            DNST::If.new(
+                DNST::MethodCall.new(
+                    :on('Ops'), :name('unbox_int'), :type('int'),
+                    'TC', $cond_result
+                ),
+                DNST::Stmts.new(
+                    $cond_result,
+                    DNST::Goto.new( :label($block_label) )
+                )
+            )
         );
     }
 

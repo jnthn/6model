@@ -97,7 +97,7 @@ namespace Rakudo.Runtime.MultiDispatch
             {
                 // ...and we did cache something...
                 var Cache = ArityCaches[Positionals.Length];
-                if (Cache.NumEntries != 0)
+                if (Cache != null && Cache.NumEntries != 0)
                 {
                     // Get what we're looking for.
                     var Seeking = PositionalsToTypeCacheIDs(Positionals);

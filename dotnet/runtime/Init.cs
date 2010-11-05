@@ -48,6 +48,7 @@ namespace Rakudo
 
             // Create an execution domain and a thread context for it.
             var ExecDom = new ExecutionDomain();
+            ExecDom.Setting = SettingContext;
             var Thread = new ThreadContext();
             Thread.Domain = ExecDom;
             Thread.CurrentContext = SettingContext;

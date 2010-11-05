@@ -13,5 +13,9 @@ namespace Rakudo.Runtime
     /// </summary>
     public class ExecutionDomain
     {
+        /// <summary>
+        /// The currently active setting.
+        /// </summary>
+        public Context Setting;
     }
 }

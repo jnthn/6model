@@ -678,34 +678,45 @@ our multi sub dnst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'if' {
-        my $result := DNST::If.new(
-            DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+        my $cond_evaluated := get_unique_id('if_cond');
+        return DNST::Stmts.new(
+            DNST::Temp.new(
+                :name($cond_evaluated), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
                 ))
             ),
-            dnst_for((@($op))[1])
+            DNST::If.new(
+                DNST::MethodCall.new(
+                    :on('Ops'), :name('unbox_int'), :type('int'),
+                    'TC', $cond_evaluated
+                ),
+                dnst_for((@($op))[1]),
+                (+@($op) == 3 ?? dnst_for((@($op))[2]) !! $cond_evaluated)
+            )
         );
-        if +@($op) == 3 {
-            $result.push(dnst_for((@($op))[2]));
-        }
-        return $result;
     }
 
     elsif $op.pasttype eq 'unless' {
-        my $result := DNST::If.new(
-            DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+        my $cond_evaluated := get_unique_id('if_cond');
+        return DNST::Stmts.new(
+            DNST::Temp.new(
+                :name($cond_evaluated), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     (@($op))[0]
                 ))
             ),
-            dnst_for((@($op))[1])
+            DNST::If.new(
+                DNST::MethodCall.new(
+                    :on('Ops'), :name('unbox_int'), :type('int'),
+                    'TC', $cond_evaluated
+                ),
+                dnst_for((@($op))[1]),
+                $cond_evaluated
+            )
         );
-        return $result;
     }
 
     elsif $op.pasttype eq 'while' || $op.pasttype eq 'until' {

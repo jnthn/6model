@@ -57,10 +57,24 @@ sub colonpair_str($ast) {
 }
 
 method comp_unit($/) {
+    # Make the main unit.
     my $mainline := $<statementlist>.ast;
     my $unit     := @BLOCK.shift;
     $unit.push($mainline);
     $unit.node($/);
+
+    # The first thing we ever want to do is load the core libraries
+    # (unless passed the flag to tell us not to, which probably means
+    # we're actually compiling those libraries.)
+    unless $*NQP_NO_CORE_LIBS {
+        $unit.unshift(PAST::Block.new(
+            :blocktype('declaration'),
+            :loadinit(PAST::Stmts.new(
+                PAST::Op.new( :pasttype('nqpop'), :name('load_module'), 'P6Objects' )
+            ))
+        ));
+    }
+
     make $unit;
 }
 

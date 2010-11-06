@@ -375,7 +375,7 @@ sub package($/) {
             )
         ),
         PAST::Op.new( :pasttype('bind'),
-            PAST::Var.new( :name($name) ),
+            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package') ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -399,7 +399,7 @@ sub package($/) {
                 PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
-            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('lexical') )
+            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('package') )
         ));
     }
 
@@ -413,9 +413,15 @@ sub package($/) {
         PAST::Var.new( :name('type_obj'), :scope('register') )
     ));
 
-    # Set up lexical for the type object to live in.
-    @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
-    @BLOCK[0].symbol($name, :scope('lexical'));
+    # Set up lexical for lexical packages; otherwise, just record that it
+    # lives in the package.
+    if $*SCOPE eq 'my' {
+        @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
+        @BLOCK[0].symbol($name, :scope('lexical'));
+    }
+    else {
+        @BLOCK[0].symbol($name, :scope('package'));
+    }
 
     # Evaluate anything else in the package in-line; also give it a $?CLASS
     # lexical.
@@ -441,9 +447,9 @@ method scope_declarator:sym<our>($/) { make $<scoped>.ast; }
 method scope_declarator:sym<has>($/) { make $<scoped>.ast; }
 
 method scoped($/) {
-    make $<declarator>
-         ?? $<declarator>.ast
-         !! $<multi_declarator>.ast;
+    make $<declarator>       ?? $<declarator>.ast       !!
+         $<multi_declarator> ?? $<multi_declarator>.ast !!
+                                $<package_declarator>.ast;
 }
 
 method declarator($/) {

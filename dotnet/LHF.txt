@@ -6,40 +6,15 @@ you want to start hacking on the 6model implementation on .Net, this
 is a great way to jump in! Questions? Try catching jnthn on #perl6
 on freenode.
 
-Comparative operators
----------------------
+String comparative operators
+----------------------------
 DIFFICULTY: Easy-Intermediate
 SKILLS: NQP, C#
 DETAILS:
-At the moment, there is no support for operators like <, <=, lt and
-so forth. Two things are needed to make this happen. First, you'll
-need to make some new entries in runtime/Runtime/Ops.cs as a way to
-actually provide the low-level comparative logic. See equal_ints for
+At the moment, there is no support for the operators lt, le, gt and
+ge. Two things are needed to make this happen. First, you'll need to
+make some new entries in runtime/Runtime/Ops as a way to actually
+provide the low-level comparative logic. See equal_strings for
 example. Then you'll need to add some entries to NQPSetting.pm (it's
 outside of the dotnet tree, in /common/NQP). Finally, see about
 getting the relevant tests running from the nqp-rx test suite.
-
-Split Up Ops.cs
----------------
-DIFFICULTY: Easy
-SKILLS: C#
-DETAILS:
-This file is getting a bit too long, so it's time to split it up. We
-still want to end up with a single Ops class, but we'll spread it over
-a few files and use partial classes. Find some sensible divide (e.g.
-all the ones that work with P6list could go in one file, all those
-that relate to exception throwing etc in another). Don't go overboard,
-but try and get some sensible balance. :-)
-
-Improve P6list and NQPArray
----------------------------
-DIFFICULTY: Intermediate
-SKILLS: NQP, C#
-DETAILS:
-NQPArray needs to have push, pop, shift and unshift methods added.
-Along the way, the P6list representation likely wants to stop using
-the C# List class and start to use an array that it resizes on
-demand, and there may be a need for a couple of new Ops. Note that
-push won't need anything new, since it's just setting another list
-element on end. pop on the other hand needs to end up with the list
-showing up as shorter.

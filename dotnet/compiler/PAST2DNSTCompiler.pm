@@ -73,7 +73,6 @@ method compile(PAST::Node $node) {
     }
 
     # Finally, startup handling code.
-    # XXX This will need to change some day for modules.
     if $*COMPILING_NQP_SETTING {
         $class.push(DNST::Method.new(
             :name('LoadSetting'),
@@ -112,15 +111,14 @@ method compile(PAST::Node $node) {
         ));
     }
     else {
+        # Commonalities for no matter how we start running (be it from the
+        # command line or loaded as a library).
+        my @params;
+        @params.push('ThreadContext TC');
         $class.push(DNST::Method.new(
-            :name('Main'),
+            :name('Init'),
+            :params(@params),
             :return_type('void'),
-            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
-                DNST::MethodCall.new(
-                    :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
-                    DNST::Literal.new( :value('NQPSetting'), :escape(1) )
-                )
-            ),
             DNST::Call.new(
                 :name('blocks_init'),
                 :void(1),
@@ -131,7 +129,29 @@ method compile(PAST::Node $node) {
                 :name('constants_init'),
                 :void(1),
                 'TC'
+            )
+        ));
+
+        # Code for when it's the entry point (e.g. a Main method).
+        $class.push(DNST::Method.new(
+            :name('Main'),
+            :return_type('void'),
+            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
+                DNST::MethodCall.new(
+                    :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
+                    DNST::Literal.new( :value('NQPSetting'), :escape(1) )
+                )
             ),
+            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
+            $main_block_call
+        ));
+
+        # Code for when it's being loaded as a library.
+        $class.push(DNST::Method.new(
+            :name('Load'),
+            :params('ThreadContext TC', 'Context Setting'),
+            :return_type('RakudoObject'),
+            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
             $main_block_call
         ));
     }
@@ -184,7 +204,7 @@ sub make_blocks_init_method($name) {
         ),
         DNST::Bind.new(
             'StaticBlockInfo[0].CurrentContext',
-            'TC.CurrentContext'
+            'TC.Domain.Setting'
         ),
 
         # The others.

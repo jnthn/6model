@@ -38,7 +38,7 @@ method compile(PAST::Node $node) {
     # Build a class node and add the inner code blocks.
     my $class := DNST::Class.new(
         # XXX At some point we'll want to generate a unique name.
-        :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! 'RakudoOutput')
+        :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! unique_name_for_module())
     );
     for @*INNER_BLOCKS {
         $class.push($_);
@@ -146,6 +146,13 @@ method compile(PAST::Node $node) {
         DNST::Using.new( :namespace('Rakudo.Runtime.Exceptions') ),
         $class
     );
+}
+
+# Creates a not-really-that-unique-yet name for the module (good enough if
+# we compile one per second, which given we're cross-compiling, is enough
+# for now.)
+sub unique_name_for_module() {
+    'NQPOutput_' ~ pir::set__IN(pir::time__N())
 }
 
 # This makes the block static info initialization sub. One day, this

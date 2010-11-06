@@ -4,6 +4,6 @@ class Mu {
     }
 
     method CREATE() {
-        repr::instance_of(self)
+        nqp::instance_of(self)
     }
 }

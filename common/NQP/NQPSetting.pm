@@ -434,6 +434,12 @@ my knowhow NQPClassHOW {
     method compose($obj) {
         # XXX TODO: Compose roles (must come before we make MRO,
         # and may provide multi candidates.)
+
+        # If we have no parents and we're not called Mu (XXX that's a
+        # tad fragile, I guess...) then add Mu as our parent.
+        if +@!parents == 0 && $!name ne 'Mu' {
+            self.add_parent($obj, Mu)
+        }
         
         # Some things we only do if we weren't already composed once, like
         # building the MRO.

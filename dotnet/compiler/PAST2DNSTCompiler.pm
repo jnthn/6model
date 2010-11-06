@@ -998,7 +998,7 @@ our multi sub dnst_for(PAST::Var $var) {
             return DNST::Bind.new( $var.name, $*BIND_VALUE );
         }
         else {
-            return $var.name;
+            return DNST::Literal.new( :value($var.name) );
         }
     }
     elsif $scope eq 'attribute' {

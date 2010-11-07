@@ -558,6 +558,22 @@ my knowhow NQPClassHOW {
     }
 
     ##
+    ## Czechy
+    ##
+
+    method isa($obj, $checkee) {
+        my $i := 0;
+        my $mro_length := +@!mro;
+        while $i != $mro_length {
+            if @!mro[$i] =:= $checkee {
+                return 1;
+            }
+            $i := $i + 1;
+        }
+        0;
+    }
+
+    ##
     ## Dispatchy
     ##
 

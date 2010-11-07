@@ -4,27 +4,23 @@ This document lays out the near-term and long-term things that need to be
 done to get NQP, and later Rakudo, running on .Net. The near-term things are
 good guesses. The more distant things are hand-waving. :-)
 
-Last Updated: 31st October 2010
+Last Updated: 7th November 2010
 
 === Add missing NQP features
 We support quite a few bits of NQP so far, but some important things are
-missing. These are in rough priority order. There's no reason the regex
-step that follows this can't start before all of these are done; somre early
-ones are hard dependencies though.
+still missing. These are in rough priority order. There's no reason the
+regex step that follows this can't start before all of these are done; all
+the ones it depends on should be done.
 
-* Get packages sorted out a bit more, especially for the purpose of putting
-  package declarations really into the package.
-
-* Some initial support for module compilation / loading, and GLOBAL merging
-
-* Write a class NQPMu { ... } in a module and load that (we'll start to build
-  out other core classes in here too, e.g. for the regex engine)
-
-* new, bless, CREATE, BUILDALL, BUILD
-
-* Make NQPMu the default class everything else inherits from
+* Indirect method calls
 
 * Defaults on optional parameters
+
+* Slurpy parameters
+
+* Flattened arguments
+
+* bless, CREATE with arg, BUILDALL, BUILD
 
 * Support PAST::Op with pasttype for
 
@@ -32,11 +28,11 @@ ones are hard dependencies though.
 
 * CATCH and CONTROL
 
-* Flattened arguments
-
-* Comparative operators
+* String comparative operators
 
 * viviself and vivibase review and updates
+
+* Review and make sure package scoped bits are really working
 
 * Other types of loop
 

@@ -2,7 +2,7 @@
 
 # check comparisons
 
-say('1..19');
+say('1..25');
 
 ##Integers, positive and negative
 
@@ -96,3 +96,33 @@ if $x =:= $z {
     print("not ");
 }
 say("ok 19 # container equality, string value");
+
+if "x" gt "y" {
+    print("not ");
+}
+say("ok 20 # string greater-than inequality");
+
+unless "y" gt "x" {
+    print("not ");
+}
+say("ok 21 # string less-than inequality");
+
+unless "y" ge "y" {
+    print("not ");
+}
+say("ok 22 # string greater-than-or-equal inequality");
+
+unless "y" ge "xx" {
+    print("not ");
+}
+say("ok 23 # string greater-than-or-equal inequality");
+
+if "y" le "xx" {
+    print("not ");
+}
+say("ok 24 # string less-than-or-equal inequality");
+
+unless "y" le "y" {
+    print("not ");
+}
+say("ok 25 # string less-than-or-equal inequality");

@@ -178,5 +178,61 @@ namespace Rakudo.Runtime
                 (Ops.unbox_int(TC, x) >= Ops.unbox_int(TC, y) ? 1 : 0),
                 TC.DefaultBoolBoxType);
         }
+
+        /// <summary>
+        /// Compares two strings for greater-than inequality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject greater_than_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC,
+                String.Compare(Ops.unbox_str(TC, x), Ops.unbox_str(TC, y)) > 0 ? 1 : 0,
+                TC.DefaultBoolBoxType);
+        }
+
+        /// <summary>
+        /// Compares two strings for greater-than-or-equal inequality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject greater_than_or_equal_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC,
+                String.Compare(Ops.unbox_str(TC, x), Ops.unbox_str(TC, y)) >= 0 ? 1 : 0,
+                TC.DefaultBoolBoxType);
+        }
+
+        /// <summary>
+        /// Compares two strings for less-than inequality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject less_than_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC,
+                String.Compare(Ops.unbox_str(TC, x), Ops.unbox_str(TC, y)) < 0 ? 1 : 0,
+                TC.DefaultBoolBoxType);
+        }
+
+        /// <summary>
+        /// Compares two strings for less-than-or-equal inequality.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject less_than_or_equal_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC,
+                String.Compare(Ops.unbox_str(TC, x), Ops.unbox_str(TC, y)) <= 0 ? 1 : 0,
+                TC.DefaultBoolBoxType);
+        }
     }
 }

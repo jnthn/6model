@@ -224,6 +224,22 @@ sub &infix:<ne>($x, $y) {
     !nqp::equal_strs($x.Str, $y.Str)
 }
 
+sub &infix:<ge>($x, $y) {
+    nqp::greater_than_or_equal_strs($x.Str, $y.Str)
+}
+
+sub &infix:<gt>($x, $y) {
+    nqp::greater_than_strs($x.Str, $y.Str)
+}
+
+sub &infix:<le>($x, $y) {
+    nqp::less_than_or_equal_strs($x.Str, $y.Str)
+}
+
+sub &infix:<lt>($x, $y) {
+    nqp::less_than_strs($x.Str, $y.Str)
+}
+
 sub &infix:<=:=>($x, $y) {
     nqp::equal_refs($x, $y)
 }

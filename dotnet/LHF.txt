@@ -8,13 +8,7 @@ on freenode.
 
 String comparative operators
 ----------------------------
-DIFFICULTY: Easy-Intermediate
-SKILLS: NQP, C#
+DIFFICULTY: Intermediate-Impossible
+SKILLS: Being jnthn
 DETAILS:
-At the moment, there is no support for the operators lt, le, gt and
-ge. Two things are needed to make this happen. First, you'll need to
-make some new entries in runtime/Runtime/Ops as a way to actually
-provide the low-level comparative logic. See equal_strings for
-example. Then you'll need to add some entries to NQPSetting.pm (it's
-outside of the dotnet tree, in /common/NQP). Finally, see about
-getting the relevant tests running from the nqp-rx test suite.
+Add task items to this file.

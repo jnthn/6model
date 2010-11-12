@@ -21,9 +21,5 @@ namespace Rakudo.Metamodel
         /// The serialization context this object belongs to.
         /// </summary>
         public SerializationContext SC;
-
-        public static implicit operator string(RakudoObject self) {
-            return self.STable.REPR.get_str(null, self);
-        }
     }
 }

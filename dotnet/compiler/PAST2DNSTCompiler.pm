@@ -562,7 +562,15 @@ our multi sub dnst_for(PAST::Op $op) {
             :name(get_unique_id('inv')), :type('RakudoObject'),
             dnst_for(@args.shift)
         );
-
+        
+        # Method name, for indirectly named dotty calls
+        my $name := $op.name ~~ PAST::Node
+          ?? dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('Str'),
+                    dnst_for($op.name)
+                ))
+          !! DNST::Literal.new( :value($op.name), :escape(1) );
+        
         # Method lookup.
         my $callee := DNST::Temp.new(
             :name(get_unique_id('callee')), :type('RakudoObject'),
@@ -570,7 +578,7 @@ our multi sub dnst_for(PAST::Op $op) {
                 :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
                 'TC',
                 $inv.name,
-                DNST::Literal.new( :value($op.name), :escape(1) ),
+                $name,
                 'Hints.NO_HINT'
             )
         );

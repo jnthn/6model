@@ -12,8 +12,6 @@ still missing. These are in rough priority order. There's no reason the
 regex step that follows this can't start before all of these are done; all
 the ones it depends on should be done.
 
-* Indirect method calls
-
 * Defaults on optional parameters
 
 * Slurpy parameters

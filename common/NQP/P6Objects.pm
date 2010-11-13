@@ -11,4 +11,9 @@ class Mu {
     multi method Str(Mu:U $self:) {
         self.HOW.name(self) ~ '()'
     }
+
+    proto method ACCEPTS($topic) { * }
+    multi method ACCEPTS(Mu:U $self: $topic) {
+        nqp::type_check($topic, self.WHAT)
+    }
 }

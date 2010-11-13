@@ -102,6 +102,37 @@ namespace Rakudo.Metamodel
         }
 
         /// <summary>
+        /// For types where we know all the possible types it could match up
+        /// front, this type check cache can be published.
+        /// </summary>
+        public RakudoObject[] TypeCheckCache;
+
+        /// <summary>
+        /// Used to do a type check. If one was published, looks in the type
+        /// check cache. If there is none, calls .HOW.type_check.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="CheckAgainst"></param>
+        /// <param name="Checkee"></param>
+        /// <returns></returns>
+        public RakudoObject TypeCheck(ThreadContext TC, RakudoObject Obj, RakudoObject Checkee)
+        {
+            if (TypeCheckCache != null)
+            {
+                for (int i = 0; i < TypeCheckCache.Length; i++)
+                    if (TypeCheckCache[i] == Checkee)
+                        return Ops.box_int(TC, 1, TC.DefaultBoolBoxType);
+                return Ops.box_int(TC, 0, TC.DefaultBoolBoxType);
+            }
+            else
+            {
+                var Checker = HOW.STable.FindMethod(TC, HOW, "type_check", Hints.NO_HINT);
+                var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Obj, Checkee });
+                return Checker.STable.Invoke(TC, Checker, Cap);
+            }
+        }
+
+        /// <summary>
         /// The serialization context of this STable, if any.
         /// </summary>
         public SerializationContext SC;

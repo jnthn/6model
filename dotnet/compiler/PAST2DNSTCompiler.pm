@@ -124,12 +124,12 @@ method compile(PAST::Node $node) {
                 :void(1),
                 'TC'
             ),
-            $loadinit_calls,
             DNST::Call.new(
                 :name('constants_init'),
                 :void(1),
                 'TC'
-            )
+            ),
+            $loadinit_calls
         ));
 
         # Code for when it's the entry point (e.g. a Main method).

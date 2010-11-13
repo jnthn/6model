@@ -19,8 +19,9 @@ method TOP() {
     my %*HOW-METAATTR;
     %*HOW-METAATTR<knowhow> := 'KnowHOWAttribute';
 
-    my $*SCOPE      := '';
-    my $*MULTINESS  := '';
+    my $*SCOPE       := '';
+    my $*MULTINESS   := '';
+    my $*INVOCANT_OK := 0;
     self.comp_unit;
 }
 
@@ -336,10 +337,12 @@ rule routine_def {
 }
 
 rule method_def {
+    :my $*INVOCANT_OK := 1;
     <deflongname>?
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
+    { $*INVOCANT_OK := 0; }
     [
     | <onlystar>
     | <blockoid>
@@ -369,7 +372,10 @@ token multi_declarator:sym<null> {
     <declarator>
 }
 
-token signature { [ [<.ws><parameter><.ws>] ** ',' ]? }
+token signature {
+    [ <?{ $*INVOCANT_OK }> <.ws><invocant=.parameter><.ws> ':' ]?
+    [ [<.ws><parameter><.ws>] ** ',' ]?
+}
 
 token parameter {
     [ <typename> [ ':' $<definedness>=<[_DU]> ]? <.ws> ]*                   # <type_constraint>

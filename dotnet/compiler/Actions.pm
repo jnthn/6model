@@ -631,7 +631,9 @@ method method_def($/) {
     }
 
     # Always need an invocant.
-    $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
+    unless $past<signature_has_invocant> {
+        $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
+    }
     $past.symbol('self', :scope('lexical') );
     
     # Provided it's named, install it in the methods table.
@@ -675,6 +677,15 @@ sub only_star_block() {
 
 method signature($/) {
     my $BLOCKINIT := @BLOCK[0][0];
+    if $<invocant> {
+        my $inv := $<invocant>[0].ast;
+        $BLOCKINIT.push($inv);
+        $BLOCKINIT.push(PAST::Var.new(
+            :name('self'), :scope('lexical'), :isdecl(1),
+            :viviself(PAST::Var.new( :scope('lexical'), :name($inv.name) ))
+        ));
+        @BLOCK[0]<signature_has_invocant> := 1
+    }
     for $<parameter> { $BLOCKINIT.push($_.ast); }
 }
 

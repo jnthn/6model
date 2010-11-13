@@ -190,16 +190,23 @@ method statement_control:sym<repeat>($/) {
 }
 
 method statement_control:sym<for>($/) {
-    my $past := $<xblock>.ast;
-    $past.pasttype('for');
-    my $block := $past[1];
+    my $xb := $<xblock>.ast;
+    my $expr  := $xb[0];
+    my $block := $xb[1];
     unless $block.arity {
         $block[0].push( PAST::Var.new( :name('$_'), :scope('parameter') ) );
         $block.symbol('$_', :scope('lexical') );
         $block.arity(1);
     }
-    $block.blocktype('immediate');
-    make $past;
+    $block.blocktype('declaration');
+    make PAST::Op.new(
+        :pasttype('callmethod'), :name('eager'),
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('map'),
+            $expr,
+            $block
+        )
+    );
 }
 
 method statement_control:sym<return>($/) {

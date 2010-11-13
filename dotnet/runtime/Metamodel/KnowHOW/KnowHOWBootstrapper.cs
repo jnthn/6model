@@ -113,6 +113,13 @@ namespace Rakudo.Metamodel.KnowHOW
                 // A pure prototype never has any parents, so return an empty list.
                 return TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
             }));
+            KnowHOWMeths.Add("type_check", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
+            {
+                // Can only match against ourselves.
+                var self = CaptureHelper.GetPositional(Cap, 1);
+                var check = CaptureHelper.GetPositional(Cap, 2);
+                return Ops.box_int(TC, self.STable.WHAT == check.STable.WHAT ? 1 : 0, TC.DefaultBoolBoxType);
+            }));
 
             // We create a KnowHOW instance that can describe itself. This
             // means .HOW.HOW.HOW.HOW etc will always return that, which

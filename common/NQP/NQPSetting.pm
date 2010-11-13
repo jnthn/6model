@@ -85,6 +85,30 @@ my knowhow Any {
     method defined() { 0 }
 }
 
+my knowhow NQPMapIter {
+    has $!block;
+    has @!list;
+    method new($block, @list) {
+        my $iter := nqp::instance_of(self.WHAT);
+        $iter.BUILD($block, @list);
+        $iter
+    }
+    method BUILD($block, @list) {
+        $!block := $block;
+        @!list := @list;
+    }
+    method eager() {
+        my $i := 0;
+        my $elems := +@!list;
+        my @result;
+        while $i < $elems {
+            @result.push($!block(@!list[$i]));
+            $i := $i + 1;
+        }
+        @result
+    }
+}
+
 my knowhow NQPList is repr('P6list') {
     method new() {
         nqp::instance_of(self.WHAT)
@@ -100,6 +124,9 @@ my knowhow NQPList is repr('P6list') {
     }
     method defined() {
         nqp::repr_defined(self)
+    }
+    method map($block) {
+        NQPMapIter.new($block, self)
     }
 }
 
@@ -133,6 +160,9 @@ my knowhow NQPArray is repr('P6list') {
     }
     method defined() {
         nqp::repr_defined(self)
+    }
+    method map($block) {
+        NQPMapIter.new($block, self)
     }
 }
 

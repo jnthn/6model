@@ -852,6 +852,26 @@ our multi sub dnst_for(PAST::Op $op) {
         );
     }
 
+    elsif $op.pasttype eq 'def_or' {
+        # Evaluate and store the first item.
+        my $first_name := get_unique_id('def_or_first_');
+        my $first := DNST::Temp.new(
+            :name($first_name), :type('RakudoObject'),
+            dnst_for((@($op))[0])
+        );
+
+        # Compile it as an if node that checks definedness.
+        my $first_lit := DNST::Literal.new( :value($first_name) );
+        return DNST::Stmts.new(
+            $first,
+            dnst_for(PAST::Op.new( :pasttype('if'),
+                PAST::Op.new( :pasttype('callmethod'), :name('defined'), $first_lit ),
+                $first_lit,
+                (@($op))[1]
+            ))
+        );
+    }
+
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }

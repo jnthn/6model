@@ -150,5 +150,40 @@ namespace Rakudo.Runtime
         {
             return Obj.STable.WHAT;
         }
+
+        /// <summary>
+        /// Checks if the given object's type accepts the checked type, using the
+        /// type check cache if one was published.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Obj"></param>
+        /// <param name="Checkee"></param>
+        /// <returns></returns>
+        public static RakudoObject type_check(ThreadContext TC, RakudoObject ToCheck, RakudoObject WantedType)
+        {
+            return ToCheck.STable.TypeCheck(TC, ToCheck, WantedType);
+        }
+
+        /// <summary>
+        /// Publishes a type check cache. The list of accepted types must use the
+        /// P6list representation.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="WHAT"></param>
+        /// <param name="TypeList"></param>
+        /// <returns></returns>
+        public static RakudoObject publish_type_check_cache(ThreadContext TC, RakudoObject WHAT, RakudoObject TypeList)
+        {
+            var Types = TypeList as P6list.Instance;
+            if (Types != null)
+            {
+                WHAT.STable.TypeCheckCache = Types.Storage.ToArray();
+                return TypeList;
+            }
+            else
+            {
+                throw new Exception("publish_type_check_cache expects a P6list");
+            }
+        }
     }
 }

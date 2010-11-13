@@ -20,7 +20,7 @@ namespace Rakudo.Runtime.MultiDispatch
         /// <param name="Candidates"></param>
         /// <param name="Capture"></param>
         /// <returns></returns>
-        public static RakudoObject FindBestCandidate(RakudoCodeRef.Instance DispatchRoutine, RakudoObject Capture)
+        public static RakudoObject FindBestCandidate(ThreadContext TC, RakudoCodeRef.Instance DispatchRoutine, RakudoObject Capture)
         {
             // Extract the native capture.
             // XXX Handle non-native captures too.
@@ -81,7 +81,7 @@ namespace Rakudo.Runtime.MultiDispatch
                 for (int i = 0; i < TypeCheckCount; i++) {
                     var Arg = NativeCapture.Positionals[i];
                     var Type = Candidate.Sig.Parameters[i].Type;
-                    if (Arg.STable.WHAT != Type && Type != null)
+                    if (Type != null && Ops.unbox_int(TC, Type.STable.TypeCheck(TC, Arg.STable.WHAT, Type)) == 0)
                     {
                         TypeMismatch = true;
                         break;

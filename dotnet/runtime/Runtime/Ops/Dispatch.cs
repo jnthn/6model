@@ -26,7 +26,7 @@ namespace Rakudo.Runtime
                 var CodeObj = CurOuter.StaticCodeObject;
                 if (CodeObj.Dispatchees != null)
                 {
-                    var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(
+                    var Candidate = MultiDispatch.MultiDispatcher.FindBestCandidate(TC,
                         CodeObj, CurOuter.Capture);
                     return Candidate.STable.Invoke(TC, Candidate, CurOuter.Capture);
                 }

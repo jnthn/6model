@@ -29,7 +29,7 @@ namespace Rakudo.Runtime
         {
             var REPR = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
             var Wrapper = REPR.type_object_for(null, null);
-            Wrapper.STable.Invoke = Code;
+            Wrapper.STable.SpecialInvoke = Code;
             return Wrapper;
         }
 

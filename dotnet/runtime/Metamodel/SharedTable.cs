@@ -33,53 +33,73 @@ namespace Rakudo.Metamodel
         public RakudoObject WHAT;
 
         /// <summary>
-        /// This finds a method with the given name or using a hint.
-        /// </summary>
-        public Func<ThreadContext, RakudoObject, string, int, RakudoObject> FindMethod =
-            (TC, Obj, Name, Hint) =>
-            {
-                // See if we can find it by hint.
-                if (Hint != Hints.NO_HINT && Obj.STable.VTable != null && Hint < Obj.STable.VTable.Length)
-                {
-                    // Yes, just grab it from the v-table.
-                    return Obj.STable.VTable[Hint];
-                }
-                else
-                {
-                    // Find the find_method method.
-                    var HOW = Obj.STable.HOW;
-                    RakudoObject Meth = Obj.STable.CachedFindMethod;
-                    if (Meth == null)
-                        Obj.STable.CachedFindMethod = Meth = HOW.STable.FindMethod(
-                            TC, HOW, "find_method", Hints.NO_HINT);
-
-                    // Call it.
-                    var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Obj, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
-                    return Meth.STable.Invoke(TC, Meth, Cap);
-                }
-            };
-
-        /// <summary>
         /// We keep a cache of the find_method method.
         /// </summary>
         internal RakudoObject CachedFindMethod;
 
         /// <summary>
-        /// The default invoke looks up a postcircumfix:<( )> and runs that.
-        /// XXX Cache the hint where we can.
+        /// Sometimes, we may want to install a hook for overriding method
+        /// finding. This does that. (We used to just give this a default
+        /// closure, but it makes dispatch a bit more expensive, and this is
+        /// path is red hot...)
         /// </summary>
-        public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Invoke =
-            (TC, Obj, Cap) =>
+        public Func<ThreadContext, RakudoObject, string, int, RakudoObject> SpecialFindMethod;
+
+        /// <summary>
+        /// This finds a method with the given name or using a hint.
+        /// </summary>
+        public RakudoObject FindMethod(ThreadContext TC, RakudoObject Obj, string Name, int Hint)
+        {
+            // Does this s-table have a special overridden finder?
+            if (SpecialFindMethod != null)
+                return SpecialFindMethod(TC, Obj, Name, Hint);
+
+            // See if we can find it by hint.
+            if (Hint != Hints.NO_HINT && Obj.STable.VTable != null && Hint < Obj.STable.VTable.Length)
             {
-                var STable = Obj.STable;
-                var Invokable = STable.CachedInvoke ?? (STable.CachedInvoke = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT));
-                return Invokable.STable.Invoke(TC, Obj, Cap);
-            };
+                // Yes, just grab it from the v-table.
+                return Obj.STable.VTable[Hint];
+            }
+            else
+            {
+                // Find the find_method method.
+                var HOW = Obj.STable.HOW;
+                RakudoObject Meth = Obj.STable.CachedFindMethod;
+                if (Meth == null)
+                    Obj.STable.CachedFindMethod = Meth = HOW.STable.FindMethod(
+                        TC, HOW, "find_method", Hints.NO_HINT);
+
+                // Call it.
+                var Cap = CaptureHelper.FormWith(new RakudoObject[] { HOW, Obj, Ops.box_str(TC, Name, TC.DefaultStrBoxType) });
+                return Meth.STable.Invoke(TC, Meth, Cap);
+            }
+        }
 
         /// <summary>
         /// We keep a cache of the postcircumfix:<( )> method.
         /// </summary>
         internal RakudoObject CachedInvoke;
+
+        /// <summary>
+        /// Hook for overriding invocation.
+        /// </summary>
+        public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> SpecialInvoke;
+
+        /// <summary>
+        /// Invokes. By default, looks up a postcircumfix:<( )> and runs that.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Obj"></param>
+        /// <param name="Cap"></param>
+        /// <returns></returns>
+        public RakudoObject Invoke(ThreadContext TC, RakudoObject Obj, RakudoObject Cap)
+        {
+            if (SpecialInvoke != null)
+                return SpecialInvoke(TC, Obj, Cap);
+            var STable = Obj.STable;
+            var Invokable = STable.CachedInvoke ?? (STable.CachedInvoke = Obj.STable.FindMethod(TC, Obj, "postcircumfix:<( )>", Hints.NO_HINT));
+            return Invokable.STable.Invoke(TC, Obj, Cap);
+        }
 
         /// <summary>
         /// The serialization context of this STable, if any.

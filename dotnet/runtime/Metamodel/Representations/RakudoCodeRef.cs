@@ -93,7 +93,7 @@ namespace Rakudo.Metamodel.Representations
 
             // Also twiddle the S-Table's Invoke to invoke the contained
             // function.
-            STable.Invoke = (TCi, Obj, Cap) =>
+            STable.SpecialInvoke = (TCi, Obj, Cap) =>
                 ((RakudoCodeRef.Instance)Obj).Body(TCi, Obj, Cap);
 
             return STable.WHAT;

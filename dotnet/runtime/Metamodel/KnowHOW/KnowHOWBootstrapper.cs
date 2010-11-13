@@ -130,7 +130,7 @@ namespace Rakudo.Metamodel.KnowHOW
 
             // And put a fake FindMethod in there that just looks in the
             // dictionary.
-            KnowHOWHOW.STable.FindMethod = (TC, Obj, Name, Hint) =>
+            KnowHOWHOW.STable.SpecialFindMethod = (TC, Obj, Name, Hint) =>
                 {
                     var MTable = ((KnowHOWREPR.KnowHOWInstance)Obj).Methods;
                     if (MTable.ContainsKey(Name))

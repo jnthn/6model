@@ -32,7 +32,6 @@ namespace Rakudo.Runtime
                     break;
         }
 
-
         /// <summary>
         /// The parameters we have.
         /// </summary>

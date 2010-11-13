@@ -57,6 +57,8 @@ namespace Rakudo
             Thread.DefaultNumBoxType = SettingContext.LexPad.GetByName("NQPNum");
             Thread.DefaultStrBoxType = SettingContext.LexPad.GetByName("NQPStr");
             Thread.DefaultListType = SettingContext.LexPad.GetByName("NQPList");
+            Thread.DefaultArrayType = SettingContext.LexPad.GetByName("NQPArray");
+            Thread.DefaultHashType = SettingContext.LexPad.GetByName("NQPHash");
 
             return Thread;
         }
@@ -92,7 +94,7 @@ namespace Rakudo
         {
             var SettingContext = new Context();
             SettingContext.LexPad = new Lexpad(new string[]
-                { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
+                { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list", "NQPArray", "NQPHash" });
             SettingContext.LexPad.Storage = new RakudoObject[]
                 {
                     KnowHOW,
@@ -111,7 +113,9 @@ namespace Rakudo
                             foreach (var Obj in NativeCapture.Positionals)
                                 List.Storage.Add(Obj);
                             return List;
-                        })
+                        }),
+                    null,
+                    null
                 };
             return SettingContext;
         }

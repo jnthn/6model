@@ -45,5 +45,15 @@ namespace Rakudo.Runtime
         /// The default list type.
         /// </summary>
         public RakudoObject DefaultListType;
+
+        /// <summary>
+        /// The default array type.
+        /// </summary>
+        public RakudoObject DefaultArrayType;
+
+        /// <summary>
+        /// The default hash type.
+        /// </summary>
+        public RakudoObject DefaultHashType;
     }
 }

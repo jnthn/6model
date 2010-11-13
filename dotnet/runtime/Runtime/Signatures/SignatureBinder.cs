@@ -36,7 +36,7 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="C"></param>
         /// <param name="Capture"></param>
-        public static void Bind(Context C, RakudoObject Capture)
+        public static void Bind(ThreadContext TC, Context C, RakudoObject Capture)
         {
             // Make sure the object is really a low level capture (don't handle
             // otherwise yet) and grab the pieces.
@@ -45,6 +45,7 @@ namespace Rakudo.Runtime
                 throw new NotImplementedException("Can only deal with native captures at the moment");
             var Positionals = NativeCapture.Positionals ?? EmptyPos;
             var Nameds = NativeCapture.Nameds ?? EmptyNamed;
+            Dictionary<string, bool> SeenNames = null;
 
             // If we have no signature, that's same as an empty signature.
             var Sig = C.StaticCodeObject.Sig;
@@ -98,13 +99,24 @@ namespace Rakudo.Runtime
                 // Named slurpy?
                 else if ((Param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
                 {
-                    throw new Exception("Named slurpy parameters are not yet implemented.");
+                    var SlurpyHolder = TC.DefaultHashType.STable.REPR.instance_of(TC, TC.DefaultHashType);
+                    C.LexPad.Storage[Param.VariableLexpadPosition] = SlurpyHolder;
+                    foreach (var Name in Nameds.Keys)
+                        if (SeenNames == null || !SeenNames.ContainsKey(Name))
+                            Ops.llmapping_bind_at_key(TC, SlurpyHolder,
+                                Ops.box_str(TC, Name, TC.DefaultStrBoxType),
+                                Nameds[Name]);
                 }
 
-                // Named positional?
+                // Positional slurpy?
                 else if ((Param.Flags & Parameter.POS_SLURPY_FLAG) != 0)
                 {
-                    throw new Exception("Positional slurpy parameters are not yet implemented.");
+                    var SlurpyHolder = TC.DefaultArrayType.STable.REPR.instance_of(TC, TC.DefaultArrayType);
+                    C.LexPad.Storage[Param.VariableLexpadPosition] = SlurpyHolder;
+                    int j;
+                    for (j = CurPositional; j < Positionals.Length; j++)
+                        Ops.lllist_push(TC, SlurpyHolder, Positionals[j]);
+                    CurPositional = j;
                 }
 
                 // Named?
@@ -116,6 +128,9 @@ namespace Rakudo.Runtime
                     {
                         // We have an argument, just bind it.
                         C.LexPad.Storage[Param.VariableLexpadPosition] = Value;
+                        if (SeenNames == null)
+                            SeenNames = new Dictionary<string, bool>();
+                        SeenNames.Add(Param.Name, true);
                     }
                     else
                     {

@@ -496,6 +496,9 @@ my knowhow NQPClassHOW {
 
         # Incorporate any new multi candidates (needs MRO built).
         self.incorporate_multi_candidates($obj);
+
+        # Publish type cache.
+        self.publish_type_cache($obj);
         
         # XXX TODO: Compose attributes.
 
@@ -579,6 +582,11 @@ my knowhow NQPClassHOW {
         @mro;
     }
 
+    method publish_type_cache($obj) {
+        # XXX TODO: when we have roles, need these here too.
+        nqp::publish_type_check_cache($obj, @!mro)
+    }
+
     ##
     ## Introspecty
     ##
@@ -617,6 +625,14 @@ my knowhow NQPClassHOW {
             $i := $i + 1;
         }
         0;
+    }
+
+    method does($obj, $checkee) {
+        0 # XXX TODO
+    }
+
+    method type_check($obj, $checkee) {
+        self.isa($obj, $checkee) || self.does($obj, $checkee)
     }
 
     ##

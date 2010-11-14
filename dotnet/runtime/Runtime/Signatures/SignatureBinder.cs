@@ -91,6 +91,7 @@ namespace Rakudo.Runtime
                     else
                     {
                         // Default value, vivification.
+                        // ((RakudoCodeRef.Instance)Param.DefaultValue).CurrentContext = TC.CurrentContext;
                         C.LexPad.Storage[Param.VariableLexpadPosition] = Param.DefaultValue.STable.Invoke(TC, Param.DefaultValue, Capture);
                     }
                 }

@@ -532,10 +532,10 @@ sub compile_signature(@params) {
         $param.push($_<definedness> eq 'D' ?? 'DefinednessConstraint.DefinedOnly' !!
                     $_<definedness> eq 'U' ?? 'DefinednessConstraint.UndefinedOnly' !!
                     'DefinednessConstraint.None');
-
+        
         # viviself.
         $param.push($_.viviself ~~ PAST::Node
-            ?? dnst_for(PAST::Block.new($_.viviself))
+            ?? dnst_for(PAST::Block.new(:closure(1), $_.viviself))
             !! 'null');
 
         $params.push($param);

@@ -24,10 +24,9 @@ class Baz is Foo {
 
 my $y := Baz.new();
 
-say("ok 3 #SKIP invocant narrowness");
-#if $y.bar() == 37 {
-#    say("ok 3");
-#}
+if $y.bar() == 37 {
+    say("ok 3");
+}
 
 class Quux is Foo {
     proto method bar() { * }

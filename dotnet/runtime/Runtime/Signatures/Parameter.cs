@@ -19,12 +19,13 @@ namespace Rakudo.Runtime
         /// <param name="Name"></param>
         /// <param name="Flags"></param>
         public Parameter(RakudoObject Type, string VariableName, int VariableLexpadPosition,
-            string Name, int Flags, DefinednessConstraint Definedness)
+            string Name, int Flags, DefinednessConstraint Definedness, RakudoObject DefaultValue)
         {
             this.Type = Type;
             this.VariableName = VariableName;
             this.VariableLexpadPosition = VariableLexpadPosition;
             this.Name = Name;
+            this.DefaultValue = DefaultValue;
             this.Flags = Flags;
             this.Definedness = Definedness;
         }
@@ -55,6 +56,11 @@ namespace Rakudo.Runtime
         public string Name;
 
         /// <summary>
+        /// Default RakudoObject for optional parameters.
+        /// </summary>
+        public RakudoObject DefaultValue;
+
+        /// <summary>
         /// Parameter flags.
         /// </summary>
         public int Flags;
@@ -83,5 +89,10 @@ namespace Rakudo.Runtime
         /// Flag for named parameters.
         /// </summary>
         public const int NAMED_FLAG = 8;
+
+        public bool IsOptional()
+        {
+            return (Flags ^ OPTIONAL_FLAG) > 0;
+        }
     }
 }

@@ -28,8 +28,6 @@ namespace Rakudo.Runtime
         /// 
         /// XXX No type-checking is available just yet. :-(
         /// 
-        /// XXX No proper handling of optionals and defaults yet.
-        /// 
         /// XXX No support for nameds mapping to positionals yet either.
         /// 
         /// (In other words, this kinda sucks...)
@@ -92,7 +90,8 @@ namespace Rakudo.Runtime
                     }
                     else
                     {
-                        // XXX Default value, vivification.
+                        // Default value, vivification.
+                        C.LexPad.Storage[Param.VariableLexpadPosition] = Param.DefaultValue.STable.Invoke(TC, Param.DefaultValue, Capture);
                     }
                 }
 
@@ -155,7 +154,7 @@ namespace Rakudo.Runtime
 
             // Ensure we had enough positionals.
             var PossiesInCapture = Positionals.Length;
-            if (CurPositional != PossiesInCapture)
+            if (CurPositional > PossiesInCapture)
                 throw new Exception("Too many positional arguments passed; expected " +
                     NumRequiredPositionals(C.StaticCodeObject.Sig).ToString() +
                     " but got " + PossiesInCapture.ToString());

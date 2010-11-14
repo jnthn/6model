@@ -133,6 +133,42 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Performs a bitwise or.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_or_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) | Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Performs a bitwise and.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_and_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) & Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Performs a bitwise xor.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_xor_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC, Ops.unbox_int(TC, x) ^ Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
         /// Performs a string concatenation.
         /// </summary>
         /// <param name="x"></param>

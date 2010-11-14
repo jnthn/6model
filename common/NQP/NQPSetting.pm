@@ -362,6 +362,16 @@ sub &infix:<~>($x, $y) {
     nqp::concat($x.Str, $y.Str);
 }
 
+sub &infix:<+|>(NQPInt $x, NQPInt $y) {
+    nqp::bitwise_or_int($x, $y);
+}
+sub &infix:<+&>(NQPInt $x, NQPInt $y) {
+    nqp::bitwise_and_int($x, $y);
+}
+sub &infix:<+^>(NQPInt $x, NQPInt $y) {
+    nqp::bitwise_xor_int($x, $y);
+}
+
 # A basic, fairly bare-bones exception object.
 my knowhow NQPException {
     has $!message;

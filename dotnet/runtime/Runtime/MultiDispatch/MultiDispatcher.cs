@@ -276,7 +276,7 @@ namespace Rakudo.Runtime.MultiDispatch
                 return false;
 
             // Otherwise, check with the type system.
-            return Ops.unbox_int(TC, Ops.type_check(TC, B, A)) != 0;
+            return Ops.unbox_int(TC, Ops.type_check(TC, A, B)) != 0;
         }
     }
 }

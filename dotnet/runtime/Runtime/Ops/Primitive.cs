@@ -133,7 +133,7 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Performs a bitwise or.
+        /// Performs a bitwise or on ints.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -145,7 +145,7 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Performs a bitwise and.
+        /// Performs a bitwise and on ints.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -157,7 +157,7 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Performs a bitwise xor.
+        /// Performs a bitwise xor on ints.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -166,6 +166,42 @@ namespace Rakudo.Runtime
         public static RakudoObject bitwise_xor_int(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
             return Ops.box_int(TC, Ops.unbox_int(TC, x) ^ Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Performs a bitwise or on nums.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_or_num(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, x)) | BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, y))), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
+        /// Performs a bitwise and on nums.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_and_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, x)) & BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, y))), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
+        /// Performs a bitwise xor on nums.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject bitwise_xor_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, x)) ^ BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, y))), TC.DefaultNumBoxType);
         }
 
         /// <summary>

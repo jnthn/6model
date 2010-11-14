@@ -196,9 +196,10 @@ my knowhow NQPCode is repr('RakudoCodeRef') {
     }
 }
 
-## XXX Need coercive Any fallbacks too.
-
 proto sub &infix:<==>($x, $y) { * }
+multi sub &infix:<==>($x, $y) {
+    nqp::equal_nums($x.Num, $y.Num)
+}
 multi sub &infix:<==>(NQPInt $x, NQPInt $y) {
     nqp::equal_ints($x, $y)
 }
@@ -207,6 +208,9 @@ multi sub &infix:<==>(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:<!=>($x, $y) { * }
+multi sub &infix:<!=>($x, $y) {
+    nqp::logical_not_int(nqp::equal_nums($x.Num, $y.Num))
+}
 multi sub &infix:<!=>(NQPInt $x, NQPInt $y) {
     nqp::logical_not_int(nqp::equal_ints($x, $y))
 }
@@ -215,6 +219,9 @@ multi sub &infix:<!=>(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:«<=»($x, $y) { * }
+multi sub &infix:«<=»($x, $y) {
+    nqp::less_than_or_equal_nums($x.Num, $y.Num)
+}
 multi sub &infix:«<=»(NQPInt $x, NQPInt $y) {
     nqp::less_than_or_equal_ints($x, $y)
 }
@@ -223,6 +230,9 @@ multi sub &infix:«<=»(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:«<»($x, $y) { * }
+multi sub &infix:«<»($x, $y) {
+    nqp::less_than_nums($x.Num, $y.Num)
+}
 multi sub &infix:«<»(NQPInt $x, NQPInt $y) {
     nqp::less_than_ints($x, $y)
 }
@@ -231,6 +241,9 @@ multi sub &infix:«<»(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:«>=»($x, $y) { * }
+multi sub &infix:«>=»($x, $y) {
+    nqp::greater_than_or_equal_nums($x.Num, $y.Num)
+}
 multi sub &infix:«>=»(NQPInt $x, NQPInt $y) {
     nqp::greater_than_or_equal_ints($x, $y)
 }
@@ -239,6 +252,9 @@ multi sub &infix:«>=»(NQPNum $x, NQPNum $y) {
 }
 
 proto sub &infix:«>»($x, $y) { * }
+multi sub &infix:«>»($x, $y) {
+    nqp::greater_than_nums($x.Num, $y.Num)
+}
 multi sub &infix:«>»(NQPInt $x, NQPInt $y) {
     nqp::greater_than_ints($x, $y)
 }
@@ -291,26 +307,53 @@ sub &prefix:<+>($x) {
 }
 
 proto sub &infix:<+>($x, $y) { * }
+multi sub &infix:<+>($x, $y) {
+    nqp::add_num($x.Num, $y.Num);
+}
 multi sub &infix:<+>(NQPInt $x, NQPInt $y) {
     nqp::add_int($x, $y);
 }
+multi sub &infix:<+>(NQPNum $x, NQPNum $y) {
+    nqp::add_num($x, $y);
+}
 
 proto sub &infix:<->($x, $y) { * }
+multi sub &infix:<->($x, $y) {
+    nqp::sub_num($x.Num, $y.Num);
+}
 multi sub &infix:<->(NQPInt $x, NQPInt $y) {
     nqp::sub_int($x, $y);
 }
+multi sub &infix:<->(NQPNum $x, NQPNum $y) {
+    nqp::sub_num($x, $y);
+}
 
 proto sub &infix:<*>($x, $y) { * }
+multi sub &infix:<*>($x, $y) {
+    nqp::mul_num($x.Num, $y.Num);
+}
 multi sub &infix:<*>(NQPInt $x, NQPInt $y) {
     nqp::mul_int($x, $y);
 }
+multi sub &infix:<*>(NQPNum $x, NQPNum $y) {
+    nqp::mul_num($x, $y);
+}
 
 proto sub &infix:</>($x, $y) { * }
+multi sub &infix:</>($x, $y) {
+    nqp::div_num($x.Num, $y.Num);
+}
 multi sub &infix:</>(NQPInt $x, NQPInt $y) {
     nqp::div_int($x, $y);
 }
+multi sub &infix:</>(NQPNum $x, NQPNum $y) {
+    nqp::div_num($x, $y);
+}
 
 proto sub &infix:<%>($x, $y) { * }
+multi sub &infix:<%>($x, $y) {
+    nqp::mod_int($x.Int, $y.Int);
+}
 multi sub &infix:<%>(NQPInt $x, NQPInt $y) {
     nqp::mod_int($x, $y);
 }

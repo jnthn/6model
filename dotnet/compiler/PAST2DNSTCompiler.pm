@@ -974,17 +974,13 @@ our multi sub dnst_for(PAST::Var $var) {
     elsif $scope eq 'package' {
         # Get all parts of the name.
         my @parts;
+        @parts.push('GLOBAL');
         if $var.namespace {
             for $var.namespace { @parts.push($_); }
         }
-        else {
-            if +@*CURRENT_NS {
-                for @*CURRENT_NS {
-                    @parts.push($_)
-                }
-            }
-            else {
-                @parts.push('GLOBAL');
+        elsif +@*CURRENT_NS {
+            for @*CURRENT_NS {
+                @parts.push($_)
             }
         }
         @parts.push($var.name);

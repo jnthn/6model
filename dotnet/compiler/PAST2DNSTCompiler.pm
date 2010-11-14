@@ -905,6 +905,7 @@ our multi sub dnst_for(PAST::Val $val) {
     else {
         pir::die("Can not detect type of value")
     }
+    my $*BIND_CONTEXT := 0;
     my $type_dnst := emit_lexical_lookup($type);
     
     # Add to constants table.

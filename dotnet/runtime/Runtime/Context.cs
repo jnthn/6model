@@ -63,7 +63,7 @@ namespace Rakudo.Runtime
             StaticCodeObject.CurrentContext = this;
 
             // Lex pad should be an "instantiation" of the static one.
-            // Instntiating a lexpad creates a new dynamic instance of it
+            // Instantiating a lexpad creates a new dynamic instance of it
             // from a static one, copying over the slot storage entries
             // from the static one but sharing the slot mapping.
             this.LexPad.SlotMapping = StaticCodeObject.StaticLexPad.SlotMapping;

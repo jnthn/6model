@@ -4,7 +4,7 @@ This document lays out the near-term and long-term things that need to be
 done to get NQP, and later Rakudo, running on .Net. The near-term things are
 good guesses. The more distant things are hand-waving. :-)
 
-Last Updated: 13th November 2010
+Last Updated: 14th November 2010
 
 === Add missing NQP features
 We support quite a few bits of NQP so far, but some important things are
@@ -29,8 +29,6 @@ the ones it depends on should be done.
 * Other types of loop
 
 * Advanced loop flow control bits
-
-* Get multi-dispatch to really topo-sort
 
 * Hash iteration
 
@@ -71,7 +69,30 @@ This is mostly tying up lose ends that have been missed so far.
 
 
 === Bootstrapped NQP-RX implementation on .Net
-Debugging, fixing and infrastructure.
+This step is about getting NQP to be able to compile itself on .Net. The
+thing that makes this a little tricky is that in a few places we depend
+on Parrot-isms, which will need to be eliminated. The proposed approach
+is:
+
+* Get DNST.pm building and us able to load it and make DNST nodes
+
+* Make a DNST to IL compiler
+
+* Build a test suite for DNST -> IL. Should be able to do it with some
+  kind of eval style primitive.
+
+* Get PAST node declarations translated into NQP and building
+
+* Get a version of PAST2DNST.pm to run
+
+* Build some test suite of PAST evaluation to get confidence that the
+  PAST2DNST.pm is actually working
+
+* Get Grammar.pm (modulo any needed tweaks) to compile and run
+
+* Get Actions.pm (modulo any needed tweaks) to compile and run
+
+* Tie it all together
 
 
 === Serialization contexts supported and fully used by the bootstrap

@@ -632,7 +632,10 @@ method method_def($/) {
 
     # Always need an invocant.
     unless $past<signature_has_invocant> {
-        $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
+        $past[0].unshift(PAST::Var.new(
+            :name('self'), :scope('parameter'),
+            :multitype(PAST::Var.new( :name('$?CLASS') ))
+        ));
     }
     $past.symbol('self', :scope('lexical') );
     

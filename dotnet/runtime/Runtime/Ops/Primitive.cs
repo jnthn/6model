@@ -85,6 +85,54 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Performs a numeric addition.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject add_num(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, Ops.unbox_num(TC, x) + Ops.unbox_num(TC, y), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
+        /// Performs a numeric subtraction.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject sub_num(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, Ops.unbox_num(TC, x) - Ops.unbox_num(TC, y), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
+        /// Performs a numeric multiplication.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject mul_num(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, Ops.unbox_num(TC, x) * Ops.unbox_num(TC, y), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
+        /// Performs a numeric division.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject div_num(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_num(TC, Ops.unbox_num(TC, x) / Ops.unbox_num(TC, y), TC.DefaultNumBoxType);
+        }
+
+        /// <summary>
         /// Performs a string concatenation.
         /// </summary>
         /// <param name="x"></param>

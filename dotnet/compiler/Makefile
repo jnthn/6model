@@ -26,7 +26,7 @@ NQPSetting.dll: ../../common/NQP/NQPSetting.pm RakudoRuntime.dll
 	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > NQPSetting.cs
 	csc /nologo /warn:0 /target:library /debug /out:NQPSetting.dll /reference:RakudoRuntime.dll NQPSetting.cs
 
-P6Objects.dll: ../../common/NQP/P6Objects.pm NQPSetting.dll
+P6Objects.dll: gen_actions.pir gen_grammar.pir gen_dnst.pir gen_past2dnst.pir gen_dnst2csharp.pir ../../common/NQP/P6Objects.pm NQPSetting.dll
 	parrot compile.pir ../../common/NQP/P6Objects.pm --no-core-libs > P6Objects.cs
 	csc /nologo /warn:0 /target:library /debug /out:P6Objects.dll /reference:RakudoRuntime.dll P6Objects.cs
 

@@ -187,7 +187,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject bitwise_and_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static RakudoObject bitwise_and_num(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
             return Ops.box_num(TC, BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, x)) & BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, y))), TC.DefaultNumBoxType);
         }
@@ -199,7 +199,7 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject bitwise_xor_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static RakudoObject bitwise_xor_num(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
             return Ops.box_num(TC, BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, x)) ^ BitConverter.DoubleToInt64Bits(Ops.unbox_num(TC, y))), TC.DefaultNumBoxType);
         }

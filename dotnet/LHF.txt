@@ -6,9 +6,32 @@ you want to start hacking on the 6model implementation on .Net, this
 is a great way to jump in! Questions? Try catching jnthn on #perl6
 on freenode.
 
-String comparative operators
-----------------------------
-DIFFICULTY: Intermediate-Impossible
-SKILLS: Being jnthn
+Support for has $.foo to classes
+--------------------------------
+DIFFICULTY: Intermediate-Difficult
+SKILLS: NQP
 DETAILS:
-Add task items to this file.
+Add a has_accessor attribute and accessor methods to the NQPAttribute
+knowhow. Take a :$has_accessor in the new method and set it (use a
+default value of 0 for if nothing is passed). Update Grammar.pm to know
+about the $.foo twigil. Update Actions.pm to pass along the has_accessor
+named parameter when the . twigil is used. Note that the attribute
+itself should be named $!foo - $.foo is just sugar for "declare $!foo
+and make me an accessor method". Add a .compose method to NQPAttribute.
+It should take a type-object of the class it's being composed into as
+a parameter. In NQPClassHOW's compose method, loop over the attributes
+and call .compose on them. Finally, fill out the compose method in
+NQPAttribute. It should add a method that does the attribute lookup.
+Something like:
+
+    method compose($obj) {
+        my $name := $!name;
+        $obj.HOW.add_method($obj, $name, method () {
+            nqp::get_attr(self, $obj.WHAT, $name)
+        });
+    }
+
+(Yes, the named lookup sucks for now, but soon we'll have enough to put
+an indexed lookup there instead. But let's make this work first.)
+
+

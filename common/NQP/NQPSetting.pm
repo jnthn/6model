@@ -524,6 +524,9 @@ my knowhow NQPClassHOW {
         if $!composed {
             die("NQPClassHOW does not support adding parents after being composed.");
         }
+        if $obj =:= $parent {
+            die("Cannot make a class its own parent.");
+        }
         my $i := 0;
         while $i != +@!parents {
             if @!parents[$i] =:= $parent {

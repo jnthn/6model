@@ -16,4 +16,25 @@ class Mu {
     multi method ACCEPTS(Mu:U $self: $topic) {
         nqp::type_check($topic, self.WHAT)
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
+}
+
+class Capture is Mu {
+    has $.target is rw;
+}
+
+class Match is Mu {
+    has $.target;
+    has $.from;
+    has $.pos;
+    
+    method chars() {
+        $!pos - $!from;
+    }
+    
+    multi method Str() {
+        substr($!target.Str, $!from, $!pos - $!from)
+    }
 }

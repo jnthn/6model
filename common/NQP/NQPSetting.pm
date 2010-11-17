@@ -408,6 +408,10 @@ sub die($message) {
     nqp::throw_dynamic(NQPException.new($message), 0)
 }
 
+sub substr(NQPStr $str, NQPInt $offset, NQPInt $length?) {
+    nqp::substr($str, $offset, $length)
+}
+
 # For tests.
 my $count := NQPInt.new();
 sub plan($n) {
@@ -553,7 +557,8 @@ my knowhow NQPClassHOW {
         # Publish type cache.
         self.publish_type_cache($obj);
         
-        # XXX TODO: Compose attributes.
+        # Compose attributes.
+        for @!attributes { $_.compose($obj) }
 
         $obj
     }
@@ -698,7 +703,7 @@ my knowhow NQPClassHOW {
         while $i != $mro_length {
             my %meths := @!mro[$i].HOW.method_table($obj);
             my $found := %meths{$name};
-            if $found.defined {
+            if nqp::repr_defined($found) {
                 return $found;
             }
             $i := $i + 1;
@@ -710,16 +715,45 @@ my knowhow NQPClassHOW {
 # A simple attribute meta-object.
 my knowhow NQPAttribute {
     has $!name;
-    method new(:$name) {
-        my $obj := nqp::instance_of(self);
-        $obj.BUILD(:name($name));
+    has $!has_accessor;
+    has $!has_mutator;
+    method new(:$name, :$has_accessor, :$has_mutator) {
+        my $obj := nqp::instance_of(self.WHAT);
+        $obj.BUILD(:name($name), :has_accessor($has_accessor),
+            :has_mutator($has_mutator));
         $obj
     }
-    method BUILD(:$name) {
-        $!name := $name
+    
+    method BUILD(:$name, :$has_accessor, :$has_mutator) {
+        $!name := $name;
+        $!has_accessor := $has_accessor;
+        $!has_mutator := $has_mutator;
     }
     method name() {
         $!name
+    }
+    method has_accessor() {
+        $!has_accessor
+    }
+    method has_mutator() {
+        $!has_mutator
+    }
+    method compose($obj) {
+        my $long_name := $!name;
+        my $short_name := nqp::substr($!name, 2);
+        if $!has_accessor {
+            if $!has_mutator {
+                $obj.HOW.add_method($obj, $short_name, method ($val?) {
+                    return nqp::repr_defined($val)
+                        ?? nqp::bind_attr(self, $obj.WHAT, $long_name, $val)
+                        !! nqp::get_attr(self, $obj.WHAT, $long_name);
+                });
+            } else {
+                $obj.HOW.add_method($obj, nqp::substr($short_name, 2), method () {
+                    nqp::get_attr(self, $obj.WHAT, $long_name);
+                });
+            }
+        }
     }
 }
 

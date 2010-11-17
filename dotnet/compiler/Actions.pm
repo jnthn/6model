@@ -366,10 +366,13 @@ method variable($/) {
                 )
             );
         }
-        elsif $<twigil>[0] eq '!' {
+        elsif $<twigil>[0] eq '!' || $<twigil>[0] eq '.' {
             $past.push(PAST::Var.new( :name('self') ));
             $past.scope('attribute');
             $past.viviself( vivitype( $<sigil> ) );
+            if ($<twigil>[0] eq '.') {
+                $past.name(pir::substr($past.name, 0, 1) ~ '!' ~ pir::substr($past.name, 2));
+            }
         }
     }
     make $past;
@@ -493,6 +496,9 @@ method variable_declarator($/) {
         $/.CURSOR.panic("Redeclaration of symbol ", $name);
     }
     if $*SCOPE eq 'has' {
+        if $<variable><twigil>[0] eq '.' {
+            $name := pir::substr($name, 0, 1) ~ '!' ~ pir::substr($name, 2);
+        }
         # Create and add a meta-attribute.
         my $meta-attr-type := %*HOW-METAATTR{$*PKGDECL} || $*DEFAULT-METAATTR;
         $*PACKAGE-SETUP.push(PAST::Op.new(
@@ -505,7 +511,11 @@ method variable_declarator($/) {
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new'),
                 PAST::Var.new( :name($meta-attr-type), :scope('lexical') ),
-                PAST::Val.new( :value($name), :named('name') )
+                PAST::Val.new( :value($name), :named('name') ),
+                PAST::Val.new( :value($<variable><twigil>[0] eq '.'
+                    ?? 1 !! 0), :named('has_accessor') ),
+                PAST::Val.new( :value($<declarator_is_rw>
+                    ?? 1 !! 0), :named('has_mutator') )
             )
         ));
         $past := PAST::Stmts.new();

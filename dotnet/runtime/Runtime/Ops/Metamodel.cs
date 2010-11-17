@@ -43,7 +43,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject repr_defined(ThreadContext TC, RakudoObject Obj)
         {
-            return Ops.box_int(TC, Obj.STable.REPR.defined(TC, Obj) ? 1 : 0, TC.DefaultBoolBoxType);
+            return Ops.box_int(TC, !(Obj is object) || Obj.STable.REPR.defined(TC, Obj) ? 1 : 0, TC.DefaultBoolBoxType);
         }
 
         /// <summary>
@@ -56,6 +56,18 @@ namespace Rakudo.Runtime
         public static RakudoObject get_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name)
         {
             return Object.STable.REPR.get_attribute(TC, Object, Class, Name);
+        }
+
+        /// <summary>
+        /// Gets the value of an attribute.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Class"></param>
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        public static RakudoObject get_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, RakudoObject Name)
+        {
+            return Object.STable.REPR.get_attribute(TC, Object, Class, Ops.unbox_str(TC, Name));
         }
 
         /// <summary>
@@ -80,6 +92,18 @@ namespace Rakudo.Runtime
         public static RakudoObject bind_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, string Name, RakudoObject Value)
         {
             Object.STable.REPR.bind_attribute(TC, Object, Class, Name, Value);
+            return Value;
+        }
+
+        /// <summary>
+        /// Binds the value of an attribute to the given value.
+        /// </summary>
+        /// <param name="Object"></param>
+        /// <param name="Class"></param>
+        /// <param name="Name"></param>
+        public static RakudoObject bind_attr(ThreadContext TC, RakudoObject Object, RakudoObject Class, RakudoObject Name, RakudoObject Value)
+        {
+            Object.STable.REPR.bind_attribute(TC, Object, Class, Ops.unbox_str(TC, Name), Value);
             return Value;
         }
 

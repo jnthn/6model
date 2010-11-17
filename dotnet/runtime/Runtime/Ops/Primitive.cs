@@ -215,5 +215,33 @@ namespace Rakudo.Runtime
         {
             return Ops.box_str(TC, Ops.unbox_str(TC, x) + Ops.unbox_str(TC, y), TC.DefaultStrBoxType);
         }
+
+        /// <summary>
+        /// Performs a string substring.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject substr(ThreadContext TC, RakudoObject x, RakudoObject y, RakudoObject z)
+        {
+            return Ops.box_str(TC, z.STable.REPR.defined(TC, z)
+                ? Ops.unbox_str(TC, x).Substring(Ops.unbox_int(TC, y), Ops.unbox_int(TC, z))
+                : Ops.unbox_str(TC, x).Substring(Ops.unbox_int(TC, y)), TC.DefaultStrBoxType);
+        }
+
+        /// <summary>
+        /// Performs a string substring.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject substr(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_str(TC, Ops.unbox_str(TC, x).Substring(Ops.unbox_int(TC, y)), TC.DefaultStrBoxType);
+        }
     }
 }

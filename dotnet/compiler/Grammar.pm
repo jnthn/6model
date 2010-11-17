@@ -265,7 +265,7 @@ token variable {
 
 token sigil { <[$@%&]> | '::' }
 
-token twigil { <[*!?]> }
+token twigil { <[*!?.]> }
 
 proto token package_declarator { <...> }
 token package_declarator:sym<module> { <sym> <package_def> }
@@ -319,7 +319,9 @@ token declarator {
     | <routine_declarator>
 }
 
-token variable_declarator { <variable> }
+token variable_declarator { <variable> <declarator_is_rw>?}
+
+token declarator_is_rw { [<.ws> 'is' <.ws> 'rw'] }
 
 proto token routine_declarator { <...> }
 token routine_declarator:sym<sub>    { <sym> <routine_def> }

@@ -522,7 +522,7 @@ my knowhow NQPClassHOW {
 
     method add_parent($obj, $parent) {
         if $!composed {
-            pir::die("NQPClassHOW does not support adding parents after being composed.");
+            die("NQPClassHOW does not support adding parents after being composed.");
         }
         my $i := 0;
         while $i != +@!parents {
@@ -606,6 +606,7 @@ my knowhow NQPClassHOW {
                             die("Could not find a proto for multi $name (it may exist, but an only is hiding it if so)");
                         }
                     }
+                    $j := $j + 1;
                 }
                 unless $found {
                     die("Could not find a proto for multi $name, and proto generation is NYI");
@@ -628,7 +629,7 @@ my knowhow NQPClassHOW {
         my @parents := $cur_obj.HOW.parents($cur_obj, :local(1));
         while +@parents {
             if +@parents == 1 {
-                @mro[+@mro] := $cur_obj := @parents[0];
+                @mro.push($cur_obj := @parents[0]);
                 @parents := $cur_obj.HOW.parents($cur_obj, :local(1));
             }
             else {

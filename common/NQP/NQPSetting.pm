@@ -744,7 +744,7 @@ my knowhow NQPAttribute {
         if $!has_accessor {
             if $!has_mutator {
                 $obj.HOW.add_method($obj, $short_name, method ($val?) {
-                    return nqp::repr_defined($val)
+                    nqp::repr_defined($val)
                         ?? nqp::bind_attr(self, $obj.WHAT, $long_name, $val)
                         !! nqp::get_attr(self, $obj.WHAT, $long_name);
                 });

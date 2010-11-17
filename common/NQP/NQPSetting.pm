@@ -749,7 +749,7 @@ my knowhow NQPAttribute {
                         !! nqp::get_attr(self, $obj.WHAT, $long_name);
                 });
             } else {
-                $obj.HOW.add_method($obj, nqp::substr($short_name, 2), method () {
+                $obj.HOW.add_method($obj, $short_name, method () {
                     nqp::get_attr(self, $obj.WHAT, $long_name);
                 });
             }

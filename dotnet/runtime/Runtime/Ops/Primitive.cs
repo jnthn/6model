@@ -272,12 +272,10 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
-        /// Search for the first occurrence of a substring within a string and returns its zero-based index
-        /// if it's found and -1 if it's not, starting at a specified index.
+        /// Split the first string by the first character of the second string returning an NQPList of the results.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="z"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
         public static RakudoObject split_str(ThreadContext TC, RakudoObject x, RakudoObject y)

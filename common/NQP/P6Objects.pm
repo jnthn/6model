@@ -1,3 +1,4 @@
+
 class Mu {
     method new() {
         self.CREATE()
@@ -26,31 +27,22 @@ class Mu {
     }
 }
 
-class Capture {
-    has $.list is rw;
-    has $.hash is rw;
+class Capture is Mu {
+    has $.cap;
     method new() {
-        $!list := NQPList.new();
-        $!hash := NQPHash.new();
-        self
+        $!cap := nqp::instance_of(NQPCapture);
     }
     method at_pos($pos) {
-        $!list.at_pos($pos)
-    }
-    method bind_pos($pos, $val) {
-        $!list.bind_pos($pos, $val)
+        nqp::llcap_get_at_pos($!cap, $pos)
     }
     method at_key($key) {
-        $!hash.at_key($key)
+        nqp::llcap_get_at_key($!cap, $key)
+    }
+    method bind_pos($pos, $val) {
+        nqp::llcap_bind_at_pos($!cap, $pos, $val)
     }
     method bind_key($key, $val) {
-        $!hash.bind_key($key, $val)
-    }
-    method Int() {
-        $!list.Int
-    }
-    method Numeric() {
-        self.Int
+        nqp::llcap_bind_at_key($!cap, $key, $val)
     }
 }
 
@@ -106,7 +98,7 @@ class Regex::Cursor {
     }
     
     method new_array() {
-        NQPList.new()
+        NQPArray.new()
     }
     
     # Return this cursor's current Match object, generating a new one
@@ -147,7 +139,7 @@ class Regex::Cursor {
                         my $names;
                         my @namelist;
                         for @cstack {
-                            if $_.isa(Regex::Cursor) {
+                            if $_ ~~ Regex::Cursor {
                                 $subcur := $_;
                                 $names := $subcur.names;
                                 if nqp::repr_defined($names) {
@@ -155,7 +147,7 @@ class Regex::Cursor {
                                     if nqp::index_str($names, "=") >= 0 {
                                         @namelist := nqp::split_str($names, "=")
                                     } else {
-                                        @namelist := ();
+                                        @namelist := NQPArray.new();
                                         @namelist.push($names)
                                     }
                                     for @namelist {
@@ -163,9 +155,9 @@ class Regex::Cursor {
                                         if nqp::repr_defined(@caparray)
                                           && nqp::repr_defined(%caphash{$_}) {
                                             if $keyint {
-                                                $match.key_at($_).push($submatch);
-                                            } else {
                                                 $match.pos_at($_).push($submatch);
+                                            } else {
+                                                $match.key_at($_).push($submatch);
                                             }
                                         } else {
                                             if $keyint {
@@ -184,7 +176,47 @@ class Regex::Cursor {
         }
         $match
     }
+    
+    # Parse C<target> in the current grammar starting with C<regex>.
+    # If C<regex> is omitted, then use the C<TOP> rule for the grammar.
+    method parse($target, :$rule?, :$actions?, :$rxtrace?, *%options) {
+        $rule := 'TOP' unless nqp::repr_defined($rule);
+        if $rule ~~ NQPStr {
+            $rule := self.HOW.find_method($rule);
+        }
+        my $*ACTIONS := $actions;
+        my $cur := self.cursor_init($target, :p(%options{'p'}), :c(%options{'c'}));
+        if $rxtrace {
+            $cur.DEBUG
+        }
+        my $cap := Capture.new();
+        $cap.bind_pos(0, $cur);
+        Ops.invoke($rule, $cap).MATCH;
+    }
+    
+    # Return the next match from a successful Cursor.
+    method next() {
+        $!cursor_next().MATCH
+    }
+    
+    # Create a new cursor for matching C<target>.
+    method cursor_init($target, $p, $c) {
+        my $cur := nqp::instance_of(self);
+        $cur.target($target);
+        if nqp::repr_defined($c) {
+            $cur.from(-1);
+            $cur.pos($c);
+        } else {
+            $cur.from($p);
+            $cur.pos($p);
+        }
+        $cur
+    }
+    
+    
 }
+
+
 
 
 

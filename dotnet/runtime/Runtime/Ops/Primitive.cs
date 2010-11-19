@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Rakudo.Metamodel;
 using Rakudo.Metamodel.Representations;
 
@@ -236,12 +237,108 @@ namespace Rakudo.Runtime
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="z"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
         public static RakudoObject substr(ThreadContext TC, RakudoObject x, RakudoObject y)
         {
             return Ops.box_str(TC, Ops.unbox_str(TC, x).Substring(Ops.unbox_int(TC, y)), TC.DefaultStrBoxType);
+        }
+
+        /// <summary>
+        /// Search for the first occurrence of a substring within a string and returns its zero-based index
+        /// if it's found and -1 if it's not.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject index_str(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            return Ops.box_int(TC, Ops.unbox_str(TC, x).IndexOf(Ops.unbox_str(TC, y)), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Search for the first occurrence of a substring within a string and returns its zero-based index
+        /// if it's found and -1 if it's not, starting at a specified index.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject index_str_index(ThreadContext TC, RakudoObject x, RakudoObject y, RakudoObject z)
+        {
+            return Ops.box_int(TC, Ops.unbox_str(TC, x).IndexOf(Ops.unbox_str(TC, y), Ops.unbox_int(TC, z)), TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Search for the first occurrence of a substring within a string and returns its zero-based index
+        /// if it's found and -1 if it's not, starting at a specified index.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject split_str(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            RakudoObject list = Ops.instance_of(TC, Ops.get_lex(TC, "NQPList"));
+            var store = ((P6list.Instance)list).Storage;
+            foreach (string splitted in Ops.unbox_str(TC, x).Split(Ops.unbox_str(TC, y)[0]))
+                store.Add(Ops.box_str(TC, splitted, TC.DefaultStrBoxType));
+            return list;
+        }
+
+        /// <summary>
+        /// Checks whether a character at a particular index in a string
+        /// is a member of a particular character class.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject is_cclass_str_index(ThreadContext TC, RakudoObject x, RakudoObject y, RakudoObject z)
+        {
+            CCLASS cclass = (CCLASS)Enum.Parse(typeof(CCLASS), Ops.unbox_str(TC, x));
+            string target = Ops.unbox_str(TC, y);
+            int index = Ops.unbox_int(TC, z);
+            return Ops.box_int(TC, is_cclass(target, index, cclass) ? 1 : 0, TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
+        /// Checks whether a character is a member of a particular character class.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject is_cclass_str(ThreadContext TC, RakudoObject x, RakudoObject y)
+        {
+            CCLASS cclass = (CCLASS)Enum.Parse(typeof(CCLASS), Ops.unbox_str(TC, x));
+            string target = Ops.unbox_str(TC, y);
+            return Ops.box_int(TC, is_cclass(target, 0, cclass) ? 1 : 0, TC.DefaultIntBoxType);
+        }
+
+        // see http://msdn.microsoft.com/en-us/library/20bw873z.aspx
+        // more precisely http://msdn.microsoft.com/en-us/library/20bw873z.aspx#SupportedUnicodeGeneralCategories
+        // to add more categories/patterns.
+        enum CCLASS
+        {   
+            Numeric
+        }
+
+        static Regex NumericCompare = new Regex(@"^\p{N}$", RegexOptions.Compiled);
+
+        static bool is_cclass(string target, int index, CCLASS cclass)
+        {
+            switch ((int)cclass)
+            {
+                case 0:
+                    return NumericCompare.IsMatch(target, index);
+                default:
+                    throw new NotImplementedException("The character class " + cclass + " is not yet implemented");
+            }
         }
     }
 }

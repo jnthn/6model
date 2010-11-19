@@ -28,13 +28,12 @@ four_five('ok 4 # passed in 1 arg');
     four_five('ok 5 # calling sub in outer scope');
 }
 
-say("ok 6 #SKIP -- no 'our'-scoped subs yet");
-#{
-#    our sub six ( ) {
-#        say("ok 6 # def in inner scope, called from outer scope");
-#    }
-#}
-#six();
+{
+    our sub six ( ) {
+        say("ok 6 # def in inner scope, called from outer scope fully qualified");
+    }
+}
+GLOBAL::six();
 
 sub seven () {
     "ok 7 # return string literal from sub";

@@ -389,6 +389,7 @@ sub package($/) {
     
     # Prefix the class initialization with initial setup. Also install it
     # in the symbol table right away, and also into $?CLASS.
+    my @empty;
     $*PACKAGE-SETUP.unshift(PAST::Stmts.new(
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
@@ -399,7 +400,7 @@ sub package($/) {
             )
         ),
         PAST::Op.new( :pasttype('bind'),
-            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package') ),
+            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package'), :namespace(@empty) ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -423,7 +424,7 @@ sub package($/) {
                 PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
-            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('package') )
+            PAST::Var.new( :name(~$<package_def><parent>[0]), :namespace(@empty), :scope('package') )
         ));
     }
 
@@ -550,9 +551,10 @@ method routine_def($/) {
     if $<deflongname> {
         my $name := ~$<sigil>[0] ~ $<deflongname>[0].ast;
         $past.name($name);
-        if $*SCOPE eq '' || $*SCOPE eq 'my' {
+        if $*SCOPE eq '' || $*SCOPE eq 'my' || $*SCOPE eq 'our' {
             if $*MULTINESS eq 'multi' {
                 # Does the current block have a candidate holder in place?
+                if $*SCOPE eq 'our' { pir::die('our-scoped multis not yet implemented') }
                 my $cholder;
                 my %sym := @BLOCK[0].symbol($name);
                 if %sym<cholder> {
@@ -602,6 +604,7 @@ method routine_def($/) {
                 # Create a candidate list holder for the dispatchees
                 # this proto will work over, and install them along
                 # with the proto.
+                if $*SCOPE eq 'our' { pir::die('our-scoped protos not yet implemented') }
                 my $cholder := PAST::Op.new( :pasttype('list') );
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
@@ -616,6 +619,20 @@ method routine_def($/) {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
                 @BLOCK[0].symbol($name, :scope('lexical') );
+                if $*SCOPE eq 'our' {
+                    # Need to install it at loadinit time but also re-bind
+                    # it per invocation.
+                    @BLOCK[0][0].push(PAST::Op.new(
+                        :pasttype('bind'),
+                        PAST::Var.new( :name($name), :scope('package') ),
+                        PAST::Var.new( :name($name), :scope('lexical') )
+                    ));
+                    @BLOCK[0].loadinit.push(PAST::Op.new(
+                        :pasttype('bind'),
+                        PAST::Var.new( :name($name), :scope('package') ),
+                        PAST::Val.new( :value($past) )
+                    ));
+                }
             }
             $past := PAST::Var.new( :name($name) );
         }
@@ -776,6 +793,7 @@ sub is_lexical($name) {
     %setting_names<NQPList>          := 1;
     %setting_names<NQPArray>         := 1;
     %setting_names<NQPHash>          := 1;
+    %setting_names<NQPStash>         := 1;
     %setting_names<Any>              := 1;
     if %setting_names{$name} {
         return 1;

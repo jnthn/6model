@@ -276,11 +276,12 @@ our multi sub dnst_for(PAST::Block $block) {
     my @*HANDLERS;
 
     # Update namespace.
-    my @*CURRENT_NS;
+    my $prev_ns := @*CURRENT_NS;
     if pir::isa($block.namespace(), 'ResizablePMCArray') {
         @*CURRENT_NS := $block.namespace();
     }
     elsif ~$block.namespace() ne '' {
+        @*CURRENT_NS := pir::new('ResizablePMCArray');
         @*CURRENT_NS.push(~$block.namespace());
     }
     
@@ -464,8 +465,9 @@ our multi sub dnst_for(PAST::Block $block) {
         ));
     }
 
-    # Clear up this PAST::Block from the blocks list.
+    # Clear up this PAST::Block from the blocks list and restore outer NS.
     @*PAST_BLOCKS.shift;
+    @*CURRENT_NS := $prev_ns;
 
     # For immediate evaluate to a call; for declaration, evaluate to the
     # low level code object.
@@ -889,7 +891,7 @@ our multi sub dnst_for(PAST::Val $val) {
         unless $val.value<SBI> {
             pir::die("Can't use PAST::Val for a block reference for an as-yet uncompiled block");
         }
-        return $val.value<SBI>;
+        return DNST::Literal.new( :value($val.value<SBI>) );
     }
 
     # Look up the type to box to.
@@ -981,7 +983,7 @@ our multi sub dnst_for(PAST::Var $var) {
         # Get all parts of the name.
         my @parts;
         @parts.push('GLOBAL');
-        if $var.namespace {
+        if pir::isa($var.namespace, 'ResizablePMCArray') {
             for $var.namespace { @parts.push($_); }
         }
         elsif +@*CURRENT_NS {

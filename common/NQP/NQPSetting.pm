@@ -807,6 +807,9 @@ my knowhow NQPStash {
     method bind_key($name, $value) {
         $!entries.bind_key($name, $value)
     }
+    method defined() {
+        nqp::repr_defined(self)
+    }
 }
 
 ::GLOBAL := NQPStash.new('GLOBAL');

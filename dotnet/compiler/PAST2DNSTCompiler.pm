@@ -998,16 +998,13 @@ our multi sub dnst_for(PAST::Var $var) {
             $lookup := emit_lexical_lookup(@parts.shift);
         }
 
-        # If we're in bind context, need to treat last part specially.
-        my $bindee;
-        if $*BIND_CONTEXT {
-            $bindee := @parts.pop;
-        }
+        # Also need to treat last part specially.
+        my $target := @parts.pop;
 
         # Now chase down the rest.
         for @parts {
             $lookup := dnst_for(PAST::Op.new(
-                :pasttype('callmethod'), :name('at_key'),
+                :pasttype('callmethod'), :name('get_namespace'),
                 $lookup,
                 PAST::Val.new( :value(~$_) )
             ));
@@ -1019,8 +1016,15 @@ our multi sub dnst_for(PAST::Var $var) {
             $lookup := dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('bind_key'),
                 $lookup,
-                PAST::Val.new( :value(~$bindee) ),
+                PAST::Val.new( :value(~$target) ),
                 $*BIND_VALUE
+            ));
+        }
+        else {
+            $lookup := dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_key'),
+                $lookup,
+                PAST::Val.new( :value(~$target) )
             ));
         }
 

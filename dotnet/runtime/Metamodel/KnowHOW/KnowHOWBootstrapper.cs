@@ -94,9 +94,11 @@ namespace Rakudo.Metamodel.KnowHOW
             {
                 // Safe to just return a P6list instance that points at
                 // the same thing we hold internally, since a list is
-                // immutable.
+                // immutable. However, if default list type has no HOW,
+                // we will see if we can find one that does have it.
                 var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                var ListType = MostDefinedListType(TC);
+                var Result = ListType.STable.REPR.instance_of(TC, ListType);
                 ((P6list.Instance)Result).Storage = HOW.Attributes;
                 return Result;
             }));
@@ -104,14 +106,16 @@ namespace Rakudo.Metamodel.KnowHOW
             {
                 // Return the methods list.
                 var HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(Cap, 0);
-                var Result = TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                var ListType = MostDefinedListType(TC);
+                var Result = ListType.STable.REPR.instance_of(TC, ListType);
                 ((P6list.Instance)Result).Storage.AddRange(HOW.Methods.Values);
                 return Result;
             }));
             KnowHOWMeths.Add("parents", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
                 // A pure prototype never has any parents, so return an empty list.
-                return TC.DefaultListType.STable.REPR.instance_of(TC, TC.DefaultListType);
+                var ListType = MostDefinedListType(TC);
+                return ListType.STable.REPR.instance_of(TC, ListType);
             }));
             KnowHOWMeths.Add("type_check", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
             {
@@ -181,6 +185,23 @@ namespace Rakudo.Metamodel.KnowHOW
                 }));
 
             return KnowHOWAttribute;
+        }
+
+        /// <summary>
+        /// Makes sure that we hand back an NQPList that has a HOW once it
+        /// is defined. Important for the bootstrap.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <returns></returns>
+        private static RakudoObject MostDefinedListType(ThreadContext TC)
+        {
+            // Have a HOW? Then return it right away.
+            if (TC.DefaultListType.STable.HOW != null)
+                return TC.DefaultListType;
+
+            // Otherwise, go and look for a list type that has one.
+            TC.DefaultListType = Ops.get_lex(TC, "NQPList");
+            return TC.DefaultListType;
         }
     }
 }

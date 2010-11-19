@@ -196,6 +196,24 @@ my knowhow NQPCode is repr('RakudoCodeRef') {
     }
 }
 
+my knowhow NQPCapture is repr('P6capture') {
+    method new() {
+        nqp::instance_of(self.WHAT)
+    }
+    method at_pos($pos) {
+        nqp::llcap_get_at_pos(self, $pos)
+    }
+    method at_key($key) {
+        nqp::llcap_get_at_key(self, $key)
+    }
+    method bind_pos($pos, $val) {
+        nqp::llcap_bind_at_pos(self, $pos, $val)
+    }
+    method bind_key($key, $val) {
+        nqp::llcap_bind_at_key(self, $key, $val)
+    }
+}
+
 proto sub &infix:<==>($x, $y) { * }
 multi sub &infix:<==>($x, $y) {
     nqp::equal_nums($x.Num, $y.Num)

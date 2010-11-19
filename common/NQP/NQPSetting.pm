@@ -761,8 +761,34 @@ my knowhow NQPAttribute {
     }
 }
 
-# GLOBAL stash.
-# (XXX Really want one per compilation unit and unify, but this will get us
-# started. Also really want a stash type that knows its name rather than just
-# a hash, I guess.)
-::GLOBAL := NQPHash.new();
+my knowhow NQPStash {
+    has $!name;
+    has $!namespaces;
+    has $!entries;
+    method new($name?) {
+        my $obj := nqp::instance_of(self);
+        $obj.BUILD($name);
+        $obj
+    }
+    method BUILD($name) {
+        $!name := $name;
+        $!namespaces := NQPHash.new();
+        $!entries := NQPHash.new();
+    }
+    method get_namespace($name) {
+        my $got := $!namespaces.at_key($name);
+        unless $got.defined {
+            $got := NQPStash.new($name);
+            $!namespaces.bind_key($name, $got);
+        }
+        $got
+    }
+    method at_key($name) {
+        $!entries.at_key($name)
+    }
+    method bind_key($name, $value) {
+        $!entries.bind_key($name, $value)
+    }
+}
+
+::GLOBAL := NQPStash.new('GLOBAL');

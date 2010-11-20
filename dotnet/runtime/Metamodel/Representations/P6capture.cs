@@ -18,6 +18,7 @@ namespace Rakudo.Metamodel.Representations
         {
             public RakudoObject[] Positionals;
             public Dictionary<string, RakudoObject> Nameds;
+            public int[] FlattenSpec;
             public Instance(SharedTable STable)
             {
                 this.STable = STable;

@@ -14,6 +14,21 @@ namespace Rakudo.Runtime
     public static class CaptureHelper
     {
         /// <summary>
+        /// Don't flatten.
+        /// </summary>
+        public const int FLATTEN_NONE = 0;
+
+        /// <summary>
+        /// Flatten positionally.
+        /// </summary>
+        public const int FLATTEN_POS = 1;
+
+        /// <summary>
+        /// Flatten named.
+        /// </summary>
+        public const int FLATTEN_NAMED = 2;
+
+        /// <summary>
         /// Cache of the native capture type object.
         /// </summary>
         internal static RakudoObject CaptureTypeObject;
@@ -31,7 +46,7 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Forms a capture from the provided positional arguments.
         /// </summary>
-        /// <param name="Args"></param>
+        /// <param name="PosArgs"></param>
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs)
         {
@@ -43,13 +58,31 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Forms a capture from the provided positional and named arguments.
         /// </summary>
-        /// <param name="Args"></param>
+        /// <param name="PosArgs"></param>
+        /// <param name="NamedArgs"></param>
         /// <returns></returns>
         public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs)
         {
             var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
             C.Positionals = PosArgs;
             C.Nameds = NamedArgs;
+            return C;
+        }
+
+        /// <summary>
+        /// Forms a capture from the provided positional and named arguments
+        /// and the given flattening spec.
+        /// </summary>
+        /// <param name="PosArgs"></param>
+        /// <param name="NamedArgs"></param>
+        /// <param name="FlattenSpec"></param>
+        /// <returns></returns>
+        public static RakudoObject FormWith(RakudoObject[] PosArgs, Dictionary<string, RakudoObject> NamedArgs, int[] FlattenSpec)
+        {
+            var C = (P6capture.Instance)CaptureTypeObject.STable.REPR.instance_of(null, CaptureTypeObject);
+            C.Positionals = PosArgs;
+            C.Nameds = NamedArgs;
+            C.FlattenSpec = FlattenSpec;
             return C;
         }
 

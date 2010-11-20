@@ -271,9 +271,8 @@ our multi sub cs_for(DNST::ArrayLiteral $al) {
     }
 
     # Code-gen the array.
-    $*LAST_TEMP := get_unique_id('arr');
-    return $code ~ "        " ~ $al.type ~ "[] $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
-        pir::join(',', @item_names) ~ "};\n";
+    $*LAST_TEMP := 'new ' ~ $al.type ~ '[] {' ~ pir::join(',', @item_names) ~ '}';
+    return $code;
 }
 
 our multi sub cs_for(DNST::DictionaryLiteral $dl) {
@@ -290,10 +289,9 @@ our multi sub cs_for(DNST::DictionaryLiteral $dl) {
     }
 
     # Code-gen the dictionary.
-    $*LAST_TEMP := get_unique_id('dic');
-    return $code ~ "        Dictionary<" ~ $dl.key_type ~ ', ' ~ $dl.value_type ~ "> $*LAST_TEMP = new Dictionary<" ~
-        $dl.key_type ~ ', ' ~ $dl.value_type ~ '>() { ' ~
-        pir::join(',', @items) ~ " };\n";
+    $*LAST_TEMP := "new Dictionary<" ~ $dl.key_type ~ ', ' ~ $dl.value_type ~ '>() { ' ~
+        pir::join(',', @items) ~ ' }';
+    return $code;
 }
 
 our multi sub cs_for($any) {

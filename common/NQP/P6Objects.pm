@@ -27,7 +27,7 @@ class Mu {
     }
 }
 
-class Capture is Mu {
+class Capture {
     has $.cap;
     method new() {
         $!cap := nqp::instance_of(NQPCapture);

@@ -46,6 +46,10 @@ class Capture {
     }
 }
 
+# the following was originally ported/transliterated directly from the PIR
+# in nqp-rx, the source of which was copyright 2009 The Perl Foundation,
+# and authored by Patrick Michaud <pmichaud@pobox.com>
+
 class Match is Capture {
     has $.target is rw;
     has $.from is rw;
@@ -90,8 +94,13 @@ class Regex::Cursor {
     has $.regex is rw;
     
     my $generation := 0;
+    # XXX make const
     my $FALSE := 0;
     my $TRUE := 1;
+    my $CURSOR_FAIL := -1;
+    my $CURSOR_FAIL_GROUP := -2;
+    my $CURSOR_FAIL_RULE := -3;
+    my $CURSOR_FAIL_MATCH := -4;
     
     method new_match() {
         Match.new()
@@ -204,7 +213,7 @@ class Regex::Cursor {
         my $cur := nqp::instance_of(self);
         $cur.target($target);
         if nqp::repr_defined($c) {
-            $cur.from(-1);
+            $cur.from($CURSOR_FAIL);
             $cur.pos($c);
         } else {
             $cur.from($p);
@@ -213,7 +222,54 @@ class Regex::Cursor {
         $cur
     }
     
+    # Create and initialize a new cursor from C<self>.  If C<lang> is
+    # provided, then the new cursor has the same type as lang.
+    method cursor_start($lang?) {
+        $lang := self unless nqp::repr_defined($lang);
+        my $cur := nqp::instance_of(self);
+        my $regex := $!regex;
+        $cur.from($!from);
+        $cur.target($!target);
+        $cur.debug($!debug);
+        if nqp::repr_defined($regex) {
+            $cur.pos($CURSOR_FAIL);
+            if nqp::repr_defined(@!cstack) {
+                my @cstack := NQPArray.new();
+                for @!cstack {
+                    @cstack.push($_);
+                }
+                $cur.cstack(@cstack);
+            }
+            if nqp::repr_defined(@!bstack) {
+                my @bstack := NQPArray.new();
+                for @!bstack {
+                    @bstack.push($_);
+                }
+                $cur.bstack(@bstack);
+            }
+        } else {
+            $cur.pos($!from);
+        }
+        return [$cur, $!from, $!target, 0];
+    }
     
+    # Permanently fail this cursor.
+    method cursor_fail() {
+        $!pos := $CURSOR_FAIL_RULE;
+        $!match := null;
+        @!bstack := ();
+        @!cstack := ();
+    }
+    
+    # Set the Cursor as passing at C<pos>; calling any reduction action
+    # C<name> associated with the cursor.  This method simply sets
+    # C<$!match> to a boolean true value to indicate the regex was
+    # successful; the C<MATCH> method above replaces this boolean true
+    # with a "real" Match object when requested.
+    method cursor_pass($pos, $name) {
+        $!pos := $pos;
+        
+    }
 }
 
 

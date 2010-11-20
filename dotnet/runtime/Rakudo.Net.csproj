@@ -83,6 +83,7 @@
     <Compile Include="Runtime\Ops\Dispatch.cs" />
     <Compile Include="Runtime\Ops\ControlFlow.cs" />
     <Compile Include="Runtime\Ops\Library.cs" />
+    <Compile Include="Runtime\Ops\P6capture.cs" />
     <Compile Include="Runtime\Ops\P6mapping.cs" />
     <Compile Include="Runtime\Ops\P6list.cs" />
     <Compile Include="Runtime\Ops\Primitive.cs" />

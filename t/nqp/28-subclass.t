@@ -36,4 +36,4 @@ say( $abc.HOW.isa($abc, XYZ) ?? 'not ok 6' !! 'ok 6' );
 say( $xyzhow.isa($xyz, Mu) ?? 'ok 7' !! 'not ok 7' );
 
 # inherits the Str method from Mu
-say( $xyz.Str eq 'XYZ()' ?? 'ok 8' !! 'not ok 8' );
+say( XYZ.Str eq 'XYZ()' ?? 'ok 8' !! 'not ok 8' );

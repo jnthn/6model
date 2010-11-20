@@ -591,28 +591,6 @@ our multi sub dnst_for(PAST::Op $op) {
                 'Hints.NO_HINT'
             )
         );
-        
-        # How is capture formed?
-        my $capture := DNST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
-        );
-        my $pos_part := DNST::ArrayLiteral.new(
-            :type('RakudoObject'),
-            $inv.name
-        );
-        my $named_part := DNST::DictionaryLiteral.new(
-            :key_type('string'), :value_type('RakudoObject') );
-        for @args {
-            if $_ ~~ PAST::Node && $_.named {
-                $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(dnst_for($_));
-            }
-            else {
-                $pos_part.push(dnst_for($_));
-            }
-        }
-        $capture.push($pos_part);
-        if +@($named_part) { $capture.push($named_part); }
 
         # Emit the call.
         return DNST::Stmts.new(
@@ -622,7 +600,7 @@ our multi sub dnst_for(PAST::Op $op) {
                 $callee,
                 'TC',
                 $callee.name,
-                $capture
+                form_capture(@args, $inv)
             )
         );
     }
@@ -643,32 +621,13 @@ our multi sub dnst_for(PAST::Op $op) {
         }
         $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
 
-        # How is capture formed?
-        my $capture := DNST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject'),
-        );
-        my $pos_part := DNST::ArrayLiteral.new( :type('RakudoObject') );
-        my $named_part := DNST::DictionaryLiteral.new(
-            :key_type('string'), :value_type('RakudoObject') );
-        for @args {
-            if $_ ~~ PAST::Node && $_.named {
-                $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(dnst_for($_));
-            }
-            else {
-                $pos_part.push(dnst_for($_));
-            }
-        }
-        $capture.push($pos_part);
-        if +@($named_part) { $capture.push($named_part); }
-
         # Emit call.
         return DNST::MethodCall.new(
             :name('STable.Invoke'), :type('RakudoObject'),
             $callee,
             'TC',
             $callee.name,
-            $capture
+            form_capture(@args)
         );
     }
 
@@ -882,6 +841,39 @@ our multi sub dnst_for(PAST::Op $op) {
     else {
         pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
     }
+}
+
+# How is capture formed?
+sub form_capture(@args, $inv?) {
+    # Create the various parts we might put into the capture.
+    my $capture := DNST::MethodCall.new(
+        :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
+    );
+    my $pos_part := DNST::ArrayLiteral.new( :type('RakudoObject') );
+    my $named_part := DNST::DictionaryLiteral.new(
+        :key_type('string'), :value_type('RakudoObject') );
+    
+    # If it's a method call, we'll have an invocant to emit.
+    if $inv ~~ DNST::Node {
+        $pos_part.push($inv.name);
+    }
+
+    # Go over the args.
+    for @args {
+        if $_ ~~ PAST::Node && $_.named {
+            $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
+            $named_part.push(dnst_for($_));
+        }
+        else {
+            $pos_part.push(dnst_for($_));
+        }
+    }
+
+    # Push the various parts as needed.
+    $capture.push($pos_part);
+    if +@($named_part) { $capture.push($named_part); }
+
+    $capture;
 }
 
 # Emits a value.

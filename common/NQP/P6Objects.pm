@@ -304,7 +304,7 @@ class Regex::Cursor {
                 @!cstack := @cstack := [];
             }
             @cstack[$cptr] := $subcur;
-            $cptr = $cptr + 1;
+            $cptr := $cptr + 1;
         }
         @bstack.push($mark);
         @bstack.push($pos);
@@ -317,10 +317,11 @@ class Regex::Cursor {
     method mark_peek($tomark) {
         my @bstack := @!bstack;
         my $bptr;
+        my $mark;
         if nqp::repr_defined(@bstack) && ($bptr := @bstack.Int) >= 0 {
             $mark := @bstack[$bptr := $bptr - 4] while $tomark != 0 && $mark != $tomark;
             return [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
-              $bptr, @bstack, $cptr];
+              $bptr, @bstack, @bstack[$bptr + 3]];
         }
         [0, $CURSOR_FAIL_GROUP, 0, 0, @bstack, 0]
     }
@@ -344,12 +345,12 @@ class Regex::Cursor {
         
         if nqp::repr_defined(@bstack) {
             if $cptr <= 0 {
-                my $cstack := @!cstack;
+                my @cstack := @!cstack;
                 $cptr := $cptr - 1;
                 $subcur := @cstack[$cptr];
                 nqp::lllist_truncate_to(@cstack, $bptr > 0
                     ?? @bstack[$bptr - 1]
-                    !! 0;
+                    !! 0);
             }
             nqp::lllist_truncate_to(@bstack, $bptr);
         }

@@ -37,3 +37,12 @@ say( $xyzhow.isa($xyz, Mu) ?? 'ok 7' !! 'not ok 7' );
 
 # inherits the Str method from Mu
 say( XYZ.Str eq 'XYZ()' ?? 'ok 8' !! 'not ok 8' );
+
+class Multi::Part {
+    method x() { say('ok 9'); }
+}
+class Another::Multi::Part is Multi::Part {
+    method y() { say('ok 10'); }
+}
+Another::Multi::Part.x();
+Another::Multi::Part.y();

@@ -1046,6 +1046,9 @@ our multi sub dnst_for(PAST::Var $var) {
             if $*BIND_CONTEXT {
                 $result.push($*BIND_VALUE);
             }
+            elsif $var.viviself {
+                $result.push(dnst_for($var.viviself));
+            }
             else {
                 $result.push('null');
             }

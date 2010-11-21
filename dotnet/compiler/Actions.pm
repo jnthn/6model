@@ -385,22 +385,24 @@ method package_declarator:sym<class>($/)   { make package($/); }
 method package_declarator:sym<role>($/)    { make package($/); }
 
 sub package($/) {
-    my $name := ~$<package_def><name>;
+    # Sort out name.
+    my $long_name := ~$<package_def><name>;
+    my @ns := pir::clone__PP($<package_def><name><identifier>);
+    my $name := @ns.pop;
     
     # Prefix the class initialization with initial setup. Also install it
     # in the symbol table right away, and also into $?CLASS.
-    my @empty;
     $*PACKAGE-SETUP.unshift(PAST::Stmts.new(
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
                 PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') ),
-                PAST::Val.new( :value($name), :named('name') )
+                PAST::Val.new( :value($long_name), :named('name') )
             )
         ),
         PAST::Op.new( :pasttype('bind'),
-            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package'), :namespace(@empty) ),
+            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package'), :namespace(@ns) ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -415,8 +417,10 @@ sub package($/) {
     }
 
     # Parent class, if any. (XXX need to handle package vs lexical scope
-    # properly, nested packages, etc).
+    # properly).
     if $<package_def><parent> {
+        my @parent_ns := pir::clone__PP($<package_def><parent>[0]<identifier>);
+        my $parent_name := @parent_ns.pop;
         $*PACKAGE-SETUP.push(PAST::Op.new(
             :pasttype('callmethod'), :name('add_parent'),
             PAST::Op.new(
@@ -424,7 +428,7 @@ sub package($/) {
                 PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
-            PAST::Var.new( :name(~$<package_def><parent>[0]), :namespace(@empty), :scope('package') )
+            PAST::Var.new( :name($parent_name), :namespace(@parent_ns), :scope('package') )
         ));
     }
 

@@ -156,7 +156,7 @@ class Regex::Cursor {
                                     if nqp::index_str($names, "=") >= 0 {
                                         @namelist := nqp::split_str($names, "=")
                                     } else {
-                                        @namelist := NQPArray.new();
+                                        @namelist := [];
                                         @namelist.push($names)
                                     }
                                     for @namelist {
@@ -250,15 +250,15 @@ class Regex::Cursor {
         } else {
             $cur.pos($!from);
         }
-        return [$cur, $!from, $!target, 0];
+        [$cur, $!from, $!target, 0]
     }
     
     # Permanently fail this cursor.
     method cursor_fail() {
         $!pos := $CURSOR_FAIL_RULE;
-        $!match := null;
-        @!bstack := ();
-        @!cstack := ();
+        $!match := Mu;
+        @!bstack := Mu;
+        @!cstack := Mu;
     }
     
     # Set the Cursor as passing at C<pos>; calling any reduction action
@@ -268,7 +268,135 @@ class Regex::Cursor {
     # with a "real" Match object when requested.
     method cursor_pass($pos, $name) {
         $!pos := $pos;
+        $!match := $TRUE;
+        self.reduce($name) if nqp::repr_defined($name);
+        self
+    }
+    
+    # Configure this cursor for backtracking via C<!cursor_next>.
+    method cursor_backtrack() {
+        $!regex := nqp::get_caller_sub(0);
+    }
+    
+    # Log a debug message
+    method cursor_debug() {
+        # XXX finish
+    }
+    
+    # Push a new backtracking point onto the cursor with the given
+    # C<rep>, C<pos>, and backtracking C<mark>.  (The C<mark> is typically
+    # the address of a label to branch to when backtracking occurs.)
+    method mark_push($rep, $pos, $mark, $subcur?) {
+        my $cptr;
+        my @bstack := @!bstack;
+        if !nqp::repr_defined(@bstack) {
+            @!bstack := @bstack := [];
+            $cptr := 0;
+        } elsif ($cptr := @bstack.Int) > 0 {
+            $cptr := $cptr - 1;
+        } else {
+            $cptr := 0;
+        }
+        if nqp::repr_defined($subcur) {
+            $!match := Mu;
+            my @cstack := @!cstack;
+            unless nqp::repr_defined(@cstack) {
+                @!cstack := @cstack := [];
+            }
+            @cstack[$cptr] := $subcur;
+            $cptr = $cptr + 1;
+        }
+        @bstack.push($mark);
+        @bstack.push($pos);
+        @bstack.push($rep);
+        @bstack.push($cptr);
+    }
+    
+    # Return information about the latest frame for C<mark>.
+    # If C<mark> is zero, return information about the latest frame.
+    method mark_peek($tomark) {
+        my @bstack := @!bstack;
+        my $bptr;
+        if nqp::repr_defined(@bstack) && ($bptr := @bstack.Int) >= 0 {
+            $mark := @bstack[$bptr := $bptr - 4] while $tomark != 0 && $mark != $tomark;
+            return [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
+              $bptr, @bstack, $cptr];
+        }
+        [0, $CURSOR_FAIL_GROUP, 0, 0, @bstack, 0]
+    }
+    
+    # Remove the most recent C<mark> and backtrack the cursor to the
+    # point given by that mark.  If C<mark> is zero, then
+    # backtracks the most recent mark.  Returns the backtracked
+    # values of repetition count, cursor position, and mark (address).
+    method mark_fail($mark) {
+        my @frame := self.mark_peek($mark);
+        my $rep := @frame[0];
+        my $pos := @frame[1];
+        $mark := @frame[2];
+        my $bptr := @frame[3];
+        my @bstack := @frame[4];
+        my $cptr := @frame[5];
         
+        $!match := Mu;
+        
+        my $subcur;
+        
+        if nqp::repr_defined(@bstack) {
+            if $cptr <= 0 {
+                my $cstack := @!cstack;
+                $cptr := $cptr - 1;
+                $subcur := @cstack[$cptr];
+                nqp::lllist_truncate_to(@cstack, $bptr > 0
+                    ?? @bstack[$bptr - 1]
+                    !! 0;
+            }
+            nqp::lllist_truncate_to(@bstack, $bptr);
+        }
+        [$rep, $pos, $mark, $subcur]
+    }
+    
+    # Like C<!mark_fail> above this backtracks the cursor to C<mark>
+    # (releasing any intermediate marks), but preserves the current
+    # capture states.
+    method mark_commit($mark) {
+        my @frame := self.mark_peek($mark);
+        my $rep := @frame[0];
+        my $pos := @frame[1];
+        $mark := @frame[2];
+        my $bptr := @frame[3];
+        my @bstack := @frame[4];
+        my $cptr;
+        if nqp::repr_defined(@bstack) && ($cptr := @bstack.Int - 1) > -1 {
+            my $i0;
+            my $i1;
+            nqp::lllist_truncate_to(@bstack, $bptr);
+            if $cptr > 0 {
+                if $bptr > 0 && @bstack[$bptr - 3] < 0 {
+                    @bstack[$bptr - 1] := $cptr;
+                } else {
+                    @bstack.push(0);
+                    @bstack.push($CURSOR_FAIL);
+                    @bstack.push(0);
+                    @bstack.push($cptr);
+                }
+            }
+        }
+        [$rep, $pos, $mark]
+    }
+    
+    method reduce($name, $key?, $match?) {
+        my $actions := $*ACTIONS;
+        if nqp::repr_defined($actions) {
+            if $actions.can($name) {
+                $match := self.MATCH unless nqp::repr_defined($match);
+                if nqp::repr_defined($key) {
+                    actions."$name"($match, $key);
+                } else {
+                    actions."$name"($match);
+                }
+            }
+        }
     }
 }
 

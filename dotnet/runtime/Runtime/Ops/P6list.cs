@@ -134,6 +134,29 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Truncates a LLList to a prescribed length. Mimics parrot's assign integer to array.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="LLList"></param>
+        /// <returns></returns>
+        public static RakudoObject lllist_truncate_to(ThreadContext TC, RakudoObject LLList, RakudoObject Length)
+        {
+            if (LLList is P6list.Instance)
+            {
+                List<RakudoObject> store = ((P6list.Instance)LLList).Storage;
+                int count = store.Count;
+                int length = Ops.unbox_int(TC, Length);
+                if (length < count)
+                    store.RemoveRange(length - 1, count - length);
+                return LLList;
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_truncate_to if representation is not P6list");
+            }
+        }
+
+        /// <summary>
         /// Shifts a value from a low level list (something that
         /// uses the P6list representation).
         /// </summary>

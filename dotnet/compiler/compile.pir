@@ -9,6 +9,7 @@
 .include 'gen_past2dnst.pir'
 .include 'gen_dnst2csharp.pir'
 .loadlib 'io_ops'
+#.include 'gen_nqpoptimizer.pir'
 
 .sub 'main' :main
     .param pmc args
@@ -28,9 +29,10 @@
     $P1 = 1
   not_ncl:
     
-    .local pmc g, a, pastcomp, dnstcomp
+    .local pmc g, a, opt, pastcomp, dnstcomp
     g = get_hll_global ['JnthnNQP'], 'Grammar'
     a = get_hll_global ['JnthnNQP'], 'Actions'
+#    opt = get_hll_global 'NQPOptimizer'
     pastcomp = get_hll_global 'PAST2DNSTCompiler'
     dnstcomp = get_hll_global 'DNST2CSharpCompiler'
     
@@ -44,6 +46,7 @@
     .local pmc match, ast, dnst, compiled
     match = g.'parse'(file, 'actions'=>a)
     ast = match.'ast'()
+#    opt.'optimize'(ast)
     dnst = pastcomp.'compile'(ast)
     compiled = dnstcomp.'compile'(dnst)
     say compiled

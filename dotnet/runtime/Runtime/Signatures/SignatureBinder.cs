@@ -45,6 +45,10 @@ namespace Rakudo.Runtime
             var Nameds = NativeCapture.Nameds ?? EmptyNamed;
             Dictionary<string, bool> SeenNames = null;
 
+            // See if we have to do any flattening.
+            if (NativeCapture.FlattenSpec != null)
+                Flatten(NativeCapture.FlattenSpec, ref Positionals, ref Nameds);
+
             // If we have no signature, that's same as an empty signature.
             var Sig = C.StaticCodeObject.Sig;
             if (Sig == null)
@@ -177,6 +181,64 @@ namespace Rakudo.Runtime
                 else
                     Num++;
             return Num;
+        }
+
+        /// <summary>
+        /// Flattens arguments into the positionals list or the nameds. This
+        /// is pretty straightforward way, could be optimized in various ways,
+        /// such as special case where we only have one arg which is the whole
+        /// parameter set.
+        /// </summary>
+        /// <param name="FlattenSpec"></param>
+        /// <param name="Positionals"></param>
+        /// <param name="Naneds"></param>
+        private static void Flatten(int[] FlattenSpec, ref RakudoObject[] Positionals, ref Dictionary<string, RakudoObject> Naneds)
+        {
+            // We'll build new positional and nameds.
+            var NewPositionals = new List<RakudoObject>();
+            var NewNameds = new Dictionary<string, RakudoObject>(Naneds);
+
+            // Go through positional arguments and look for things to flatten.
+            for (int i = 0; i < Positionals.Length; i++)
+            {
+                if (FlattenSpec[i] == CaptureHelper.FLATTEN_NONE)
+                {
+                    NewPositionals.Add(Positionals[i]);
+                }
+                else if (FlattenSpec[i] == CaptureHelper.FLATTEN_POS)
+                {
+                    // XXX For now rely on it being a P6list but in the future we
+                    // should handle other cases.
+                    var Flattenee = Positionals[i] as P6list.Instance;
+                    if (Flattenee != null)
+                    {
+                        NewPositionals.AddRange(Flattenee.Storage);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Currently can only flatten a P6list");
+                    }
+                }
+                else if (FlattenSpec[i] == CaptureHelper.FLATTEN_NAMED)
+                {
+                    // XXX For now rely on it being a P6mapping but in the future we
+                    // should handle other cases.
+                    var Flattenee = Positionals[i] as P6mapping.Instance;
+                    if (Flattenee != null)
+                    {
+                        foreach (var Pair in Flattenee.Storage)
+                            NewNameds.Add(Pair.Key, Pair.Value);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Currently can only flatten a P6mapping");
+                    }
+                }
+            }
+
+            // Put updated positionals and nameds in place.
+            Positionals = NewPositionals.ToArray();
+            Naneds = NewNameds;
         }
     }
 }

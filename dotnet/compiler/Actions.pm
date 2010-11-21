@@ -970,7 +970,7 @@ method arglist($/) {
         if $past[$i].name eq '&prefix:<|>' {
             $past[$i] := $past[$i][0];
             $past[$i].flat(1);
-            if $past[$i].isa(PAST::Val)
+            if $past[$i].isa(PAST::Var)
                 && pir::substr($past[$i].name, 0, 1) eq '%' {
                     $past[$i].named(1);
             }

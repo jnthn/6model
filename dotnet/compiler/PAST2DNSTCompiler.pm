@@ -852,6 +852,8 @@ sub form_capture(@args, $inv?) {
     my $pos_part := DNST::ArrayLiteral.new( :type('RakudoObject') );
     my $named_part := DNST::DictionaryLiteral.new(
         :key_type('string'), :value_type('RakudoObject') );
+    my $flatten_flags := DNST::ArrayLiteral.new( :type('int') );
+    my $has_flats := 0;
     
     # If it's a method call, we'll have an invocant to emit.
     if $inv ~~ DNST::Node {
@@ -861,17 +863,31 @@ sub form_capture(@args, $inv?) {
     # Go over the args.
     for @args {
         if $_ ~~ PAST::Node && $_.named {
-            $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
-            $named_part.push(dnst_for($_));
+            if $_.flat {
+                $pos_part.push(dnst_for($_));
+                $flatten_flags.push('CaptureHelper.FLATTEN_NAMED');
+                $has_flats := 1;
+            }
+            else {
+                $named_part.push(DNST::Literal.new( :value($_.named), :escape(1) ));
+                $named_part.push(dnst_for($_));
+            }
+        }
+        elsif $_ ~~ PAST::Node && $_.flat {
+            $pos_part.push(dnst_for($_));
+            $flatten_flags.push('CaptureHelper.FLATTEN_POS');
+            $has_flats := 1;
         }
         else {
             $pos_part.push(dnst_for($_));
+            $flatten_flags.push('CaptureHelper.FLATTEN_NONE');
         }
     }
 
     # Push the various parts as needed.
     $capture.push($pos_part);
-    if +@($named_part) { $capture.push($named_part); }
+    if +@($named_part) || $has_flats { $capture.push($named_part); }
+    if $has_flats { $capture.push($flatten_flags); }
 
     $capture;
 }

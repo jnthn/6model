@@ -4,7 +4,7 @@ This document lays out the near-term and long-term things that need to be
 done to get NQP, and later Rakudo, running on .Net. The near-term things are
 good guesses. The more distant things are hand-waving. :-)
 
-Last Updated: 14th November 2010
+Last Updated: 21st November 2010
 
 === Add missing NQP features
 We support quite a few bits of NQP so far, but some important things are
@@ -13,8 +13,6 @@ regex step that follows this can't start before all of these are done; all
 the ones it depends on should be done.
 
 * Defaults on optional parameters
-
-* Flattened arguments
 
 * bless, CREATE with arg, BUILDALL, BUILD
 

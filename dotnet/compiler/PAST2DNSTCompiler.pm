@@ -1171,18 +1171,10 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $rb; # regex block
     my $pasttype := $r.pasttype;
     pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
-    # Toplevel regex creation
     my $stmts := PAST::Stmts.new;
-    $rb := PAST::Block.new(:blocktype('declaration'), $stmts);
     
-    # emit regex to $rb
-    
-    dnst_for(PAST::Op.new(
-        emit_outer_lexical_lookup('Regex'),
-        :name('new'),
-        :pasttype('callmethod'),
-        dnst_for($rb)
-    ))
+    $stmts.push(dnst_for(PAST::Val.new( :value(1) )));
+    dnst_for($stmts);
 }
 
 # Regex nodes reached inside a regex

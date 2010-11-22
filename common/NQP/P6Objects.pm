@@ -30,7 +30,12 @@ class Mu {
 class Capture {
     has $.cap;
     method new() {
-        $!cap := nqp::instance_of(NQPCapture);
+        my $obj := self.CREATE();
+        $obj.BUILD();
+        $obj;
+    }
+    method BUILD() {
+        $!cap := nqp::instance_of(NQPCapture.WHAT)
     }
     method at_pos($pos) {
         nqp::llcap_get_at_pos($!cap, $pos)
@@ -79,9 +84,9 @@ class Match is Capture {
     }
 }
 
-# Cursor is used for managing regular expression control flow
+# Regex::Cursor is used for managing regular expression control flow
 # and is also a base class for grammars.
-class Cursor {
+class Regex::Cursor {
     has $.target is rw;
     has $.from is rw;
     has $.pos is rw;
@@ -188,17 +193,17 @@ class Cursor {
     
     # Parse C<target> in the current grammar starting with C<regex>.
     # If C<regex> is omitted, then use the C<TOP> rule for the grammar.
-    method parse($target, :$rule?, :$actions?, :$rxtrace?, *%options) {
+    method parse($target, :$rule?, :$actions?, :$rxtrace?, :$p?, :$c?) {
         $rule := 'TOP' unless nqp::repr_defined($rule);
-        if $rule ~~ NQPStr {
+        if $rule.WHAT =:= NQPStr {
             $rule := self.HOW.find_method($rule);
         }
         my $*ACTIONS := $actions;
-        my $cur := self.cursor_init($target, :p(%options{'p'}), :c(%options{'c'}));
-        if $rxtrace {
-            $cur.DEBUG
-        }
-        my $cap := Capture.new();
+        my $cur := self.cursor_init($target, nqp::repr_defined($p) ?? $p !! 0, $c);
+        #if nqp::repr_defined($rxtrace) {
+        #    $cur.DEBUG
+        #}
+        my $cap := Capture.new;
         $cap.bind_pos(0, $cur);
         Ops.invoke($rule, $cap).MATCH;
     }
@@ -209,7 +214,7 @@ class Cursor {
     }
     
     # Create a new cursor for matching C<target>.
-    method cursor_init($target, $p, $c) {
+    method cursor_init($target, $p, $c?) {
         my $cur := nqp::instance_of(self);
         $cur.target($target);
         if nqp::repr_defined($c) {
@@ -401,15 +406,14 @@ class Cursor {
     }
 }
 
-class Regex {
+class Regex::Regex {
     has $!regex_block;
     method new($regex_block) {
-        $regex_block();
         $!regex_block := $regex_block;
         self
     }
-    multi method ACCEPTS(Regex:D $self: $target) {
-        Cursor.new.parse($target, :rule($!regex_block))
+    method ACCEPTS($target) {
+        Regex::Cursor.new.parse($target, :rule($!regex_block))
     }
 }
 

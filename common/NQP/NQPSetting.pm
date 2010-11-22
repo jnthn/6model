@@ -24,6 +24,10 @@ my knowhow NQPStr is repr('P6str') {
     method defined() {
         nqp::repr_defined(self)
     }
+    method ACCEPTS($target) {
+        my $what := self;
+        $what.isa($target, $what);
+    }
 }
 
 my knowhow NQPInt is repr('P6int') {

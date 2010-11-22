@@ -874,8 +874,7 @@ method regex_declarator($/, $key?) {
         return 0;
     }
     else {
-        my $regex := 
-            Regex::P6Regex::Actions::buildsub($<p6regex>.ast, @BLOCK.shift);
+        my $regex := buildsub($<p6regex>.ast, @BLOCK.shift);
         $regex.name($name);
         $past := 
             PAST::Op.new(
@@ -1109,8 +1108,7 @@ method quote:sym</ />($/, $key?) {
         @BLOCK[0].symbol('$/', :scope('lexical'));
         return 0;
     }
-    my $regex := 
-        Regex::P6Regex::Actions::buildsub($<p6regex>.ast, @BLOCK.shift);
+    my $regex := buildsub($<p6regex>.ast, @BLOCK.shift);
     my $past := 
         PAST::Op.new(
             :pasttype<callmethod>, :name<new>,
@@ -1122,6 +1120,91 @@ method quote:sym</ />($/, $key?) {
     make $past;
 }
 
+sub buildsub($rpast, $block = PAST::Block.new() ) {
+    my %capnames := capnames($rpast, 0);
+    %capnames{''} := 0;
+    $rpast := PAST::Regex.new(
+        PAST::Regex.new( :pasttype('scan') ),
+        $rpast,
+        PAST::Regex.new( :pasttype('pass'),
+                         # XXX :backtrack(@MODIFIERS[0]<r> ?? 'r' !! 'g') ),
+                         :backtrack('g') ),
+        :pasttype('concat'),
+        :capnames(%capnames)
+    );
+    unless $block.symbol('$¢') { $block.symbol('$¢', :scope<lexical>); }
+    unless $block.symbol('$/') { $block.symbol('$/', :scope<lexical>); }
+    $block.push($rpast);
+    $block.blocktype('declaration');
+    $block.unshift(PAST::Var.new( :name('self'), :scope('parameter') ));
+    $block;
+}
+
+sub capnames($ast, $count) {
+    my %capnames;
+    my $pasttype := $ast.pasttype;
+    if $pasttype eq 'alt' {
+        my $max := $count;
+        for $ast.list {
+            my %x := capnames($_, $count);
+            for %x {
+                %capnames{$_} := +%capnames{$_} < 2 && %x{$_} == 1
+                                 ?? 1
+                                 !! 2;
+            }
+            if %x{''} > $max { $max := %x{''}; }
+        }
+        $count := $max;
+    }
+    elsif $pasttype eq 'concat' {
+        for $ast.list {
+            my %x := capnames($_, $count);
+            for %x {
+                %capnames{$_} := +%capnames{$_} + %x{$_};
+            }
+            $count := %x{''};
+        }
+    }
+    elsif $pasttype eq 'subrule' && $ast.subtype eq 'capture' {
+        my $name := $ast.name;
+        if $name eq '' { $name := $count; $ast.name($name); }
+        my @names := Q:PIR {
+            $P0 = find_lex '$name'
+            $S0 = $P0
+            %r = split '=', $S0
+        };
+        for @names {
+            if $_ eq '0' || $_ > 0 { $count := $_ + 1; }
+            %capnames{$_} := 1;
+        }
+    }
+    elsif $pasttype eq 'subcapture' {
+        my $name := $ast.name;
+        my @names := Q:PIR {
+            $P0 = find_lex '$name'
+            $S0 = $P0
+            %r = split '=', $S0
+        };
+        for @names {
+            if $_ eq '0' || $_ > 0 { $count := $_ + 1; }
+            %capnames{$_} := 1;
+        }
+        my %x := capnames($ast[0], $count);
+        for %x {
+            %capnames{$_} := +%capnames{$_} + %x{$_};
+        }
+        $count := %x{''};
+    }
+    elsif $pasttype eq 'quant' {
+        my %astcap := capnames($ast[0], $count);
+        for %astcap {
+            %capnames{$_} := 2;
+        }
+        $count := %astcap{''};
+    }
+    %capnames{''} := $count;
+    %capnames;
+}
 method quote_escape:sym<$>($/) { make $<variable>.ast; }
 method quote_escape:sym<{ }>($/) {
     make PAST::Op.new(

@@ -145,7 +145,7 @@ namespace Rakudo.Runtime
                         }
                         else
                         {
-                            // XXX Default value, vivification.
+                            C.LexPad.Storage[Param.VariableLexpadPosition] = Param.DefaultValue.STable.Invoke(TC, Param.DefaultValue, Capture);
                         }
                     }
                 }

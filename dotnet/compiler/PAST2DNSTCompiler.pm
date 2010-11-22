@@ -1161,6 +1161,44 @@ our multi sub dnst_for($any) {
     }
 }
 
+# Non-regex nodes reached inside a regex
+our multi sub dnst_regex(PAST::Node $r) {
+    dnst_for($r)
+}
+
+# Regex nodes reached from non-regex nodes
+our multi sub dnst_for(PAST::Regex $r) {
+    my $rb; # regex block
+    my $pasttype := $r.pasttype;
+    pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
+    # Toplevel regex creation
+    my $stmts := PAST::Stmts.new;
+    $rb := PAST::Block.new(:blocktype('declaration'), $stmts);
+    
+    # emit regex to $rb
+    
+    dnst_for(PAST::Op.new(
+        emit_outer_lexical_lookup('Regex'),
+        :name('new'),
+        :pasttype('callmethod'),
+        dnst_for($rb)
+    ))
+}
+
+# Regex nodes reached inside a regex
+our multi sub dnst_regex(PAST::Regex $r) {
+    my $res;
+    my $pasttype := $r.pasttype;
+    if $pasttype eq 'concat' {
+        # Handle a concatenation of regexes.
+        $res := dnst_for(PAST::Val.new( :value(1) ));
+    }
+    else {
+        pir::die("Don't know how to compile regex pasttype $pasttype.");
+    }
+    $res
+}
+
 # Emits a lookup of a lexical.
 sub emit_lexical_lookup($name) {
     my $lookup := DNST::MethodCall.new(

@@ -36,7 +36,6 @@ This mostly invovles getting regexes, then grammars to compile and run. This
 is mostly a guess at an ordering.
 
 * Stub in basic bits of Capture, Cursor, Match
---- Match, Capture completed; Cursor 10% completed
 
 * pasttype concat, scan, literal and pass (should make /foo/ work)
 
@@ -45,11 +44,8 @@ is mostly a guess at an ordering.
 * pasttype alt
 
 * Built-in character classes
---- infrastructure completed; Numeric implemented
---- others can be added on demand
 
 * Captures (named and positional)
---- completed
 
 * Built-in rules
 

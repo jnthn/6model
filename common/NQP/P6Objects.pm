@@ -79,9 +79,9 @@ class Match is Capture {
     }
 }
 
-# Regex::Cursor is used for managing regular expression control flow
+# Cursor is used for managing regular expression control flow
 # and is also a base class for grammars.
-class Regex::Cursor {
+class Cursor {
     has $.target is rw;
     has $.from is rw;
     has $.pos is rw;
@@ -103,11 +103,11 @@ class Regex::Cursor {
     my $CURSOR_FAIL_MATCH := -4;
     
     method new_match() {
-        Match.new()
+        Match.new
     }
     
     method new_array() {
-        NQPArray.new()
+        []
     }
     
     # Return this cursor's current Match object, generating a new one
@@ -234,14 +234,14 @@ class Regex::Cursor {
         if nqp::repr_defined($regex) {
             $cur.pos($CURSOR_FAIL);
             if nqp::repr_defined(@!cstack) {
-                my @cstack := NQPArray.new();
+                my @cstack := [];
                 for @!cstack {
                     @cstack.push($_);
                 }
                 $cur.cstack(@cstack);
             }
             if nqp::repr_defined(@!bstack) {
-                my @bstack := NQPArray.new();
+                my @bstack := [];
                 for @!bstack {
                     @bstack.push($_);
                 }
@@ -398,6 +398,18 @@ class Regex::Cursor {
                 }
             }
         }
+    }
+}
+
+class Regex {
+    has $!regex_block;
+    method new($regex_block) {
+        $regex_block();
+        $!regex_block := $regex_block;
+        self
+    }
+    multi method ACCEPTS(Regex:D $self: $target) {
+        Cursor.new.parse($target, :rule($!regex_block))
     }
 }
 

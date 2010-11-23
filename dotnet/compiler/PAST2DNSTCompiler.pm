@@ -1172,8 +1172,27 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $pasttype := $r.pasttype;
     pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
     my $stmts := PAST::Stmts.new;
-    
-    $stmts.push(dnst_for(PAST::Val.new( :value(1) )));
+    my $re_cur_tmp := DNST::Temp.new(
+        :name(get_unique_id('re_cur')), :type('RakudoObject'),
+        dnst_for(PAST::Var.new( :name('self'), :scope('lexical')))
+    );
+    my $*re_cur := DNST::Local.new($re_cur_tmp.name);
+    $stmts.push($re_cur_tmp);
+    my $re_pos_tmp := DNST::Temp.new(
+        :name(get_unique_id('re_pos')), :type('RakudoObject'),
+        dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('pos'),
+            $*re_cur
+        ))
+    );
+    my $*re_pos := DNST::Local.new($re_pos_tmp.name);
+    $stmts.push($re_pos_tmp);
+    for @($r) {
+        $stmts.push(dnst_regex($_));
+    }
+    $stmts.push(DNST::Return.new(
+        $*re_cur
+    ));
     dnst_for($stmts);
 }
 
@@ -1183,7 +1202,32 @@ our multi sub dnst_regex(PAST::Regex $r) {
     my $pasttype := $r.pasttype;
     if $pasttype eq 'concat' {
         # Handle a concatenation of regexes.
-        $res := dnst_for(PAST::Val.new( :value(1) ));
+        my $stmts := PAST::Stmts.new;
+        for @($r) {
+            $stmts.push(dnst_regex($_));
+        }
+        $res := dnst_for($stmts);
+    }
+    elsif $pasttype eq 'scan' {
+        # Code for initial regex scan.
+        my $stmts := PAST::Stmts.new;
+        
+        $res := dnst_for($stmts)
+    }
+    elsif $pasttype eq 'literal' {
+        # Code for literal characters.  Faked/stubbed.
+        my $stmts := PAST::Stmts.new;
+        $stmts.push(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('pos'),
+            $*re_cur,
+            PAST::Val.new( :value(1) )
+        )));
+        $res := dnst_for($stmts)
+    }
+    elsif $pasttype eq 'pass' {
+        # Code for success
+        my $stmts := PAST::Stmts.new;
+        $res := dnst_for($stmts)
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");

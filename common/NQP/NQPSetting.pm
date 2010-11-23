@@ -204,10 +204,10 @@ my knowhow NQPCapture is repr('P6capture') {
     method new() {
         nqp::instance_of(self.WHAT)
     }
-    method at_pos($pos) {
+    method pos_at($pos) {
         nqp::llcap_get_at_pos(self, $pos)
     }
-    method at_key($key) {
+    method key_at($key) {
         nqp::llcap_get_at_key(self, $key)
     }
     method bind_pos($pos, $val) {
@@ -431,7 +431,9 @@ sub die($message) {
 }
 
 sub substr(NQPStr $str, NQPInt $offset, NQPInt $length?) {
-    nqp::substr($str, $offset, $length)
+    nqp::repr_defined($length)
+        ?? nqp::substr($str, $offset, $length)
+        !! nqp::substr($str, $offset)
 }
 
 # For tests.

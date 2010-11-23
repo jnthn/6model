@@ -43,7 +43,7 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject repr_defined(ThreadContext TC, RakudoObject Obj)
         {
-            return Ops.box_int(TC, !(Obj is object) || Obj.STable.REPR.defined(TC, Obj) ? 1 : 0, TC.DefaultBoolBoxType);
+            return Ops.box_int(TC, Obj is object && Obj.STable.REPR.defined(TC, Obj) ? 1 : 0, TC.DefaultBoolBoxType);
         }
 
         /// <summary>

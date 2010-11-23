@@ -23,9 +23,15 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject llcap_get_at_pos(ThreadContext TC, RakudoObject Capture, RakudoObject Index)
         {
-            if (Capture is P6capture.Instance)
+            P6capture.Instance Cap;
+            if ((Cap = Capture as P6capture.Instance) != null)
             {
-                return ((P6capture.Instance)Capture).Positionals[Ops.unbox_int(TC, Index)];
+                if (Cap.Positionals == null)
+                {
+                    Cap.Positionals = new RakudoObject[Ops.unbox_int(TC, Index)];
+                    return Ops.get_lex(TC, "Mu");
+                }
+                return Cap.Positionals[Ops.unbox_int(TC, Index)] ?? Ops.get_lex(TC, "Mu");
             }
             else
             {
@@ -43,17 +49,20 @@ namespace Rakudo.Runtime
         /// <returns></returns>
         public static RakudoObject llcap_bind_at_pos(ThreadContext TC, RakudoObject Capture, RakudoObject IndexObj, RakudoObject Value)
         {
-            if (Capture is P6capture.Instance)
+            P6capture.Instance Cap;
+            if ((Cap = Capture as P6capture.Instance) != null)
             {
-                var Storage = ((P6capture.Instance)Capture).Positionals;
+                var Storage = Cap.Positionals;
                 var Index = Ops.unbox_int(TC, IndexObj);
+                if (Storage == null)
+                    Storage = Cap.Positionals = new RakudoObject[Index + 1];
                 if (Index >= Storage.Length)
                 {
                     // XXX Need some more efficient resizable array approach...
                     // Also this is no way thread safe.
                     var newStorage = new RakudoObject[Index + 1];
                     Storage.CopyTo(newStorage, 0);
-                    ((P6capture.Instance)Capture).Positionals = newStorage;
+                    Cap.Positionals = newStorage;
                 }
                 return Storage[Index] = Value;
             }
@@ -76,11 +85,13 @@ namespace Rakudo.Runtime
             if (Capture is P6capture.Instance)
             {
                 var Storage = ((P6capture.Instance)Capture).Nameds;
+                if (Storage == null)
+                    Storage = ((P6capture.Instance)Capture).Nameds = new Dictionary<string, RakudoObject>();
                 var StrKey = Ops.unbox_str(TC, Key);
                 if (Storage.ContainsKey(StrKey))
                     return Storage[StrKey];
                 else
-                    return null;
+                    return Ops.get_lex(TC, "Mu");
             }
             else
             {
@@ -102,6 +113,8 @@ namespace Rakudo.Runtime
             if (Capture is P6capture.Instance)
             {
                 var Storage = ((P6capture.Instance)Capture).Nameds;
+                if (Storage == null)
+                    Storage = ((P6capture.Instance)Capture).Nameds = new Dictionary<string, RakudoObject>();
                 var StrKey = Ops.unbox_str(TC, Key);
                 if (Storage.ContainsKey(StrKey))
                     Storage[StrKey] = Value;

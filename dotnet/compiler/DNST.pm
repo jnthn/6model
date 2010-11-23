@@ -269,6 +269,21 @@ class DNST::If is DNST::Node {
     }
 }
 
+class DNST::Return is DNST::Node {
+    has $!target;
+
+    method target($set?) {
+        if pir::defined($set) { $!target := $set }
+        $!target
+    }
+    
+    method new($target) {
+        my $obj := self.CREATE;
+        $obj.target($target);
+        $obj;
+    }
+}
+
 class DNST::Label is DNST::Node {
     has $!name;
 
@@ -348,6 +363,21 @@ class DNST::Literal is DNST::Node {
         my $obj := self.CREATE;
         $obj.value($value);
         $obj.escape($escape);
+        $obj;
+    }
+}
+
+class DNST::Local is DNST::Node {
+    has $!name;
+
+    method name($set?) {
+        if pir::defined($set) { $!name := $set }
+        $!name
+    }
+
+    method new($value) {
+        my $obj := self.CREATE;
+        $obj.name($value);
         $obj;
     }
 }

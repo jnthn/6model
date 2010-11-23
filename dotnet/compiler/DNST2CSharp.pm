@@ -216,6 +216,10 @@ our multi sub cs_for(DNST::If $if) {
     return $code;
 }
 
+our multi sub cs_for(DNST::Return $ret) {
+    return cs_for($ret.target) ~ "        return " ~ $*LAST_TEMP ~ ";\n";
+}
+
 our multi sub cs_for(DNST::Label $lab) {
     return "      " ~ $lab.name ~ ":\n";
 }
@@ -249,6 +253,11 @@ our multi sub cs_for(DNST::Literal $lit) {
         ('@"' ~ pir::join__ssp('""', pir::split__pss('"', ~$lit.value)) ~ '"') !!
         $lit.value;
     return '';
+}
+
+our multi sub cs_for(DNST::Local $loc) {
+    $*LAST_TEMP := get_unique_id('result');
+    return "        RakudoObject $*LAST_TEMP = " ~ $loc.name ~ ";\n";
 }
 
 our multi sub cs_for(DNST::Throw $throw) {

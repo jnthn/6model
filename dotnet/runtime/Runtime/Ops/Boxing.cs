@@ -27,6 +27,18 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Boxes a native int into its matching value type.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static RakudoObject box_int(ThreadContext TC, int Value)
+        {
+            var Result = TC.DefaultIntBoxType.STable.REPR.instance_of(TC, TC.DefaultIntBoxType);
+            TC.DefaultIntBoxType.STable.REPR.set_int(TC, Result, Value);
+            return Result;
+        }
+
+        /// <summary>
         /// Boxes a native num into its matching value type.
         /// </summary>
         /// <param name="Value"></param>
@@ -40,6 +52,18 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Boxes a native num into its matching value type.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static RakudoObject box_num(ThreadContext TC, int Value)
+        {
+            var Result = TC.DefaultNumBoxType.STable.REPR.instance_of(TC, TC.DefaultNumBoxType);
+            TC.DefaultNumBoxType.STable.REPR.set_num(TC, Result, Value);
+            return Result;
+        }
+
+        /// <summary>
         /// Boxes a native string into its matching value type.
         /// </summary>
         /// <param name="Value"></param>
@@ -49,6 +73,18 @@ namespace Rakudo.Runtime
             var REPR = To.STable.REPR;
             var Result = REPR.instance_of(TC, To);
             REPR.set_str(TC, Result, Value);
+            return Result;
+        }
+
+        /// <summary>
+        /// Boxes a native string into its matching value type.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static RakudoObject box_str(ThreadContext TC, string Value)
+        {
+            var Result = TC.DefaultStrBoxType.STable.REPR.instance_of(TC, TC.DefaultStrBoxType);
+            TC.DefaultStrBoxType.STable.REPR.set_str(TC, Result, Value);
             return Result;
         }
 

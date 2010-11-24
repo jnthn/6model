@@ -95,6 +95,7 @@ class Regex::Cursor {
     has $.target is rw;
     has $.from is rw;
     has $.pos is rw;
+    has $.off is rw;
     has $.match is rw;
     has $.names is rw;
     has $.debug is rw;
@@ -126,6 +127,12 @@ class Regex::Cursor {
 
     method CREATE() {
         nqp::instance_of(self)
+    }
+    
+    # index representing 'off the end of the string'
+    # (or 1-based length)
+    method eos() {
+        nqp::length_str($!target)
     }
     
     # Return this cursor's current Match object, generating a new one
@@ -229,9 +236,11 @@ class Regex::Cursor {
         my $cur := nqp::instance_of(self);
         $cur.target($target);
         if nqp::repr_defined($c) {
+            $cur.off($c);
             $cur.from($CURSOR_FAIL);
             $cur.pos($c);
         } else {
+            $cur.off(0);
             $cur.from($p);
             $cur.pos($p);
         }

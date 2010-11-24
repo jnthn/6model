@@ -262,9 +262,17 @@ class DNST::Throw is DNST::Node {
 }
 
 class DNST::If is DNST::Node {
-    method new(*@children) {
+    has $!bool;
+
+    method bool($set?) {
+        if $set { $!bool := $set }
+        $!bool
+    }
+
+    method new(:$bool, *@children) {
         my $obj := self.CREATE;
         $obj.set_children(@children);
+        $obj.bool($bool);
         $obj;
     }
 }
@@ -366,6 +374,23 @@ class DNST::Literal is DNST::Node {
         $obj;
     }
 }
+
+class DNST::BinaryOp is DNST::Node {
+    method new(*@children) {
+        my $obj := self.CREATE;
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class DNST::Add is DNST::BinaryOp { }
+class DNST::Subtract is DNST::BinaryOp { }
+class DNST::GT is DNST::BinaryOp { }
+class DNST::LT is DNST::BinaryOp { }
+class DNST::GE is DNST::BinaryOp { }
+class DNST::LE is DNST::BinaryOp { }
+class DNST::EQ is DNST::BinaryOp { }
+class DNST::NE is DNST::BinaryOp { }
 
 class DNST::Local is DNST::Node {
     has $!name;

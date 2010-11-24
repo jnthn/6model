@@ -1172,21 +1172,56 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $pasttype := $r.pasttype;
     pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
     my $stmts := PAST::Stmts.new;
+    
+    # cursor register
     my $re_cur_tmp := DNST::Temp.new(
         :name(get_unique_id('re_cur')), :type('RakudoObject'),
         dnst_for(PAST::Var.new( :name('self'), :scope('lexical')))
     );
     my $*re_cur := DNST::Local.new($re_cur_tmp.name);
     $stmts.push($re_cur_tmp);
-    my $re_pos_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_pos')), :type('RakudoObject'),
+    
+    # current position register
+    my $re_pos := emit_unbox_int(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('pos'),
+        $*re_cur
+    )));
+    $stmts.push($re_pos);
+    my $*re_pos := $re_pos.name;
+    
+    # end of string register
+    my $re_eos := emit_unbox_int(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('eos'),
+        $*re_cur
+    )));
+    $stmts.push($re_eos);
+    my $*re_eos := $re_eos.name;
+    
+    # original offset register
+    my $re_off := emit_unbox_int(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('off'),
+        $*re_cur
+    )));
+    $stmts.push($re_off);
+    my $*re_off := $re_off.name;
+    
+    # target (string) register
+    my $re_tgt_tmp := DNST::Temp.new(
+        :name(get_unique_id('re_tgt')), :type('RakudoObject'),
         dnst_for(PAST::Op.new(
-            :pasttype('callmethod'), :name('pos'),
+            :pasttype('callmethod'), :name('target'),
             $*re_cur
         ))
     );
-    my $*re_pos := DNST::Local.new($re_pos_tmp.name);
-    $stmts.push($re_pos_tmp);
+    my $*re_tgt := DNST::Local.new($re_tgt_tmp.name);
+    $stmts.push($re_tgt_tmp);
+    
+    # fail label
+    my $re_fail_label := get_unique_id('re_fail');
+    my $*re_fail := DNST::Goto.new(:label($re_fail_label));
+    $stmts.push(DNST::Label.new(:name($re_fail_label)));
+    # inject failure handling code here.
+    
     for @($r) {
         $stmts.push(dnst_regex($_));
     }
@@ -1198,41 +1233,37 @@ our multi sub dnst_for(PAST::Regex $r) {
 
 # Regex nodes reached inside a regex
 our multi sub dnst_regex(PAST::Regex $r) {
-    my $res;
     my $pasttype := $r.pasttype;
+    my $stmts := PAST::Stmts.new;
     if $pasttype eq 'concat' {
         # Handle a concatenation of regexes.
-        my $stmts := PAST::Stmts.new;
         for @($r) {
             $stmts.push(dnst_regex($_));
         }
-        $res := dnst_for($stmts);
     }
     elsif $pasttype eq 'scan' {
         # Code for initial regex scan.
-        my $stmts := PAST::Stmts.new;
         
-        $res := dnst_for($stmts)
     }
     elsif $pasttype eq 'literal' {
         # Code for literal characters.  Faked/stubbed.
-        my $stmts := PAST::Stmts.new;
         $stmts.push(dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('pos'),
             $*re_cur,
             PAST::Val.new( :value(1) )
         )));
-        $res := dnst_for($stmts)
     }
     elsif $pasttype eq 'pass' {
         # Code for success
-        my $stmts := PAST::Stmts.new;
-        $res := dnst_for($stmts)
+        
+        $stmts.push(DNST::Return.new(
+            $*re_cur
+        ));
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");
     }
-    $res
+    dnst_for($stmts)
 }
 
 # Emits a lookup of a lexical.
@@ -1275,4 +1306,56 @@ sub emit_dynamic_lookup($name) {
         $lookup.push($*BIND_VALUE);
     }
     $lookup
+}
+
+# Emits the printing of something # C# only, silly.
+sub emit_say($arg) {
+    DNST::MethodCall.new(
+        :on('Console'), :name('WriteLine'),
+        :void(1),
+        $arg
+    )
+}
+
+# Emits the unboxing of an int
+sub emit_unbox_int($arg) {
+    DNST::Temp.new(
+        :name(get_unique_id('int')), :type('int'),
+        dnst_for(DNST::MethodCall.new(
+            :on('Ops'), :name('unbox_int'), :type('int'),
+            'TC', $arg
+        ))
+    );
+}
+
+sub plus($l, $r, $type?) {
+    DNST::Add.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub minus($l, $r, $type?) {
+    DNST::Subtract.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub gt($l, $r, $type?) {
+    DNST::GT.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub lt($l, $r, $type?) {
+    DNST::LT.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub ge($l, $r, $type?) {
+    DNST::GE.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub le($l, $r, $type?) {
+    DNST::LE.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub eq($l, $r, $type?) {
+    DNST::EQ.new($l, $r, pir::defined($type) ?? $type !! 'int')
+}
+
+sub ne($l, $r, $type?) {
+    DNST::NE.new($l, $r, pir::defined($type) ?? $type !! 'int')
 }

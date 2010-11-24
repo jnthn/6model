@@ -2,7 +2,7 @@
 
 # class inheritance
 
-plan(8);
+plan(10);
 
 class ABC {
     method foo() {

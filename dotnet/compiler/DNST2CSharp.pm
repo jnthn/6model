@@ -33,7 +33,7 @@ our multi sub cs_for(DNST::Using $using) {
 our multi sub cs_for(DNST::Class $class) {
     my $code := '';
     if $class.namespace {
-        $code := $code ~ 'namespace ' ~ $class.namespce ~ " \{\n";
+        $code := $code ~ 'namespace ' ~ $class.namespace ~ " \{\n";
     }
     $code := $code ~ 'class ' ~ $class.name ~ " \{\n";
     for @($class) {
@@ -197,7 +197,7 @@ our multi sub cs_for(DNST::If $if) {
     my $code := cs_for((@($if))[0]);
     $code := $code ~
              "        RakudoObject $if_result = null;\n" ~
-             "        if ($*LAST_TEMP != 0) \{\n";
+             "        if ($*LAST_TEMP" ~ ($if.bool ?? "" !! " != 0") ~ ") \{\n";
 
     # Compile branch(es).
     $*LAST_TEMP := 'null';
@@ -256,8 +256,50 @@ our multi sub cs_for(DNST::Literal $lit) {
 }
 
 our multi sub cs_for(DNST::Local $loc) {
-    $*LAST_TEMP := get_unique_id('result');
-    return "        RakudoObject $*LAST_TEMP = " ~ $loc.name ~ ";\n";
+    $*LAST_TEMP := $loc.name;
+    return '';
+}
+
+sub lhs_rhs_op(@ops, $op) {
+    my $code := cs_for(@ops[0]);
+    my $lhs := $*LAST_TEMP;
+    $code := $code ~ cs_for(@ops[1]);
+    my $rhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result');
+    # @ops[2] is the type
+    return "$code        " ~ @ops[2] ~ " $*LAST_TEMP = $lhs $op $rhs;\n";
+}
+
+our multi sub cs_for(DNST::Add $ops) {
+    lhs_rhs_op(@($ops), '+')
+}
+
+our multi sub cs_for(DNST::Subtract $ops) {
+    lhs_rhs_op(@($ops), '-')
+}
+
+our multi sub cs_for(DNST::GT $ops) {
+    lhs_rhs_op(@($ops), '>')
+}
+
+our multi sub cs_for(DNST::LT $ops) {
+    lhs_rhs_op(@($ops), '<')
+}
+
+our multi sub cs_for(DNST::GE $ops) {
+    lhs_rhs_op(@($ops), '>=')
+}
+
+our multi sub cs_for(DNST::LE $ops) {
+    lhs_rhs_op(@($ops), '<=')
+}
+
+our multi sub cs_for(DNST::EQ $ops) {
+    lhs_rhs_op(@($ops), '==')
+}
+
+our multi sub cs_for(DNST::NE $ops) {
+    lhs_rhs_op(@($ops), '!=')
 }
 
 our multi sub cs_for(DNST::Throw $throw) {

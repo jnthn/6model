@@ -1206,25 +1206,47 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $*re_off := $re_off.name;
     
     # target (string) register
-    my $re_tgt_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_tgt')), :type('RakudoObject'),
-        dnst_for(PAST::Op.new(
-            :pasttype('callmethod'), :name('target'),
-            $*re_cur
-        ))
-    );
-    my $*re_tgt := DNST::Local.new($re_tgt_tmp.name);
-    $stmts.push($re_tgt_tmp);
+    my $re_tgt := emit_unbox_str(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('target'),
+        $*re_cur
+    )));
+    $stmts.push($re_tgt);
+    my $*re_tgt := $re_tgt.name;
     
     # fail label
     my $re_fail_label := get_unique_id('re_fail');
     my $*re_fail := DNST::Goto.new(:label($re_fail_label));
-    $stmts.push(DNST::Label.new(:name($re_fail_label)));
-    # inject failure handling code here.
+    
+    # pass label
+    my $re_pass_label := get_unique_id('re_pass');
+    my $*re_pass := DNST::Goto.new(:label($re_pass_label));
+    
+    # done label
+    my $re_done_label := get_unique_id('re_done');
+    my $re_done := DNST::Goto.new(:label($re_done_label));
     
     for @($r) {
         $stmts.push(dnst_regex($_));
     }
+    
+    $stmts.push(DNST::Label.new(:name($re_pass_label)));
+    
+    $stmts.push($re_done);
+    
+    $stmts.push(DNST::Label.new(:name($re_fail_label)));
+    # inject failure handling code here.
+    
+    
+    $stmts.push(DNST::Label.new(:name($re_done_label)));
+    # Success
+    
+    $stmts.push(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('pos'),
+        $*re_cur,
+        emit_box_int(lit($*re_pos))
+    )));
+    
+    
     $stmts.push(DNST::Return.new(
         $*re_cur
     ));
@@ -1247,18 +1269,14 @@ our multi sub dnst_regex(PAST::Regex $r) {
     }
     elsif $pasttype eq 'literal' {
         # Code for literal characters.  Faked/stubbed.
-        $stmts.push(dnst_for(PAST::Op.new(
-            :pasttype('callmethod'), :name('pos'),
-            $*re_cur,
-            PAST::Val.new( :value(1) )
-        )));
+        $stmts.push(if_then(
+            ge(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), lit($*re_pos) ), lit(0)),
+            DNST::Bind.new($*re_pos, plus(lit($*re_pos), lit(pir::length((@($r))[0]))))
+        ));
     }
     elsif $pasttype eq 'pass' {
         # Code for success
         
-        $stmts.push(DNST::Return.new(
-            $*re_cur
-        ));
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");
@@ -1310,11 +1328,11 @@ sub emit_dynamic_lookup($name) {
 
 # Emits the printing of something # C# only, silly.
 sub emit_say($arg) {
-    DNST::MethodCall.new(
+    DNST::Stmts.new(DNST::MethodCall.new(
         :on('Console'), :name('WriteLine'),
         :void(1),
-        $arg
-    )
+        dnst_for($arg)
+    ), dnst_for(PAST::Val.new( :value("") )))
 }
 
 # Emits the unboxing of an int
@@ -1323,13 +1341,32 @@ sub emit_unbox_int($arg) {
         :name(get_unique_id('int')), :type('int'),
         dnst_for(DNST::MethodCall.new(
             :on('Ops'), :name('unbox_int'), :type('int'),
-            'TC', $arg
+            'TC', dnst_for($arg)
+        ))
+    );
+}
+
+# Emits the boxing of an int
+sub emit_box_int($arg) {
+    dnst_for(DNST::MethodCall.new(
+        :on('Ops'), :name('box_int'), :type('RakudoObject'),
+        'TC', dnst_for($arg)
+    ))
+}
+
+# Emits the unboxing of an str
+sub emit_unbox_str($arg) {
+    DNST::Temp.new(
+        :name(get_unique_id('str')), :type('string'),
+        dnst_for(DNST::MethodCall.new(
+            :on('Ops'), :name('unbox_str'), :type('string'),
+            'TC', dnst_for($arg)
         ))
     );
 }
 
 sub plus($l, $r, $type?) {
-    DNST::Add.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::Add.new(dnst_for($l), dnst_for($r), pir::defined($type) ?? $type !! 'int')
 }
 
 sub minus($l, $r, $type?) {
@@ -1337,25 +1374,100 @@ sub minus($l, $r, $type?) {
 }
 
 sub gt($l, $r, $type?) {
-    DNST::GT.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::GT.new($l, $r, pir::defined($type) ?? $type !! 'bool')
 }
 
 sub lt($l, $r, $type?) {
-    DNST::LT.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::LT.new($l, $r, pir::defined($type) ?? $type !! 'bool')
 }
 
 sub ge($l, $r, $type?) {
-    DNST::GE.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::GE.new($l, $r, pir::defined($type) ?? $type !! 'bool')
 }
 
 sub le($l, $r, $type?) {
-    DNST::LE.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::LE.new($l, $r, pir::defined($type) ?? $type !! 'bool')
 }
 
 sub eq($l, $r, $type?) {
-    DNST::EQ.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::EQ.new($l, $r, pir::defined($type) ?? $type !! 'bool')
 }
 
 sub ne($l, $r, $type?) {
-    DNST::NE.new($l, $r, pir::defined($type) ?? $type !! 'int')
+    DNST::NE.new($l, $r, pir::defined($type) ?? $type !! 'bool')
+}
+
+sub if_then($cond, $pred, $oth?) {
+    pir::defined($oth)
+        ?? DNST::If.new($cond, $pred, $oth, :bool(1), :result(0))
+        !! DNST::If.new($cond, $pred, :bool(1), :result(0))
+}
+
+sub lits($str) {
+    DNST::Literal.new( :value($str), :escape(1))
+}
+
+sub lit($str) {
+    DNST::Literal.new( :value($str), :escape(0))
+}
+
+sub emit_op($name, $arg1, $arg2?, $arg3?) {
+    my $res;
+    if pir::defined($arg2) {
+        if pir::defined($arg3) {
+            $res := DNST::MethodCall.new(
+                :on('Ops'), :name($name),
+                :type('RakudoObject'),
+                'TC',
+                dnst_for($arg1),
+                dnst_for($arg2),
+                dnst_for($arg3)
+            )
+        } else {
+            $res := DNST::MethodCall.new(
+                :on('Ops'), :name($name),
+                :type('RakudoObject'),
+                'TC',
+                dnst_for($arg1),
+                dnst_for($arg2)
+            )
+        }
+    } else {
+        $res := DNST::MethodCall.new(
+            :on('Ops'), :name($name),
+            :type('RakudoObject'),
+            'TC',
+            dnst_for($arg1)
+        )
+    }
+    $res
+}
+
+sub emit_call($on, $name, $type, $arg1, $arg2?, $arg3?) {
+    my $res;
+    if pir::defined($arg2) {
+        if pir::defined($arg3) {
+            $res := DNST::MethodCall.new(
+                :on($on), :name($name),
+                :type($type),
+                dnst_for($arg1),
+                dnst_for($arg2),
+                dnst_for($arg3)
+            )
+        } else {
+            $res := DNST::MethodCall.new(
+                :on($on), :name($name),
+                :type($type),
+                dnst_for($arg1),
+                dnst_for($arg2)
+            )
+        }
+    } else {
+        $res := DNST::MethodCall.new(
+            :on($on), :name($name),
+            :type($type),
+            dnst_for($arg1)
+        )
+    }
+    $res
 }

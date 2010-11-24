@@ -288,6 +288,17 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Returns the length of the string.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject length_str(ThreadContext TC, RakudoObject x)
+        {
+            return Ops.box_int(TC, Ops.unbox_str(TC, x).Length, TC.DefaultIntBoxType);
+        }
+
+        /// <summary>
         /// Checks whether a character at a particular index in a string
         /// is a member of a particular character class.
         /// </summary>

@@ -191,28 +191,29 @@ our multi sub cs_for(DNST::If $if) {
     unless +@($if) >= 2 { pir::die('A DNST::If node must have at least 2 children') }
 
     # Need a variable to put the final result in.
-    my $if_result := get_unique_id('if_result');
+    my $if_result := get_unique_id('if_result') if $if.result;
 
     # Get the conditional and emit if.
     my $code := cs_for((@($if))[0]);
     $code := $code ~
-             "        RakudoObject $if_result = null;\n" ~
+             "        " ~ $if.type ~ " $if_result = null;\n" if $if.result;
+    $code := $code ~
              "        if ($*LAST_TEMP" ~ ($if.bool ?? "" !! " != 0") ~ ") \{\n";
 
     # Compile branch(es).
     $*LAST_TEMP := 'null';
     $code := $code ~ cs_for((@($if))[1]);
-    $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
-                     "        }\n";
+    $code := $code ~ "        $if_result = $*LAST_TEMP;\n" if $if.result;
+    $code := $code ~ "        }\n";
     if +@($if) == 3 {
         $*LAST_TEMP := 'null';
         $code := $code ~ "        else \{\n";
         $code := $code ~ cs_for((@($if))[2]);
-        $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
-                         "        }\n";
+        $code := $code ~ "        $if_result = $*LAST_TEMP;\n" if $if.result;
+        $code := $code ~ "        }\n";
     }
 
-    $*LAST_TEMP := $if_result;
+    $*LAST_TEMP := $if_result if $if.result;
     return $code;
 }
 

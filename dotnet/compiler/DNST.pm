@@ -262,17 +262,31 @@ class DNST::Throw is DNST::Node {
 }
 
 class DNST::If is DNST::Node {
+    has $!type;
     has $!bool;
+    has $!result;
 
     method bool($set?) {
         if $set { $!bool := $set }
         $!bool
     }
 
-    method new(:$bool, *@children) {
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method result($set?) {
+        if $set { $!result := $set }
+        $!result
+    }
+
+    method new(:$bool, :$type, :$result, *@children) {
         my $obj := self.CREATE;
         $obj.set_children(@children);
         $obj.bool($bool);
+        $obj.type(pir::defined($type) ?? $type !! 'RakudoObject');
+        $obj.result(pir::defined($result) ?? $result !! 1);
         $obj;
     }
 }

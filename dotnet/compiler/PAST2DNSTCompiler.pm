@@ -1236,6 +1236,10 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_done_label := get_unique_id('re_done');
     my $re_done := DNST::Goto.new(:label($re_done_label));
     
+    # return label
+    my $re_return_label := get_unique_id('re_return');
+    my $re_return := DNST::Goto.new(:label($re_return_label));
+    
     my $*I10 := temp_int();
     my $*P10 := temp_int();
     
@@ -1254,9 +1258,15 @@ our multi sub dnst_for(PAST::Regex $r) {
         :pasttype('callmethod'), :name('mark_fail'),
         $*re_cur, val(4), box_int($*re_rep_lit), box_int($*I10), box_int($*P10), val(0)
     )));
+	# ops.'push_pirop'('lt', pos, CURSOR_FAIL, donelabel)
+	$stmts.push(if_then(lt($*re_pos_lit, lit('-1')), $re_done));
+	# ops.'push_pirop'('eq', pos, CURSOR_FAIL, faillabel)
+	$stmts.push(if_then(eq($*re_pos_lit, lit('-1')), $*re_fail));
+    
+	
+	$stmts.push($re_return);
     
     $stmts.push(DNST::Label.new(:name($re_done_label)));
-    # Success
     
     $stmts.push(dnst_for(PAST::Op.new(
         :pasttype('callmethod'), :name('pos'),
@@ -1264,10 +1274,10 @@ our multi sub dnst_for(PAST::Regex $r) {
         box_int($*re_pos_lit)
     )));
     
+    $stmts.push(DNST::Label.new(:name($re_return_label)));
     
-    $stmts.push(DNST::Return.new(
-        $*re_cur
-    ));
+    $stmts.push(DNST::Return.new($*re_cur));
+	
     dnst_for($stmts);
 }
 
@@ -1289,7 +1299,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
         # Code for literal characters.  Faked/stubbed.
         $stmts.push(if_then(
             ge(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0)),
-            DNST::Bind.new($*re_pos, plus($*re_pos_lit, lit(pir::length((@($r))[0]))))
+            DNST::Bind.new($*re_pos, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
+			$*re_fail
         ));
     }
     elsif $pasttype eq 'pass' {

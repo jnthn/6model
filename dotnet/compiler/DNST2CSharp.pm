@@ -303,6 +303,42 @@ our multi sub cs_for(DNST::NE $ops) {
     lhs_rhs_op(@($ops), '!=')
 }
 
+our multi sub cs_for(DNST::OR $ops) {
+    lhs_rhs_op(@($ops), '||')
+}
+
+our multi sub cs_for(DNST::AND $ops) {
+    lhs_rhs_op(@($ops), '&&')
+}
+
+our multi sub cs_for(DNST::BOR $ops) {
+    lhs_rhs_op(@($ops), '|')
+}
+
+our multi sub cs_for(DNST::BAND $ops) {
+    lhs_rhs_op(@($ops), '&')
+}
+
+our multi sub cs_for(DNST::BXOR $ops) {
+    lhs_rhs_op(@($ops), '^')
+}
+
+our multi sub cs_for(DNST::NOT $ops) {
+    my $code := cs_for((@(ops))[0]);
+    my $lhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result_negated');
+    return "$code        bool $*LAST_TEMP = !$lhs;\n";
+}
+
+our multi sub cs_for(DNST::XOR $ops) {
+    my $code := cs_for((@(ops))[0]);
+    my $lhs := $*LAST_TEMP;
+    $code := $code ~ cs_for((@(ops))[0]);
+    my $rhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result');
+    return "$code        bool $*LAST_TEMP = $lhs ? ! $rhs : $rhs;\n";
+}
+
 our multi sub cs_for(DNST::Throw $throw) {
     $*LAST_TEMP := 'null';
     return '        throw;';

@@ -405,6 +405,14 @@ class DNST::GE is DNST::BinaryOp { }
 class DNST::LE is DNST::BinaryOp { }
 class DNST::EQ is DNST::BinaryOp { }
 class DNST::NE is DNST::BinaryOp { }
+class DNST::NOT is DNST::BinaryOp { } # not really BinaryOp, but whatever
+# no such thing as short-circuiting XOR, of course.
+class DNST::OR is DNST::BinaryOp { }
+class DNST::AND is DNST::BinaryOp { }
+class DNST::XOR is DNST::BinaryOp { }
+class DNST::BOR is DNST::BinaryOp { }
+class DNST::BAND is DNST::BinaryOp { }
+class DNST::BXOR is DNST::BinaryOp { }
 
 class DNST::Local is DNST::Node {
     has $!name;

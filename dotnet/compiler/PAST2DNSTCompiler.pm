@@ -1288,7 +1288,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
     elsif $pasttype eq 'literal' {
         # Code for literal characters.  Faked/stubbed.
         $stmts.push(if_then(
-            log_or(lt(lit(1),lit(0)),ge(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0))),
+            ge(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0)),
             DNST::Bind.new($*re_pos, plus($*re_pos_lit, lit(pir::length((@($r))[0]))))
         ));
     }

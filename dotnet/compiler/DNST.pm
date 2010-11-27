@@ -414,6 +414,68 @@ class DNST::BOR is DNST::BinaryOp { }
 class DNST::BAND is DNST::BinaryOp { }
 class DNST::BXOR is DNST::BinaryOp { }
 
+# build/emit only one of these per method (if any)
+class DNST::JumpTable is DNST::Node {
+    has @!labels;
+    has %!names;
+    has $!jump_table_label;
+    has $!register;
+    
+    method labels(@set?) {
+        if pir::defined(@set) { @!labels := @set }
+        @!labels
+    }
+    
+    method names(%set?) {
+        if pir::defined(%set) { %!names := %set }
+        %!names
+    }
+    
+    # (prologue) label just before the jumptable
+    method label($set?) {
+        if pir::defined($set) { $!label := $set }
+        $!label
+    }
+    
+    # DNST::Temp - int register in which to store the target
+    #   branch's index in the jumptable
+    method register($set?) {
+        if pir::defined($set) { $!register := $set }
+        $!register
+    }
+    
+    # returns DNST::Stmts node with code that ends up branching
+    #   (indirectly through a jumptable with string gotos computed
+    #   at compile-time) to the destination label with that $name
+    method jump($name) {
+        DNST::Stmts.new(
+            DNST::Bind.new($!register, @!labels[%!names{$name}]),
+            DNST::Goto.new(:label($!label.name))
+        )
+    }
+    
+    # accepts the name of a label; registers a label with this
+    #   jumptable; returns the label.
+    method mark($name) {
+        my $lbl := DNST::Label.new(:name($name));
+        %!names{$name} := +@!labels;
+        @!labels.push($lbl);
+        $lbl
+    }
+    
+    method new() {
+        my $obj := self.CREATE;
+        $obj.labels([]);
+        $obj.names(NQPHash.new);
+        $obj.label(DNST::Label.new(:name(get_unique('jump_table'))));
+        $obj.register(DNST::Temp.new(
+            :name(get_unique('jump_table_int_register')),
+            :type('int')
+        ));
+        $obj
+    }
+}
+
 class DNST::Local is DNST::Node {
     has $!name;
 

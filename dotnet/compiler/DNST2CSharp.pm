@@ -261,6 +261,21 @@ our multi sub cs_for(DNST::Local $loc) {
     return '';
 }
 
+our multi sub cs_for(DNST::JumpTable $jt) {
+    my $reg := $jt.register;
+    my $skip_label := DNST::Label.new(:name('skip_jumptable_for_' ~ $reg.name));
+    my $code := cs_for(DNST::Goto.new(:label($skip_label.name)));
+    $code := $code ~ cs_for($jt.label);
+    $code := '        switch( ' ~ $reg.name ~ " ) \{\n";
+    my $i := 0;
+    for $jt.labels {
+        $code := $code ~ "        case $i : goto " ~ $_.name ~ ";\n";
+        $i := $i + 1;
+    }
+    $code := $code ~ "        }\n" ~ cs_for($skip_label);
+    return $code;
+}
+
 sub lhs_rhs_op(@ops, $op) {
     my $code := cs_for(@ops[0]);
     my $lhs := $*LAST_TEMP;

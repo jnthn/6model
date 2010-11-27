@@ -37,7 +37,6 @@ method compile(PAST::Node $node) {
 
     # Build a class node and add the inner code blocks.
     my $class := DNST::Class.new(
-        # XXX At some point we'll want to generate a unique name.
         :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! unique_name_for_module())
     );
     for @*INNER_BLOCKS {
@@ -827,12 +826,12 @@ our multi sub dnst_for(PAST::Op $op) {
         );
 
         # Compile it as an if node that checks definedness.
-        my $first_lit := DNST::Literal.new( :value($first_name) );
+        my $first_var := DNST::Local.new( :name($first_name) );
         return DNST::Stmts.new(
             $first,
             dnst_for(PAST::Op.new( :pasttype('if'),
-                PAST::Op.new( :pasttype('callmethod'), :name('defined'), $first_lit ),
-                $first_lit,
+                PAST::Op.new( :pasttype('callmethod'), :name('defined'), $first_var ),
+                $first_var,
                 (@($op))[1]
             ))
         );
@@ -1055,10 +1054,10 @@ our multi sub dnst_for(PAST::Var $var) {
             return $result;
         }
         elsif $*BIND_CONTEXT {
-            return DNST::Bind.new( $var.name, $*BIND_VALUE );
+            return DNST::Bind.new( DNST::Local.new( :name($var.name) ), $*BIND_VALUE );
         }
         else {
-            return DNST::Literal.new( :value($var.name) );
+            return DNST::Local.new( :name($var.name) );
         }
     }
     elsif $scope eq 'attribute' {
@@ -1184,7 +1183,7 @@ our multi sub dnst_for(PAST::Regex $r) {
         :name(get_unique_id('re_cur')), :type('RakudoObject'),
         dnst_for(PAST::Var.new( :name('self'), :scope('lexical')))
     );
-    my $*re_cur := DNST::Local.new($re_cur_tmp.name);
+    my $*re_cur := DNST::Local.new( :name($re_cur_tmp.name) );
     my $*re_cur_name := $re_cur_tmp.name;
     $stmts.push($re_cur_tmp);
     

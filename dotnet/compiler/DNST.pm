@@ -484,7 +484,7 @@ class DNST::Local is DNST::Node {
         $!name
     }
 
-    method new(:$name) {
+    method new(:$name!) {
         my $obj := self.CREATE;
         $obj.name($name);
         $obj;

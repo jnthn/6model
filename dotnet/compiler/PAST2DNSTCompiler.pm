@@ -349,9 +349,7 @@ our multi sub dnst_for(PAST::Block $block) {
         %handler<type> := 57;
         %handler<code> := dnst_for(PAST::Block.new(PAST::Stmts.new(
             PAST::Var.new( :name('$!'), :scope('parameter') ),
-            DNST::MethodCall.new(
-                :on('Ops'), :name('leave_block'),
-                'TC',
+            emit_op('leave_block',
                 DNST::Literal.new( :value('TC.CurrentContext.Outer.StaticCodeObject') ),
                 dnst_for(PAST::Var.new( :name('$!'), :scope('lexical') ))
             )
@@ -484,11 +482,9 @@ our multi sub dnst_for(PAST::Block $block) {
         );
     }
     else {
-        return DNST::MethodCall.new(
-            :on('Ops'), :name($block.closure ?? 'new_closure' !! 'capture_outer'),
-            :type('RakudoObject'),
-            'TC',
-            "StaticBlockInfo[$our_sbi]"
+        return emit_op(
+            ($block.closure ?? 'new_closure' !! 'capture_outer'),
+            DNST::Local.new( :name("StaticBlockInfo[$our_sbi]") )
         );
     }
 }
@@ -568,7 +564,7 @@ our multi sub dnst_for(PAST::Op $op) {
             :name(get_unique_id('inv')), :type('RakudoObject'),
             dnst_for(@args.shift)
         );
-        
+
         # Method name, for indirectly named dotty calls
         my $name := $op.name ~~ PAST::Node
           ?? DNST::MethodCall.new(
@@ -643,13 +639,8 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'nqpop' {
         # Just a call on the Ops class. Always pass thread context
         # as the first parameter.
-        my $result := DNST::MethodCall.new(
-            :on('Ops'), :name($op.name), :type('RakudoObject'), 'TC'
-        );
-        for @($op) {
-            $result.push(dnst_for($_));
-        }
-        return $result;
+        my @args := @($op);
+        return emit_op($op.name, |@args);
     }
 
     elsif $op.pasttype eq 'if' {
@@ -809,12 +800,7 @@ our multi sub dnst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'return' {
-        return DNST::MethodCall.new(
-            :on('Ops'), :name('throw_lexical'),
-            'TC',
-            dnst_for((@($op))[0]),
-            dnst_for(PAST::Val.new( :value(57) ))
-        );
+        return emit_op('throw_lexical', (@($op))[0], PAST::Val.new( :value(57) ));
     }
 
     elsif $op.pasttype eq 'def_or' {
@@ -923,9 +909,7 @@ our multi sub dnst_for(PAST::Val $val) {
     my $type_dnst := emit_lexical_lookup($type);
     
     # Add to constants table.
-    my $make_const := DNST::MethodCall.new(
-        :on('Ops'), :name('box_' ~ $primitive), :type('RakudoObject'),
-        'TC',
+    my $make_const := emit_op('box_' ~ $primitive,
         DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_dnst
     );
@@ -1071,10 +1055,7 @@ our multi sub dnst_for(PAST::Var $var) {
         }
 
         # Emit attribute lookup/bind.
-        my $lookup := DNST::MethodCall.new(
-            :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
-            :type('RakudoObject'),
-            'TC',
+        my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
             $self,
             $class,
             DNST::Literal.new( :value($var.name), :escape(1) )
@@ -1324,10 +1305,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
 
 # Emits a lookup of a lexical.
 sub emit_lexical_lookup($name) {
-    my $lookup := DNST::MethodCall.new(
-        :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
-        :type('RakudoObject'),
-        'TC',
+    my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
         DNST::Literal.new( :value($name), :escape(1) )
     );
     if $*BIND_CONTEXT {
@@ -1341,10 +1319,7 @@ sub emit_outer_lexical_lookup($name) {
     if $*BIND_CONTEXT {
         pir::die("Cannot bind to something using scope 'outer'.");
     }
-    my $lookup := DNST::MethodCall.new(
-        :on('Ops'), :name('get_lex_skip_current'),
-        :type('RakudoObject'),
-        'TC',
+    my $lookup := emit_op('get_lex_skip_current',
         DNST::Literal.new( :value($name), :escape(1) )
     );
     $lookup
@@ -1352,10 +1327,7 @@ sub emit_outer_lexical_lookup($name) {
 
 # Emits a lookup of a dynamic var.
 sub emit_dynamic_lookup($name) {
-    my $lookup := DNST::MethodCall.new(
-        :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
-        :type('RakudoObject'),
-        'TC',
+    my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
         DNST::Literal.new( :value($name), :escape(1) )
     );
     if $*BIND_CONTEXT {
@@ -1364,7 +1336,8 @@ sub emit_dynamic_lookup($name) {
     $lookup
 }
 
-# Emits the printing of something # C# only, silly.
+# Emits the printing of something 
+# XXX Debugging and C# only, silly.
 sub emit_say($arg) {
     DNST::Stmts.new(DNST::MethodCall.new(
         :on('Console'), :name('WriteLine'),
@@ -1521,36 +1494,16 @@ sub val($val) {
         !! dnst_for(PAST::Val.new( :value($val) ))
 }
 
-sub emit_op($name, $arg1, $arg2?, $arg3?) {
-    my $res;
-    if pir::defined($arg2) {
-        if pir::defined($arg3) {
-            $res := DNST::MethodCall.new(
-                :on('Ops'), :name($name),
-                :type('RakudoObject'),
-                'TC',
-                dnst_for($arg1),
-                dnst_for($arg2),
-                dnst_for($arg3)
-            )
-        } else {
-            $res := DNST::MethodCall.new(
-                :on('Ops'), :name($name),
-                :type('RakudoObject'),
-                'TC',
-                dnst_for($arg1),
-                dnst_for($arg2)
-            )
-        }
-    } else {
-        $res := DNST::MethodCall.new(
-            :on('Ops'), :name($name),
-            :type('RakudoObject'),
-            'TC',
-            dnst_for($arg1)
-        )
+sub emit_op($name, *@args) {
+    my @dnst_args;
+    for @args {
+        @dnst_args.push(dnst_for($_))
     }
-    $res
+    DNST::MethodCall.new(
+        :on('Ops'), :name($name),
+        :type('RakudoObject'),
+        'TC', |@dnst_args
+    )
 }
 
 sub emit_call($on, $name, $type, $arg1, $arg2?, $arg3?) {

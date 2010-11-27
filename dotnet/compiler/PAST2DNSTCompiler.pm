@@ -1063,6 +1063,19 @@ our multi sub dnst_for(PAST::Var $var) {
         if $*BIND_CONTEXT {
             $lookup.push($*BIND_VALUE);
         }
+        elsif pir::defined($var.viviself) {
+            # May need to auto-vivify.
+            my $viv_name := get_unique_id('viv_attr_');
+            my $temp := DNST::Temp.new( :name($viv_name), :type('RakudoObject'), $lookup );
+            $lookup := DNST::Stmts.new(
+                $temp,
+                DNST::If.new( :bool(1),
+                    eq(DNST::Local.new( :name($viv_name) ), DNST::Literal.new( :value('null') )),
+                    dnst_for($var.viviself),
+                    DNST::Local.new( :name($viv_name) )
+                )
+            );
+        }
         return $lookup;
     }
     elsif $scope eq 'keyed_int' {

@@ -149,7 +149,7 @@ class Regex::Cursor {
             $match.from($!from);
             
             # Create any arrayed subcaptures.
-            if nqp::repr_defined(@!caparray) {
+            if +@!caparray {
                 my @caparray := @!caparray;
                 my %caphash := NQPHash.new();
                 my @arr;

@@ -1506,31 +1506,14 @@ sub emit_op($name, *@args) {
     )
 }
 
-sub emit_call($on, $name, $type, $arg1, $arg2?, $arg3?) {
-    my $res;
-    if pir::defined($arg2) {
-        if pir::defined($arg3) {
-            $res := DNST::MethodCall.new(
-                :on($on), :name($name),
-                :type($type),
-                dnst_for($arg1),
-                dnst_for($arg2),
-                dnst_for($arg3)
-            )
-        } else {
-            $res := DNST::MethodCall.new(
-                :on($on), :name($name),
-                :type($type),
-                dnst_for($arg1),
-                dnst_for($arg2)
-            );
-        }
-    } else {
-        $res := DNST::MethodCall.new(
-            :on($on), :name($name),
-            :type($type),
-            dnst_for($arg1)
-        )
+sub emit_call($on, $name, $type, *@args) {
+    my @dnst_args;
+    for @args {
+        @dnst_args.push(dnst_for($_))
     }
-    $res
+    DNST::MethodCall.new(
+        :on($on), :name($name),
+        :type($type),
+        |@dnst_args
+    )
 }

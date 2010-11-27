@@ -1173,6 +1173,12 @@ our multi sub dnst_for(PAST::Regex $r) {
     pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
     my $stmts := PAST::Stmts.new;
     
+    # create a name-based jump table for this CLR routine
+    my $jt := DNST::JumpTable.new();
+    
+    $stmts.push(DNST::Bind.new($jt.register, lit('0')));
+    $stmts.push($jt.mark("dummy_marker"));
+    
     # cursor register
     my $re_cur_tmp := DNST::Temp.new(
         :name(get_unique_id('re_cur')), :type('RakudoObject'),
@@ -1228,9 +1234,9 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_fail_label := get_unique_id('re_fail');
     my $*re_fail := DNST::Goto.new(:label($re_fail_label));
     
-    # pass label
-    my $re_pass_label := get_unique_id('re_pass');
-    my $*re_pass := DNST::Goto.new(:label($re_pass_label));
+    # restart label
+    my $re_restart_label := get_unique_id('re_restart');
+    my $re_restart := DNST::Goto.new(:label($re_restart_label));
     
     # done label
     my $re_done_label := get_unique_id('re_done');
@@ -1247,10 +1253,10 @@ our multi sub dnst_for(PAST::Regex $r) {
         $stmts.push(dnst_regex($_));
     }
     
-    $stmts.push(DNST::Label.new(:name($re_pass_label)));
-    
     $stmts.push($re_done);
     
+	
+	$stmts.push(DNST::Label.new(:name($re_restart_label)));
     # ops.'push'(faillabel)
     $stmts.push(DNST::Label.new(:name($re_fail_label)));
     # self.'!cursorop'(ops, '!mark_fail', 4, rep, pos, '$I10', '$P10', 0)
@@ -1262,7 +1268,10 @@ our multi sub dnst_for(PAST::Regex $r) {
 	$stmts.push(if_then(lt($*re_pos_lit, lit('-1')), $re_done));
 	# ops.'push_pirop'('eq', pos, CURSOR_FAIL, faillabel)
 	$stmts.push(if_then(eq($*re_pos_lit, lit('-1')), $*re_fail));
-    
+    # ops.'push_pirop'('jump', '$I10')
+	# XXX perform string-based label jump from a constructed switch/case
+	
+	$stmts.push($jt);
 	
 	$stmts.push($re_return);
     
@@ -1293,12 +1302,13 @@ our multi sub dnst_regex(PAST::Regex $r) {
     }
     elsif $pasttype eq 'scan' {
         # Code for initial regex scan.
-        
+        my $s0 := get_unique_id('rxscan');
+		my $looplabel := DNST::Label.new(:name($s0 ~ '_loop'));
     }
     elsif $pasttype eq 'literal' {
         # Code for literal characters.  Faked/stubbed.
         $stmts.push(if_then(
-            ge(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0)),
+            eq(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0)),
             DNST::Bind.new($*re_pos, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
 			$*re_fail
         ));

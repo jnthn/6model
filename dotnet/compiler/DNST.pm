@@ -16,6 +16,11 @@
 # contain Using or Class nodes. The Class nodes may only contain Method
 # nodes.
 
+sub get_unique_id($prefix) {
+    $*CUR_ID := $*CUR_ID + 1;
+    return $prefix ~ '_' ~ $*CUR_ID;
+}
+
 class DNST::Node {
     has @!children;
     method set_children(@children) {
@@ -416,16 +421,10 @@ class DNST::BXOR is DNST::BinaryOp { }
 
 # build/emit only one of these per method (if any)
 class DNST::JumpTable is DNST::Node {
-    has @!labels;
     has %!names;
-    has $!jump_table_label;
+    has $!label;
     has $!register;
-    
-    method labels(@set?) {
-        if pir::defined(@set) { @!labels := @set }
-        @!labels
-    }
-    
+
     method names(%set?) {
         if pir::defined(%set) { %!names := %set }
         %!names
@@ -449,7 +448,7 @@ class DNST::JumpTable is DNST::Node {
     #   at compile-time) to the destination label with that $name
     method jump($name) {
         DNST::Stmts.new(
-            DNST::Bind.new($!register, @!labels[%!names{$name}]),
+            DNST::Bind.new($!register, lit((@(self))[%!names{$name}])),
             DNST::Goto.new(:label($!label.name))
         )
     }
@@ -458,19 +457,20 @@ class DNST::JumpTable is DNST::Node {
     #   jumptable; returns the label.
     method mark($name) {
         my $lbl := DNST::Label.new(:name($name));
-        %!names{$name} := +@!labels;
-        @!labels.push($lbl);
+        %!names{$name} := +@(self);
+        @(self).push($lbl);
         $lbl
     }
     
-    method new() {
+    method new(*@children) {
         my $obj := self.CREATE;
-        $obj.labels([]);
-        $obj.names(NQPHash.new);
-        $obj.label(DNST::Label.new(:name(get_unique('jump_table'))));
+        $obj.set_children(@children);
+        $obj.names({});
+        $obj.label(DNST::Label.new(:name(get_unique_id('jump_table'))));
         $obj.register(DNST::Temp.new(
-            :name(get_unique('jump_table_int_register')),
-            :type('int')
+            :name(get_unique_id('jump_table_int_register')),
+            :type('int'),
+            DNST::Literal.new( :value('0'), :escape(0))
         ));
         $obj
     }

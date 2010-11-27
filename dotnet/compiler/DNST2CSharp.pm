@@ -266,9 +266,9 @@ our multi sub cs_for(DNST::JumpTable $jt) {
     my $skip_label := DNST::Label.new(:name('skip_jumptable_for_' ~ $reg.name));
     my $code := cs_for(DNST::Goto.new(:label($skip_label.name)));
     $code := $code ~ cs_for($jt.label);
-    $code := '        switch( ' ~ $reg.name ~ " ) \{\n";
+    $code := $code ~ '        switch( ' ~ $reg.name ~ " ) \{\n";
     my $i := 0;
-    for $jt.labels {
+    for @($jt) {
         $code := $code ~ "        case $i : goto " ~ $_.name ~ ";\n";
         $i := $i + 1;
     }

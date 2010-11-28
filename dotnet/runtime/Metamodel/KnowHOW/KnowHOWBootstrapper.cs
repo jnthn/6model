@@ -39,6 +39,10 @@ namespace Rakudo.Metamodel.KnowHOW
                     var KnowHOWTypeObj = CaptureHelper.GetPositional(Cap, 0);
                     var HOW = KnowHOWTypeObj.STable.REPR.instance_of(TC, KnowHOWTypeObj.STable.WHAT);
 
+                    // If we have a name arg, stash that value away.
+                    var TypeName = CaptureHelper.GetNamed(Cap, "name");
+                    (HOW as KnowHOWREPR.KnowHOWInstance).Name = TypeName ?? Ops.box_str(TC, "<anon>");
+
                     // Now create a new type object to go with it of the
                     // desired REPR; we default to P6opaque (note that the
                     // KnowHOW repr only knows how to store a table of
@@ -83,7 +87,10 @@ namespace Rakudo.Metamodel.KnowHOW
                 if (HOW.Methods.TryGetValue(Ops.unbox_str(TC, Positionals[2]), out Method))
                     return Method;
                 else
-                    throw new InvalidOperationException("No such method " + Ops.unbox_str(TC, Positionals[2]));
+                    throw new InvalidOperationException(string.Format(
+                        "No method '{0}' found in knowhow '{1}'",
+                        Ops.unbox_str(TC, Positionals[2]),
+                        Ops.unbox_str(TC, HOW.Name)));
             }));
             KnowHOWMeths.Add("compose", CodeObjectUtility.WrapNativeMethod((TC, Ignored, Cap) =>
                 {

@@ -32,6 +32,18 @@ namespace Rakudo.Runtime
                 throw new Exception("Cannot use lllist_get_at_pos if representation is not P6list");
             }
         }
+        // i'm a cheater
+        public static RakudoObject lllist_get_at_pos(ThreadContext TC, RakudoObject LLList, int index)
+        {
+            if (LLList is P6list.Instance)
+            {
+                return ((P6list.Instance)LLList).Storage[index];
+            }
+            else
+            {
+                throw new Exception("Cannot use lllist_get_at_pos if representation is not P6list");
+            }
+        }
 
         /// <summary>
         /// Binds a value at a given positional index from a low level list

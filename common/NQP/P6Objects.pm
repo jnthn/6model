@@ -342,8 +342,8 @@ class Regex::Cursor {
     method mark_peek($tomark) {
         my @bstack := @!bstack;
         my $bptr;
-        my $mark;
-        if nqp::repr_defined(@bstack) && ($bptr := @bstack.Int) >= 0 {
+        my $mark := 0;
+        if nqp::repr_defined(@bstack) && ($bptr := +@bstack) >= 0 {
             $mark := @bstack[$bptr := $bptr - 4] while $tomark != 0 && $mark != $tomark;
             return [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
               $bptr, @bstack, @bstack[$bptr + 3]];

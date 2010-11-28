@@ -736,7 +736,7 @@ my knowhow NQPClassHOW {
             }
             $i := $i + 1;
         }
-        die("Could not find method " ~ $name);
+        die("No method '$name' found in class '" ~ self.name($obj) ~ "'");
     }
 }
 

@@ -21,6 +21,7 @@ namespace Rakudo.Metamodel.KnowHOW
         {
             public List<RakudoObject> Attributes;
             public Dictionary<string, RakudoObject> Methods;
+            public RakudoObject Name;
             public KnowHOWInstance(SharedTable STable)
             {
                 this.STable = STable;

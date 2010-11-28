@@ -87,7 +87,7 @@ my knowhow NQPNum is repr('P6num') {
 # XXX Bad hack, we'll replace this later.
 my knowhow Any {
     method defined() { 0 }
-    method Num() { nqp::coerce_int_to_num(0) }
+    method Num() { nqp::coerce_int_to_num(0, NQPNum) }
     method Int() { 0 }
 }
 

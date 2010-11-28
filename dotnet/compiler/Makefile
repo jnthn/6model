@@ -20,10 +20,10 @@ gen_past2dnst.pir: PAST2DNSTCompiler.pm
 gen_dnst2csharp.pir: DNST2CSharp.pm
 	parrot-nqp --target=pir DNST2CSharp.pm > gen_dnst2csharp.pir
 
-RakudoRuntime.dll: ..\runtime\bin\Debug\RakudoRuntime.dll
-	msbuild /nologo /verbosity:q ..\runtime\Rakudo.Net.csproj
-	perl -MExtUtils::Command -e cp ..\runtime\bin\Debug\RakudoRuntime.dll .
-	perl -MExtUtils::Command -e cp ..\runtime\bin\Debug\RakudoRuntime.pdb .
+RakudoRuntime.dll: ../runtime/bin/Debug/RakudoRuntime.dll
+	msbuild /nologo /verbosity:q ../runtime/Rakudo.Net.csproj
+	perl -MExtUtils::Command -e cp ../runtime/bin/Debug/RakudoRuntime.dll .
+	perl -MExtUtils::Command -e cp ../runtime/bin/Debug/RakudoRuntime.pdb .
 
 NQPSetting.dll: ../../common/NQP/NQPSetting.pm RakudoRuntime.dll
 	parrot compile.pir ../../common/NQP/NQPSetting.pm --setting > NQPSetting.cs

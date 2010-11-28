@@ -6,32 +6,44 @@ you want to start hacking on the 6model implementation on .Net, this
 is a great way to jump in! Questions? Try catching jnthn on #perl6
 on freenode.
 
-Support for has $.foo to classes
---------------------------------
-DIFFICULTY: Intermediate-Difficult
-SKILLS: NQP
+Run optimizer when -O is passed
+-------------------------------
+DIFFICULTY: Easy
+SKILLS: PIR
 DETAILS:
-Add a has_accessor attribute and accessor methods to the NQPAttribute
-knowhow. Take a :$has_accessor in the new method and set it (use a
-default value of 0 for if nothing is passed). Update Grammar.pm to know
-about the $.foo twigil. Update Actions.pm to pass along the has_accessor
-named parameter when the . twigil is used. Note that the attribute
-itself should be named $!foo - $.foo is just sugar for "declare $!foo
-and make me an accessor method". Add a .compose method to NQPAttribute.
-It should take a type-object of the class it's being composed into as
-a parameter. In NQPClassHOW's compose method, loop over the attributes
-and call .compose on them. Finally, fill out the compose method in
-NQPAttribute. It should add a method that does the attribute lookup.
-Something like:
+At the moment, NQPOptimizer.pm is enabled/disabled by commenting stuff
+out in compile.pir. So it's easier to try things with/without it, add
+a -O flag that, when passed, runs the optimizer.
 
-    method compose($obj) {
-        my $name := $!name;
-        $obj.HOW.add_method($obj, $name, method () {
-            nqp::get_attr(self, $obj.WHAT, $name)
-        });
-    }
+Simple Configure System
+-----------------------
+DIFFICULTY: Easy-Intermediate
+SKILLS: Perl, Makefiles
+DETAILS:
+At the moment, people on non-Windows systems have to manually hack in
+some aliases to get a working build. To improve things:
+1) Create a build directory with a Makefile.in.
+2) Create a Configure.pl that looks for msbuild or xbuild and picks
+   the one that exists. It should do similar for csc vs gmcs. (In
+   general, msbuild/csc will be available on Windows, and xbuild/
+   gmcs will be elsewhere, since those are the Mono variants). It
+   should then substitute for these into Makefile.in using some
+   placeholder scheme to generate a Makefile that will work.
+3) If none of msbuild or xbuild are in the path, warn that no build
+   tool is available. Same for csc and gmcs. Try and make the message
+   helpful as to what the user might need. :-)
 
-(Yes, the named lookup sucks for now, but soon we'll have enough to put
-an indexed lookup there instead. But let's make this work first.)
-
-
+Foundation for .WHO support
+---------------------------
+DIFFICULTY: Intermediate
+SKILLS: NQP, C#
+DETAILS:
+At the moment, there is no link between a type object and its
+underlying package (generally, an NQPStash). This task lays the
+foundation for getting that in place. To do this:
+1) Add a WHO field to SharedTable (follow how .WHAT and .HOW look).
+2) Write get_who and set_who ops that take in a RakudoObject and
+   get and set the STable.WHO (the set one takes in a second
+   RakudoObject).
+3) Edit Actions.pm and make .WHO use the get_who op (see .WHAT and
+   .HOW for examples).

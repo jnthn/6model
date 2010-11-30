@@ -89,6 +89,7 @@ my knowhow Any {
     method defined() { 0 }
     method Num() { nqp::coerce_int_to_num(0, NQPNum) }
     method Int() { 0 }
+    method Bool() { 0 }
 }
 
 my knowhow NQPMapIter {
@@ -436,6 +437,15 @@ sub substr(NQPStr $str, NQPInt $offset, NQPInt $length?) {
     nqp::repr_defined($length)
         ?? nqp::substr($str, $offset, $length)
         !! nqp::substr($str, $offset)
+}
+
+sub join($joiner, @args) {
+    $joiner := ~$joiner;
+    my $res := "";
+    for @args {
+        $res := $res ~ $joiner ~ ~$_
+    }
+    $res
 }
 
 # For tests.

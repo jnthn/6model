@@ -139,7 +139,7 @@ class Regex::Cursor {
     # for the Cursor if one hasn't been created yet.
     method MATCH() {
         my $match := $!match;
-        if !nqp::repr_defined($match) {
+        if $match.WHAT =:= NQPInt {
             # First, create a Match object and bind it
             $match := self.new_match;
             $!match := $match;
@@ -217,7 +217,9 @@ class Regex::Cursor {
             $rule := self.HOW.find_method($rule);
         }
         my $*ACTIONS := $actions;
-        my $cur := self.cursor_init($target, nqp::repr_defined($p) ?? $p !! 0, $c);
+        my $cur := nqp::repr_defined($c)
+            ?? self.cursor_init($target, nqp::repr_defined($p) ?? $p !! 0, $c)
+            !! self.cursor_init($target, nqp::repr_defined($p) ?? $p !! 0);
         #if nqp::repr_defined($rxtrace) {
         #    $cur.DEBUG
         #}
@@ -235,12 +237,13 @@ class Regex::Cursor {
     method cursor_init($target, $p, $c?) {
         my $cur := nqp::instance_of(self);
         $cur.target($target);
+        $cur.off(0); # not actually used in this impl (yet?)
+        #$cur.debug(1);
         if nqp::repr_defined($c) {
-            $cur.off($c);
+            # means "has continuation"
             $cur.from($CURSOR_FAIL);
             $cur.pos($c);
         } else {
-            $cur.off(0);
             $cur.from($p);
             $cur.pos($p);
         }
@@ -304,8 +307,10 @@ class Regex::Cursor {
     }
     
     # Log a debug message
-    method cursor_debug() {
-        # XXX finish
+    method cursor_debug($tag, *@args) {
+        if $!debug {
+            say("from: $!from; $tag " ~ join(' ', @args))
+        }
     }
     
     # Push a new backtracking point onto the cursor with the given
@@ -317,7 +322,7 @@ class Regex::Cursor {
         if !nqp::repr_defined(@bstack) {
             @!bstack := @bstack := [];
             $cptr := 0;
-        } elsif ($cptr := @bstack.Int) > 0 {
+        } elsif ($cptr := +@bstack) > 0 {
             $cptr := $cptr - 1;
         } else {
             $cptr := 0;
@@ -343,7 +348,7 @@ class Regex::Cursor {
         my @bstack := @!bstack;
         my $bptr;
         my $mark := 0;
-        if nqp::repr_defined(@bstack) && ($bptr := +@bstack) >= 0 {
+        if nqp::repr_defined(@bstack) && ($bptr := +@bstack) >= 4 {
             $mark := @bstack[$bptr := $bptr - 4] while $tomark != 0 && $mark != $tomark;
             return [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
               $bptr, @bstack, @bstack[$bptr + 3]];
@@ -369,7 +374,7 @@ class Regex::Cursor {
         my $subcur;
         
         if nqp::repr_defined(@bstack) {
-            if $cptr <= 0 {
+            if $cptr > 0 {
                 my @cstack := @!cstack;
                 $cptr := $cptr - 1;
                 $subcur := @cstack[$cptr];
@@ -393,7 +398,7 @@ class Regex::Cursor {
         my $bptr := @frame[3];
         my @bstack := @frame[4];
         my $cptr;
-        if nqp::repr_defined(@bstack) && ($cptr := @bstack.Int - 1) > -1 {
+        if nqp::repr_defined(@bstack) && ($cptr := +@bstack - 1) > -1 {
             my $i0;
             my $i1;
             nqp::lllist_truncate_to(@bstack, $bptr);
@@ -423,6 +428,11 @@ class Regex::Cursor {
                 }
             }
         }
+    }
+    
+    method DEBUG($arg?) {
+        $!debug := nqp::repr_defined($arg) ?? $arg !! $TRUE;
+        1
     }
 }
 

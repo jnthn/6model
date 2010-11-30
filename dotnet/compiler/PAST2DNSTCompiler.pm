@@ -1167,9 +1167,9 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $stmts := PAST::Stmts.new;
     
     # create a name-based jump table for this CLR routine
-    my $jt := DNST::JumpTable.new();
+    my $*re_jt := DNST::JumpTable.new();
     
-    $stmts.push(DNST::Bind.new($jt.register, lit('0')));
+    $stmts.push(DNST::Bind.new($*re_jt.register, lit('0')));
     
     # cursor register
     my $re_cur_tmp := DNST::Temp.new(
@@ -1190,16 +1190,13 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_done := DNST::Goto.new(:label($re_done_label));
     my $re_start_label := $re_prefix ~ '_start';
     my $re_start := DNST::Goto.new(:label($re_start_label));
-    my $re_return_label := $re_prefix ~ '_return';
-    my $re_return := DNST::Goto.new(:label($re_return_label));
     
-    my $*I10 := temp_int();
-    my $*P10 := temp_int();
+    my $*I10 := temp_int(:name("I10"));
+    my $*P10 := temp_int(:name("P10"));
     $stmts.push($*I10);
     $stmts.push($*P10);
     
     my $regex_name := my $*REGEXNAME := @*PAST_BLOCKS[0].name;
-    #$stmts.push(emit_say(lits($regex_name)));
     
     # If capnames is available, it's a hash where each key is the
     # name of a potential subcapture and the value is greater than 1
@@ -1216,7 +1213,7 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_pos := unbox_int(PAST::Op.new(
         :pasttype('callmethod'), :name('pos'),
         $*re_cur
-    ));
+    ), :name("pos"));
     $stmts.push($re_pos);
     my $*re_pos := $re_pos.name;
     my $*re_pos_lit := lit($re_pos.name);
@@ -1225,16 +1222,16 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_eos := unbox_int(PAST::Op.new(
         :pasttype('callmethod'), :name('eos'),
         $*re_cur
-    ));
+    ), :name("eos"));
     $stmts.push($re_eos);
     my $*re_eos := $re_eos.name;
     my $*re_eos_lit := lit($re_eos.name);
     
-    # original offset register
+    # offset register
     my $re_off := unbox_int(PAST::Op.new(
         :pasttype('callmethod'), :name('off'),
         $*re_cur
-    ));
+    ), :name("off"));
     $stmts.push($re_off);
     my $*re_off := $re_off.name;
     my $*re_off_lit := lit($re_off.name);
@@ -1249,7 +1246,7 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $re_tgt := unbox_str(PAST::Op.new(
         :pasttype('callmethod'), :name('target'),
         $*re_cur
-    ));
+    ), :name("tgt"));
     $stmts.push($re_tgt);
     my $*re_tgt := $re_tgt.name;
     my $*re_tgt_lit := lit($re_tgt.name);
@@ -1283,15 +1280,29 @@ our multi sub dnst_for(PAST::Regex $r) {
         $*re_cur
     )));
     
+    $stmts.push(DNST::Bind.new($*re_eos_lit, unbox_int(emit_op('length_str', box_str($*re_tgt_lit)))));
+    
+    $stmts.push(DNST::Label.new(:name($re_start_label)));
+    $stmts.push(if_then(eq(lit($*I10.name), lit("1")), $re_restart));
+    
+    $stmts.push(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('cursor_debug'),
+        $*re_cur, "START"
+    )));
+    
     for @($r) {
         $stmts.push(dnst_regex($_));
     }
     
-    $stmts.push($re_done);
+    #$stmts.push($re_done);
     
-	
 	$stmts.push(DNST::Label.new(:name($re_restart_label)));
-    # ops.'push'(faillabel)
+    
+    $stmts.push(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('cursor_debug'),
+        $*re_cur, "NEXT"
+    )));
+    
     $stmts.push(DNST::Label.new(:name($re_fail_label)));
     # self.'!cursorop'(ops, '!mark_fail', 4, rep, pos, '$I10', '$P10', 0)
     $stmts.push(dnst_for(PAST::Op.new(
@@ -1303,21 +1314,21 @@ our multi sub dnst_for(PAST::Regex $r) {
 	# ops.'push_pirop'('eq', pos, CURSOR_FAIL, faillabel)
 	$stmts.push(if_then(eq($*re_pos_lit, lit('-1')), $*re_fail));
     # ops.'push_pirop'('jump', '$I10')
-	# XXX perform string-based label jump from a constructed switch/case
-	
-	$stmts.push($jt);
-	
-	$stmts.push($re_return);
+	$stmts.push($*re_jt.jump(lit($*I10.name)));
     
-    $stmts.push(DNST::Label.new(:name($re_done_label)));
+    $stmts.push($*re_jt);
+	
+	$stmts.push(DNST::Label.new(:name($re_done_label)));
     
     $stmts.push(dnst_for(PAST::Op.new(
-        :pasttype('callmethod'), :name('pos'),
-        $*re_cur,
-        box_int($*re_pos_lit)
+        :pasttype('callmethod'), :name('cursor_fail'),
+        $*re_cur, val(0)
     )));
     
-    $stmts.push(DNST::Label.new(:name($re_return_label)));
+    $stmts.push(dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name('cursor_debug'),
+        $*re_cur, "FAIL"
+    )));
     
     $stmts.push(DNST::Return.new($*re_cur));
 	
@@ -1337,19 +1348,63 @@ our multi sub dnst_regex(PAST::Regex $r) {
     elsif $pasttype eq 'scan' {
         # Code for initial regex scan.
         my $s0 := get_unique_id('rxscan');
-		my $looplabel := DNST::Label.new(:name($s0 ~ '_loop'));
+		my $looplabel := $*re_jt.mark($s0 ~ '_loop');
+		my $scanlabel := DNST::Label.new(:name($s0 ~ '_scan'));
+		my $donelabel := DNST::Label.new(:name($s0 ~ '_done'));
+        $stmts.push(DNST::Bind.new(lit($*I10.name), unbox_int(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('from'),
+            $*re_cur
+        )))));
+        $stmts.push(if_then(ne(lit($*I10.name), lit("-1")),
+            DNST::Goto.new(:label($donelabel.name))));
+        $stmts.push(DNST::Goto.new(:label($scanlabel.name)));
+        $stmts.push($looplabel);
+        # self.'!cursorop'(ops, 'from', 1, '$P10')
+        # ops.'push_pirop'('inc', '$P10')
+        # ops.'push_pirop'('set', pos, '$P10')
+        $stmts.push(DNST::Bind.new($*re_pos_lit, plus(unbox_int(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('from'),
+            $*re_cur
+        ))), lit("1"))));
+        $stmts.push(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('from'),
+            $*re_cur, box_int(plus(unbox_int(dnst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('from'),
+                $*re_cur
+            ))), lit("1")))
+        )));
+        $stmts.push(if_then(ge($*re_pos_lit, $*re_eos_lit), DNST::Goto.new(:label($donelabel.name))));
+        $stmts.push($scanlabel);
+        $stmts.push(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('mark_push'),
+            $*re_cur, box_int(lit('0')), box_int(lit('0')),
+            box_int($*re_pos_lit), box_int(lit($*re_jt.get_index($s0 ~ '_loop')))
+        )));
+        $stmts.push($donelabel);
     }
     elsif $pasttype eq 'literal' {
-        # Code for literal characters.  Faked/stubbed.
+        # Code for literal strings
         $stmts.push(if_then(
-            eq(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), lit(0)),
-            DNST::Bind.new($*re_pos, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
+            eq(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), $*re_pos_lit),
+            DNST::Bind.new($*re_pos_lit, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
 			$*re_fail
         ));
     }
     elsif $pasttype eq 'pass' {
         # Code for success
+        $stmts.push(DNST::Label.new(:name(get_unique_id("rx_pass"))));
         
+        $stmts.push(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('cursor_pass'),
+            $*re_cur, box_int($*re_pos_lit), "" # XXX TODO regexname
+        )));
+        
+        $stmts.push(dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('cursor_debug'),
+            $*re_cur, "PASS"
+        )));
+        
+        $stmts.push(DNST::Return.new($*re_cur));
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");
@@ -1401,23 +1456,23 @@ sub emit_say($arg) {
 }
 
 # Emits the unboxing of an int
-sub unbox_int($arg) {
+sub unbox_int($arg, :$name) {
     temp_int(dnst_for(DNST::MethodCall.new(
         :on('Ops'), :name('unbox_int'), :type('int'),
         'TC', dnst_for($arg)
-    )))
+    )), :name($name))
 }
 
-sub temp_int($arg?) {
+sub temp_int($arg?, :$name) {
     DNST::Temp.new(
-        :name(get_unique_id('int')), :type('int'),
+        :name(get_unique_id('int_' ~ ($name || ''))), :type('int'),
         pir::defined($arg) ?? dnst_for($arg) !! lit(0)
     )
 }
 
-sub temp_str($arg?) {
+sub temp_str($arg?, :$name) {
     DNST::Temp.new(
-        :name(get_unique_id('string')), :type('string'),
+        :name(get_unique_id('string_' ~ ($name || ''))), :type('string'),
         pir::defined($arg) ?? dnst_for($arg) !! lits("")
     )
 }
@@ -1430,12 +1485,20 @@ sub box_int($arg) {
     ))
 }
 
-# Emits the unboxing of an str
-sub unbox_str($arg) {
+# Emits the boxing of a str
+sub box_str($arg) {
+    dnst_for(DNST::MethodCall.new(
+        :on('Ops'), :name('box_str'), :type('RakudoObject'),
+        'TC', dnst_for($arg)
+    ))
+}
+
+# Emits the unboxing of a str
+sub unbox_str($arg, :$name) {
     temp_str(dnst_for(DNST::MethodCall.new(
         :on('Ops'), :name('unbox_str'), :type('string'),
         'TC', dnst_for($arg)
-    )))
+    )), :name($name))
 }
 
 sub plus($l, $r, $type?) {

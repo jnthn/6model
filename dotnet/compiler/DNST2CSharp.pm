@@ -269,7 +269,7 @@ our multi sub cs_for(DNST::JumpTable $jt) {
     $code := $code ~ '        switch( ' ~ $reg.name ~ " ) \{\n";
     my $i := 0;
     for @($jt) {
-        $code := $code ~ "        case $i : goto " ~ $_.name ~ ";\n";
+        $code := $code ~ "          case $i : goto " ~ $_.name ~ ";\n";
         $i := $i + 1;
     }
     $code := $code ~ "        }\n" ~ cs_for($skip_label);

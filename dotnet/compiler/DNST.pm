@@ -448,7 +448,7 @@ class DNST::JumpTable is DNST::Node {
     #   at compile-time) to the destination label with that $name
     method jump($name) {
         DNST::Stmts.new(
-            DNST::Bind.new($!register, lit((@(self))[%!names{$name}])),
+            DNST::Bind.new(DNST::Literal.new($!register.name, :escape(0)), $name),
             DNST::Goto.new(:label($!label.name))
         )
     }
@@ -457,15 +457,23 @@ class DNST::JumpTable is DNST::Node {
     #   jumptable; returns the label.
     method mark($name) {
         my $lbl := DNST::Label.new(:name($name));
-        %!names{$name} := +@(self);
-        @(self).push($lbl);
+        %!names{$name} := ~+@!children;
+        #pir::say("marked $name as " ~ %!names{$name});
+        @!children.push($lbl);
         $lbl
+    }
+    
+    method get_index($name) {
+        my $i := 0;
+        for @!children {
+            return $i if (@!children[$i]).name eq $name
+        }
+        -1
     }
     
     method new(*@children) {
         my $obj := self.CREATE;
         $obj.set_children(@children);
-        $obj.names({});
         $obj.label(DNST::Label.new(:name(get_unique_id('jump_table'))));
         $obj.register(DNST::Temp.new(
             :name(get_unique_id('jump_table_int_register')),

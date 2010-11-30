@@ -245,6 +245,22 @@ namespace Rakudo.Runtime
         }
 
         /// <summary>
+        /// Performs a string format.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="ResultType"></param>
+        /// <returns></returns>
+        public static RakudoObject format_str(ThreadContext TC, RakudoObject x, params RakudoObject[] arguments)
+        {
+            string[] args = new string[arguments.Length];
+            int i = 0;
+            foreach (RakudoObject arg in arguments)
+                args[i++] = Ops.unbox_str(TC, arguments[i]);
+            return Ops.box_str(TC, String.Format(Ops.unbox_str(TC, x), args), TC.DefaultStrBoxType);
+        }
+
+        /// <summary>
         /// Search for the first occurrence of a substring within a string and returns its zero-based index
         /// if it's found and -1 if it's not.
         /// </summary>

@@ -81,6 +81,13 @@ our multi optimizer(PAST::Val $stmts) {
     # Nothing to do at all :-)
 }
 
+our multi optimizer(PAST::Regex $regex) {
+    # XXX Don't know about this yet really, but at least visit the children.
+    for @($regex) {
+        optimizer($_);
+    }
+}
+
 our multi sub optimizer($any) {
     if pir::isa($any, 'String') || pir::isa($any, 'Integer') || pir::isa($any, 'Float') {
         # Literals - nothing to do.

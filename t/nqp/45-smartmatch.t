@@ -2,7 +2,7 @@
 # to make sure the basic bits of regexes in place at the time it was
 # added didn't get regressed.
 
-plan(8);
+plan(12);
 
 my $match := 'abcdef' ~~ / abc /;
 ok( $match, "simple smart match, scanning form" );
@@ -16,3 +16,7 @@ ok( $match, "successfully match empty string");
 ok(("hi" ~~ /i/) eq 'i', "basic non-anchored scanning works");
 ok(("hihi" ~~ /i hi/) eq 'ihi', "rule concatenation works");
 ok(("hihi" ~~ /i [h i]/) eq 'ihi', "non-capturing groups work");
+ok(("hi" ~~ /i$/) eq 'i', 'end of string anchor works');
+ok(("hi" ~~ /h$/) eq 'Mu()', 'end of string anchor fails correctly');
+ok(("hi" ~~ /^h/) eq 'h', 'beginning of string anchor works');
+ok(("hi" ~~ /^i/) eq 'Mu()', 'beginning of string anchor fails correctly');

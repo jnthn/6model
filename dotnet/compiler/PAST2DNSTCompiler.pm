@@ -1299,8 +1299,8 @@ our multi sub dnst_for(PAST::Regex $r) {
     $stmts.push(if_then(gt($*re_pos_lit, $*re_pos_lit), $re_done));
     
     $stmts.push(DNST::Label.new(:name($re_start_label)));
-    $stmts.push(emit_say(lits("re startlabel at position ")));
-    $stmts.push(emit_say($*re_pos_lit));
+    #$stmts.push(emit_say(lits("re startlabel at position ")));
+    #$stmts.push(emit_say($*re_pos_lit));
     $stmts.push(if_then(eq($*I10_lit, lit("1")), $re_restart));
     
     $stmts.push(dnst_for(PAST::Op.new(
@@ -1313,8 +1313,8 @@ our multi sub dnst_for(PAST::Regex $r) {
     }
     
 	$stmts.push(DNST::Label.new(:name($re_restart_label)));
-    $stmts.push(emit_say(lits("re restartlabel at position ")));
-    $stmts.push(emit_say($*re_pos_lit));
+    #$stmts.push(emit_say(lits("re restartlabel at position ")));
+    #$stmts.push(emit_say($*re_pos_lit));
     
     $stmts.push(dnst_for(PAST::Op.new(
         :pasttype('callmethod'), :name('cursor_debug'),
@@ -1322,8 +1322,8 @@ our multi sub dnst_for(PAST::Regex $r) {
     )));
     
     $stmts.push(DNST::Label.new(:name($re_fail_label)));
-    $stmts.push(emit_say(lits("re faillabel at position ")));
-    $stmts.push(emit_say($*re_pos_lit));
+    #$stmts.push(emit_say(lits("re faillabel at position ")));
+    #$stmts.push(emit_say($*re_pos_lit));
     # self.'!cursorop'(ops, '!mark_fail', 4, rep, pos, '$I10', '$P10', 0)
     $stmts.push(returns_array(dnst_for(PAST::Op.new(
         :pasttype('callmethod'), :name('mark_fail'), $*re_cur, val(0))),
@@ -1342,8 +1342,8 @@ our multi sub dnst_for(PAST::Regex $r) {
     $stmts.push($*re_jt);
 	
 	$stmts.push(DNST::Label.new(:name($re_done_label)));
-    $stmts.push(emit_say(lits("re donelabel at position ")));
-    $stmts.push(emit_say($*re_pos_lit));
+    #$stmts.push(emit_say(lits("re donelabel at position ")));
+    #$stmts.push(emit_say($*re_pos_lit));
     
     $stmts.push(dnst_for(PAST::Op.new(
         :pasttype('callmethod'), :name('cursor_fail'),
@@ -1371,27 +1371,27 @@ our multi sub dnst_regex(PAST::Regex $r) {
         }
     }
     elsif $pasttype eq 'scan' {
-        $stmts.push(emit_say(lits("scan at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("scan at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
         # Code for initial regex scan.
         my $s0 := get_unique_id('rxscan');
 		my $looplabel := $*re_jt.mark($s0 ~ '_loop');
 		my $scanlabel := DNST::Label.new(:name($s0 ~ '_scan'));
 		my $donelabel := DNST::Label.new(:name($s0 ~ '_done'));
         
-        $stmts.push(emit_say(lits("scan from returned ")));
-        $stmts.push(emit_say(
-        unbox_int(dnst_for(PAST::Op.new(
-                :pasttype('callmethod'), :name('special'), $*re_cur_self
-            )))));
+        #$stmts.push(emit_say(lits("scan from returned ")));
+        #$stmts.push(emit_say(
+        #unbox_int(dnst_for(PAST::Op.new(
+        #        :pasttype('callmethod'), :name('special'), $*re_cur_self
+        #    )))));
         
         $stmts.push(if_then(ne(unbox_int(dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('special'), $*re_cur_self
             ))), lit("-1")), DNST::Goto.new(:label($donelabel.name))));
         $stmts.push(DNST::Goto.new(:label($scanlabel.name)));
         $stmts.push($looplabel);
-        $stmts.push(emit_say(lits("scan looplabel at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("scan looplabel at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
         # self.'!cursorop'(ops, 'from', 1, '$P10')
         # ops.'push_pirop'('inc', '$P10')
         # ops.'push_pirop'('set', pos, '$P10')
@@ -1405,33 +1405,33 @@ our multi sub dnst_regex(PAST::Regex $r) {
         )));
         $stmts.push(if_then(ge($*re_pos_lit, $*re_eos_lit), DNST::Goto.new(:label($donelabel.name))));
         $stmts.push($scanlabel);
-        $stmts.push(emit_say(lits("scan scanlabel at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("scan scanlabel at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
         $stmts.push(dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('mark_push'),
             $*re_cur, val(0),
             box_int($*re_pos_lit), box_int(lit($*re_jt.get_index($s0 ~ '_loop')))
         )));
         $stmts.push($donelabel);
-        $stmts.push(emit_say(lits("scan donelabel at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("scan donelabel at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
     }
     elsif $pasttype eq 'literal' {
         # Code for literal strings
-        $stmts.push(emit_say(lits("literal " ~ (@($r))[0] ~ " at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("literal " ~ (@($r))[0] ~ " at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
         $stmts.push(if_then(
             log_and(lt($*re_pos_lit, $*re_eos_lit), eq(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), $*re_pos_lit)),
             DNST::Bind.new($*re_pos_lit, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
 			$*re_fail
         ));
-        $stmts.push(emit_say(lits("literal succeeded at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("literal succeeded at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
     }
     elsif $pasttype eq 'pass' {
         # Code for success
-        $stmts.push(emit_say(lits("pass at position ")));
-        $stmts.push(emit_say($*re_pos_lit));
+        #$stmts.push(emit_say(lits("pass at position ")));
+        #$stmts.push(emit_say($*re_pos_lit));
         $stmts.push(DNST::Label.new(:name(get_unique_id("rx_pass"))));
         
         $stmts.push(dnst_for(PAST::Op.new(

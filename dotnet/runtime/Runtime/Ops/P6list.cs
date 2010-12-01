@@ -159,7 +159,7 @@ namespace Rakudo.Runtime
                 int count = store.Count;
                 int length = Ops.unbox_int(TC, Length);
                 if (length < count)
-                    store.RemoveRange(length - 1, count - length);
+                    store.RemoveRange(length, count - length);
                 return LLList;
             }
             else

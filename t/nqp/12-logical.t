@@ -2,7 +2,7 @@
 
 # check '||', '&&', and '//'
 
-plan(7);
+plan(8);
 
 my $or_no_branch := 1;
 $or_no_branch || ( $or_no_branch := 0 );
@@ -11,6 +11,13 @@ ok($or_no_branch, "logical || shortcuts, branch not taken");
 my $or_branch := 0;
 0 || ( $or_branch := 1 );
 ok($or_branch, "logical || shortcuts, branch taken");
+
+my $or_test := 0;
+if 0 || $or_test == 0 {
+    ok(!$or_test, "logical || result is correct");
+} else {
+    nok('took the wrong branch');
+}
 
 my $and_no_branch := 0;
 $and_no_branch && ( $and_no_branch := 1 );

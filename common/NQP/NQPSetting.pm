@@ -144,6 +144,13 @@ my knowhow NQPArray is repr('P6list') {
     method Numeric() {
         self.elems
     }
+    method Stringy() {
+        my $res := '';
+        for self {
+            $res := $res ~ ' ' ~ ~$_
+        }
+        $res
+    }
     method elems() {
         nqp::lllist_elems(self)
     }

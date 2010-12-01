@@ -25,6 +25,10 @@ class Mu {
     method isa($type) {
         return self.HOW.isa(self, $type);
     }
+    
+    method Bool() {
+        nqp::repr_defined(self)
+    }
 }
 
 class Capture {
@@ -103,6 +107,7 @@ class Regex::Cursor {
     has @.cstack is rw;
     has @.caparray is rw;
     has $.regex is rw;
+    has $.special is rw;
     
     my $generation := 0;
     # XXX make const
@@ -124,9 +129,21 @@ class Regex::Cursor {
     method new() {
         self.CREATE();
     }
-
+    
     method CREATE() {
         nqp::instance_of(self)
+    }
+    
+    method from_from($set?) {
+        my $res;
+        if $!from.WHAT =:= NQPInt {
+            say('from is an integer!');
+            $!from := $set if nqp::repr_defined($set);
+            $res := $!from
+        } else {
+            $res := -1
+        }
+        $res
     }
     
     # index representing 'off the end of the string'
@@ -212,6 +229,7 @@ class Regex::Cursor {
     # Parse C<target> in the current grammar starting with C<regex>.
     # If C<regex> is omitted, then use the C<TOP> rule for the grammar.
     method parse($target, :$rule?, :$actions?, :$rxtrace?, :$p?, :$c?) {
+        say("in parse");
         $rule := 'TOP' unless nqp::repr_defined($rule);
         if $rule.WHAT =:= NQPStr {
             $rule := self.HOW.find_method($rule);
@@ -223,6 +241,7 @@ class Regex::Cursor {
         #if nqp::repr_defined($rxtrace) {
         #    $cur.DEBUG
         #}
+        #$cur.from(-1); # XXX ??????
         my $cap := Capture.new;
         $cap.bind_pos(0, $cur);
         $rule($cur, $cap).MATCH
@@ -235,10 +254,11 @@ class Regex::Cursor {
     
     # Create a new cursor for matching C<target>.
     method cursor_init($target, $p, $c?) {
+        say("in cursor_init");
         my $cur := nqp::instance_of(self);
         $cur.target($target);
         $cur.off(0); # not actually used in this impl (yet?)
-        #$cur.debug(1);
+        $cur.debug(1);
         if nqp::repr_defined($c) {
             # means "has continuation"
             $cur.from($CURSOR_FAIL);
@@ -247,6 +267,7 @@ class Regex::Cursor {
             $cur.from($p);
             $cur.pos($p);
         }
+        $cur.special(-1);
         $cur
     }
     
@@ -256,10 +277,13 @@ class Regex::Cursor {
         $lang := self unless nqp::repr_defined($lang);
         my $cur := nqp::instance_of(self);
         my $regex := $!regex;
+        $!from := 0 unless $!from.WHAT =:= NQPInt;
         $cur.from($!from);
         $cur.target($!target);
         $cur.debug($!debug);
-        if nqp::repr_defined($regex) {
+        my $ret;
+        if $regex {
+            say('there was a regex');
             $cur.pos($CURSOR_FAIL);
             if nqp::repr_defined(@!cstack) {
                 my @cstack := [];
@@ -275,10 +299,15 @@ class Regex::Cursor {
                 }
                 $cur.bstack(@bstack);
             }
+            $ret := [$cur, $!from, $!target, 1];
         } else {
             $cur.pos($!from);
+            $cur.from($!from);
+            $cur.target($!target);
+            $cur.debug($!debug);
+            $ret := [$cur, $!from, $!target, 0];
         }
-        [$cur, $!from, $!target, 0]
+        $ret
     }
     
     # Permanently fail this cursor.
@@ -317,10 +346,11 @@ class Regex::Cursor {
     # C<rep>, C<pos>, and backtracking C<mark>.  (The C<mark> is typically
     # the address of a label to branch to when backtracking occurs.)
     method mark_push($rep, $pos, $mark, $subcur?) {
+        say("in mark_push");
         my $cptr;
         my @bstack := @!bstack;
         if !nqp::repr_defined(@bstack) {
-            @!bstack := @bstack := [];
+            @bstack := [];
             $cptr := 0;
         } elsif ($cptr := +@bstack) > 0 {
             $cptr := $cptr - 1;
@@ -336,24 +366,45 @@ class Regex::Cursor {
             @cstack[$cptr] := $subcur;
             $cptr := $cptr + 1;
         }
+        say("pos is $pos");
         @bstack.push($mark);
         @bstack.push($pos);
         @bstack.push($rep);
         @bstack.push($cptr);
+        say("bstack now has " ~ +@bstack ~ " items");
+        @!bstack := @bstack;
     }
     
     # Return information about the latest frame for C<mark>.
     # If C<mark> is zero, return information about the latest frame.
     method mark_peek($tomark) {
+        say("in mark_peek");
         my @bstack := @!bstack;
-        my $bptr;
-        my $mark := 0;
-        if nqp::repr_defined(@bstack) && ($bptr := +@bstack) >= 4 {
-            $mark := @bstack[$bptr := $bptr - 4] while $tomark != 0 && $mark != $tomark;
-            return [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
-              $bptr, @bstack, @bstack[$bptr + 3]];
+        $tomark := +$tomark;
+        my $bptr := +@bstack - 4;
+        my $mark;
+        my $res;
+        while !nqp::repr_defined($res) {
+            say("bptr is $bptr");
+            if $bptr >= 0 {
+                $mark := @bstack[$bptr];
+                say("tomark is " ~ +$tomark);
+                say("mark is " ~ +$mark );
+                if $tomark == 0 || $mark == $tomark {
+                    # rep, pos, mark, bptr, bstack, cptr
+                    say("setting result");
+                    $res := [@bstack[$bptr + 2], @bstack[$bptr + 1], $mark,
+                        $bptr, @bstack, @bstack[$bptr + 3]]
+                } else {
+                    say("NOT setting result");
+                }
+                $bptr := $bptr - 4
+            } else {
+                $res := [0, $CURSOR_FAIL_GROUP, 0, 0, @bstack, 0]
+            }
         }
-        [0, $CURSOR_FAIL_GROUP, 0, 0, @bstack, 0]
+        say('returning ' ~ join(' ', $res));
+        $res;
     }
     
     # Remove the most recent C<mark> and backtrack the cursor to the
@@ -361,11 +412,16 @@ class Regex::Cursor {
     # backtracks the most recent mark.  Returns the backtracked
     # values of repetition count, cursor position, and mark (address).
     method mark_fail($mark) {
+        say("in mark_fail");
         my @frame := self.mark_peek($mark);
         my $rep := @frame[0];
+        say("rep is $rep");
         my $pos := @frame[1];
+        say("pos is $pos");
         $mark := @frame[2];
+        say("mark is $mark");
         my $bptr := @frame[3];
+        say("bptr is $bptr");
         my @bstack := @frame[4];
         my $cptr := @frame[5];
         
@@ -373,7 +429,8 @@ class Regex::Cursor {
         
         my $subcur;
         
-        if nqp::repr_defined(@bstack) {
+        if +@bstack {
+            #say('bstack was defined');
             if $cptr > 0 {
                 my @cstack := @!cstack;
                 $cptr := $cptr - 1;
@@ -391,6 +448,7 @@ class Regex::Cursor {
     # (releasing any intermediate marks), but preserves the current
     # capture states.
     method mark_commit($mark) {
+        say("in mark_commit");
         my @frame := self.mark_peek($mark);
         my $rep := @frame[0];
         my $pos := @frame[1];
@@ -447,8 +505,7 @@ class Regex::Regex {
         $!regex_block := $regex_block;
     }
     method ACCEPTS($target) {
-        my $cur := Regex::Cursor.new;
-        $cur.parse($target, :rule($!regex_block))
+        Regex::Cursor.parse($target, :rule($!regex_block))
     }
 }
 

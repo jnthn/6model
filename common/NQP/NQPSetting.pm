@@ -745,17 +745,22 @@ my knowhow NQPClassHOW {
     ##
 
     method find_method($obj, $name) {
+        my $found;
+        my %meths;
         my $i := 0;
         my $mro_length := +@!mro;
-        while $i != $mro_length {
-            my %meths := @!mro[$i].HOW.method_table($obj);
-            my $found := %meths{$name};
+        while $i < $mro_length {
+            %meths := @!mro[$i].HOW.method_table($obj);
+            $found := %meths{$name};
             if nqp::repr_defined($found) {
-                return $found;
+                $i := $mro_length;
             }
             $i := $i + 1;
         }
-        die("No method '$name' found in class '" ~ self.name($obj) ~ "'");
+        unless nqp::repr_defined($found) {
+            die("No method '$name' found in class '" ~ self.name($obj) ~ "'");
+        }
+        $found
     }
 }
 

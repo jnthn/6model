@@ -1160,7 +1160,7 @@ our multi sub dnst_for($any) {
 }
 
 # Non-regex nodes reached inside a regex
-our multi sub dnst_regex(PAST::Node $r) {
+our multi sub dnst_regex($r) {
     dnst_for($r)
 }
 
@@ -1453,6 +1453,9 @@ our multi sub dnst_regex(PAST::Regex $r) {
     }
     elsif $pasttype eq 'anchor' {
         my $subtype := $r.subtype;
+        my $lbl := get_unique_id('rxanchor');
+        my $donelabel := DNST::Label.new(:name($lbl));
+        my $donegoto := DNST::Goto.new(:label($lbl));
         if $subtype eq 'bos' {
             $stmts.push(if_then(
                 ne($*re_pos_lit, lit("0")),
@@ -1463,8 +1466,50 @@ our multi sub dnst_regex(PAST::Regex $r) {
                 ne($*re_pos_lit, $*re_eos_lit),
                 $*re_fail
             ));
+        } elsif $subtype eq 'bol' {
+            $stmts.push(if_then(
+                emit_op('is_cclass_str_index', 'Newline',
+                    $*re_tgt_lit, $*re_pos_lit),
+                $donegoto
+            ));
+            $stmts.push(if_then(
+                ne($*re_pos_lit, $*re_eos_lit),
+                $*re_fail
+            ));
+            #$stmts.push(if_then(
+            #    eq(lit('0'), $*re_pos_lit),
+            #    $donegoto
+            #));
+            # XXX TODO add the rest here
+            $stmts.push($donelabel);
         } else {
             pir::die("Don't know how to compile regex anchor $subtype.");
+        }
+    }
+    elsif $pasttype eq 'alt' {
+        my $total := +@($r);
+        if $total > 0 {
+            my $name := get_unique_id('alt') ~ '_';
+            my $acount := 0;
+            my $alabel := DNST::Label.new(:name($name ~ $acount));
+            my $endlabel := DNST::Label.new(:name($name ~ 'end'));
+            my $adnst;
+            $stmts.push($alabel);
+            for @($r) {
+                $adnst := dnst_regex($_);
+                if ($acount := $acount + 1) <= $total {
+                    $alabel := $*re_jt.mark($name ~ $acount);
+                    $stmts.push(dnst_for(PAST::Op.new(
+                        :pasttype('callmethod'), :name('mark_push'),
+                        $*re_cur, val(0),
+                        box_int($*re_pos_lit),
+                        box_int(lit($*re_jt.get_index($name ~ $acount)))
+                    )));
+                }
+                $stmts.push($adnst);
+                $stmts.push($alabel);
+            }
+            $stmts.push($endlabel);
         }
     }
     else {

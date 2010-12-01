@@ -349,14 +349,12 @@ class Regex::Cursor {
         #say("in mark_push");
         my $cptr;
         my @bstack := @!bstack;
-        if !nqp::repr_defined(@bstack) {
-            @bstack := [];
-            $cptr := 0;
-        } elsif ($cptr := +@bstack) > 0 {
+        if ($cptr := +@bstack) > 0 {
             $cptr := $cptr - 1;
         } else {
             $cptr := 0;
         }
+        #say("cptr is $cptr");
         if nqp::repr_defined($subcur) {
             $!match := Mu;
             my @cstack := @!cstack;
@@ -424,6 +422,7 @@ class Regex::Cursor {
         #say("bptr is $bptr");
         my @bstack := @frame[4];
         my $cptr := @frame[5];
+        #say("cptr is $cptr");
         
         $!match := Mu;
         
@@ -434,7 +433,7 @@ class Regex::Cursor {
             if $cptr > 0 {
                 my @cstack := @!cstack;
                 $cptr := $cptr - 1;
-                $subcur := @cstack[$cptr];
+                $subcur := @cstack[$cptr] if +@cstack > $cptr;
                 nqp::lllist_truncate_to(@cstack, $bptr > 0
                     ?? @bstack[$bptr - 1]
                     !! 0);

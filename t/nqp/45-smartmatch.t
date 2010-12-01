@@ -2,7 +2,7 @@
 # to make sure the basic bits of regexes in place at the time it was
 # added didn't get regressed.
 
-plan(12);
+plan(14);
 
 my $match := 'abcdef' ~~ / abc /;
 ok( $match, "simple smart match, scanning form" );
@@ -20,3 +20,7 @@ ok(("hi" ~~ /i$/) eq 'i', 'end of string anchor works');
 ok(("hi" ~~ /h$/) eq 'Mu()', 'end of string anchor fails correctly');
 ok(("hi" ~~ /^h/) eq 'h', 'beginning of string anchor works');
 ok(("hi" ~~ /^i/) eq 'Mu()', 'beginning of string anchor fails correctly');
+
+ok(("abc" ~~ /[a|ab]c/) eq 'abc', 'basic alternation works with concatenation');
+
+ok(("abcd" ~~ /[[a|ab]|abc]d/) eq 'abcd', 'deep backtracking works');

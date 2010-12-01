@@ -466,7 +466,8 @@ class DNST::JumpTable is DNST::Node {
     method get_index($name) {
         my $i := 0;
         for @!children {
-            return $i if (@!children[$i]).name eq $name
+            return $i if $_.name eq $name;
+            $i := $i + 1
         }
         -1
     }

@@ -318,9 +318,9 @@ namespace Rakudo.Runtime
         /// Checks whether a character at a particular index in a string
         /// is a member of a particular character class.
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
+        /// <param name="x">name of the character class as a string</param>
+        /// <param name="y">target string</param>
+        /// <param name="z">integer index into the target string</param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
         public static RakudoObject is_cclass_str_index(ThreadContext TC, RakudoObject x, RakudoObject y, RakudoObject z)
@@ -334,8 +334,8 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Checks whether a character is a member of a particular character class.
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="x">name of the character class as a string</param>
+        /// <param name="y">target string</param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
         public static RakudoObject is_cclass_str(ThreadContext TC, RakudoObject x, RakudoObject y)

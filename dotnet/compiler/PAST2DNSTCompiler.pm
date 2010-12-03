@@ -1226,28 +1226,28 @@ our multi sub dnst_for(PAST::Regex $r) {
     }
     
     # current position register
-    my $re_pos := unbox_int(PAST::Op.new(
+    my $re_pos := temp_int(:name("pos"), unbox('int', PAST::Op.new(
         :pasttype('callmethod'), :name('pos'),
         $*re_cur
-    ), :name("pos"));
+    )));
     $stmts.push($re_pos);
     my $*re_pos := $re_pos.name;
     my $*re_pos_lit := lit($re_pos.name);
     
     # end of string register
-    my $re_eos := unbox_int(PAST::Op.new(
+    my $re_eos := temp_int(:name("eos"), unbox('int', PAST::Op.new(
         :pasttype('callmethod'), :name('eos'),
         $*re_cur
-    ), :name("eos"));
+    )));
     $stmts.push($re_eos);
     my $*re_eos := $re_eos.name;
     my $*re_eos_lit := lit($re_eos.name);
     
     # offset register
-    my $re_off := unbox_int(PAST::Op.new(
+    my $re_off := temp_int(:name("off"), unbox('int', PAST::Op.new(
         :pasttype('callmethod'), :name('off'),
         $*re_cur
-    ), :name("off"));
+    )));
     $stmts.push($re_off);
     my $*re_off := $re_off.name;
     my $*re_off_lit := lit($re_off.name);
@@ -1382,11 +1382,11 @@ our multi sub dnst_regex(PAST::Regex $r) {
         
         #$stmts.push(emit_say(lits("scan from returned ")));
         #$stmts.push(emit_say(
-        #unbox_int(dnst_for(PAST::Op.new(
+        #unbox('int', dnst_for(PAST::Op.new(
         #        :pasttype('callmethod'), :name('special'), $*re_cur_self
         #    )))));
         
-        $stmts.push(if_then(ne(unbox_int(dnst_for(PAST::Op.new(
+        $stmts.push(if_then(ne(unbox('int', dnst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('special'), $*re_cur_self
             ))), lit("-1")), DNST::Goto.new(:label($donelabel.name))));
         $stmts.push(DNST::Goto.new(:label($scanlabel.name)));
@@ -1396,7 +1396,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         # self.'!cursorop'(ops, 'from', 1, '$P10')
         # ops.'push_pirop'('inc', '$P10')
         # ops.'push_pirop'('set', pos, '$P10')
-        $stmts.push(DNST::Bind.new($*re_pos_lit, plus(unbox_int(dnst_for(PAST::Op.new(
+        $stmts.push(DNST::Bind.new($*re_pos_lit, plus(unbox('int', dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('from'),
             $*re_cur
         ))), lit("1"))));
@@ -1636,14 +1636,6 @@ sub emit_say($arg) {
     ), dnst_for(PAST::Val.new( :value("") )))
 }
 
-# Emits the unboxing of an int
-sub unbox_int($arg, :$name) {
-    temp_int(dnst_for(DNST::MethodCall.new(
-        :on('Ops'), :name('unbox_int'), :type('int'),
-        'TC', dnst_for($arg)
-    )), :name($name))
-}
-
 sub temp_int($arg?, :$name) {
     DNST::Temp.new(
         :name(get_unique_id('int_' ~ ($name || ''))), :type('int'),
@@ -1831,7 +1823,7 @@ sub returns_array($expr, *@result_slots) {
         $stmts.push(DNST::Bind.new(
             @result_slots[$i],
             @result_slots[$i + 1] eq 'int'
-            ?? unbox_int(emit_op('lllist_get_at_pos',
+            ?? unbox('int', emit_op('lllist_get_at_pos',
                 DNST::Local.new(:name($tmp.name)),
                 lit(~($i / 2))))
             !! 

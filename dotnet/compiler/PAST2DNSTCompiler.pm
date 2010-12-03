@@ -1402,7 +1402,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         ))), lit("1"))));
         $stmts.push(dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('from'),
-            $*re_cur, box_int($*re_pos_lit)
+            $*re_cur, box('int', $*re_pos_lit)
         )));
         $stmts.push(if_then(ge($*re_pos_lit, $*re_eos_lit), DNST::Goto.new(:label($donelabel.name))));
         $stmts.push($scanlabel);
@@ -1411,7 +1411,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         $stmts.push(dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('mark_push'),
             $*re_cur, val(0),
-            box_int($*re_pos_lit), box_int(lit($*re_jt.get_index($s0 ~ '_loop')))
+            box('int', $*re_pos_lit), box('int', lit($*re_jt.get_index($s0 ~ '_loop')))
         )));
         $stmts.push($donelabel);
         #$stmts.push(emit_say(lits("scan donelabel at position ")));
@@ -1437,7 +1437,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         
         $stmts.push(dnst_for(PAST::Op.new(
             :pasttype('callmethod'), :name('cursor_pass'),
-            $*re_cur, box_int($*re_pos_lit), "" # XXX TODO regexname
+            $*re_cur, box('int', $*re_pos_lit), "" # XXX TODO regexname
         )));
         
         $stmts.push(dnst_for(PAST::Op.new(
@@ -1503,8 +1503,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
                     $stmts.push(dnst_for(PAST::Op.new(
                         :pasttype('callmethod'), :name('mark_push'),
                         $*re_cur, val(0),
-                        box_int($*re_pos_lit),
-                        box_int(lit($*re_jt.get_index($name ~ $acount)))
+                        box('int', $*re_pos_lit),
+                        box('int', lit($*re_jt.get_index($name ~ $acount)))
                     )));
                 }
                 $stmts.push($adnst);
@@ -1530,8 +1530,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
         my $qname := get_unique_id('rxquant' ~ $backtrack);
         my $q1label := $*re_jt.mark($qname ~ 'loop');
         my $q2label := $*re_jt.mark($qname ~ 'done');
-        my $q1idx := box_int(lit($*re_jt.get_index($q1label.name)));
-        my $q2idx := box_int(lit($*re_jt.get_index($q2label.name)));
+        my $q1idx := box('int', lit($*re_jt.get_index($q1label.name)));
+        my $q2idx := box('int', lit($*re_jt.get_index($q2label.name)));
         my $q1goto := DNST::Goto.new(:label($q1label.name));
         my $q2goto := DNST::Goto.new(:label($q2label.name));
         my $cdnst := dnst_regex(PAST::Regex.new(:pasttype('concat'), |@($r)));
@@ -1563,7 +1563,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
             if $needmark {
                 $stmts.push(dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name($peekcut),
-                    $*re_cur, val(1), box_int($*re_rep_lit),
+                    $*re_cur, val(1), box('int', $*re_rep_lit),
                     $q2idx
                 )));
                 if $needrep {
@@ -1575,7 +1575,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
             if $max != 1 {
                 $stmts.push(dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('mark_push'),
-                    $*re_cur, box_int($*re_rep_lit), box_int($*re_pos_lit),
+                    $*re_cur, box('int', $*re_rep_lit), box('int', $*re_pos_lit),
                     $q2idx
                 )));
                 $stmts.push($sepdnst) if pir::defined($sepdnst);
@@ -1658,20 +1658,12 @@ sub temp_str($arg?, :$name) {
     )
 }
 
-# Emits the boxing of an int
-sub box_int($arg) {
-    dnst_for(DNST::MethodCall.new(
-        :on('Ops'), :name('box_int'), :type('RakudoObject'),
+# Emits a boxing operation to an int/num/str.
+sub box($type, $arg) {
+    DNST::MethodCall.new(
+        :on('Ops'), :name("box_$type"), :type('RakudoObject'),
         'TC', dnst_for($arg)
-    ))
-}
-
-# Emits the boxing of a str
-sub box_str($arg) {
-    dnst_for(DNST::MethodCall.new(
-        :on('Ops'), :name('box_str'), :type('RakudoObject'),
-        'TC', dnst_for($arg)
-    ))
+    )
 }
 
 # Emits the unboxing of a str

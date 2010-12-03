@@ -1309,6 +1309,7 @@ our multi sub dnst_for(PAST::Regex $r) {
     )));
     
     for @($r) {
+        #$stmts.push(emit_say(lits("gh " ~ $_.pasttype)));
         $stmts.push(dnst_regex($_));
     }
     
@@ -1510,6 +1511,80 @@ our multi sub dnst_regex(PAST::Regex $r) {
                 $stmts.push($alabel);
             }
             $stmts.push($endlabel);
+        }
+    }
+    elsif $pasttype eq 'quant' {
+        my $backtrack := $r.backtrack || 'g';
+        my $sep := $r.sep;
+        my $min := $r.min;
+        my $max := $r.max;
+        pir::defined($max) || ($max := -1);
+        # # XXX TODO optimizations
+        #my $cpast;
+        #if +@($r) != 1 {
+        #    $cpast := (@($r))[0];
+        #    if self.can($cpast.pasttype ~ '_q') {
+        #        my $p0 := self
+        #    }
+        #}
+        my $qname := get_unique_id('rxquant' ~ $backtrack);
+        my $q1label := $*re_jt.mark($qname ~ 'loop');
+        my $q2label := $*re_jt.mark($qname ~ 'done');
+        my $q1idx := box_int(lit($*re_jt.get_index($q1label.name)));
+        my $q2idx := box_int(lit($*re_jt.get_index($q2label.name)));
+        my $q1goto := DNST::Goto.new(:label($q1label.name));
+        my $q2goto := DNST::Goto.new(:label($q2label.name));
+        my $cdnst := dnst_regex(PAST::Regex.new(:pasttype('concat'), |@($r)));
+        my $sepdnst;
+        my $seppast := $r.sep;
+        $sepdnst := dnst_regex($seppast) if $seppast;
+        
+        #my $s0 := $max;
+        my $needrep := $min > 1 || $max > 1 || $max == -1;
+        #$s0 := '*' if $max < 0;
+        my $btreg;
+        
+        if $backtrack ne 'f' { # greedy
+            my $needmark := $needrep;
+            my $peekcut := 'mark_peek';
+            if $backtrack eq 'r' {
+                $needmark := 1;
+                $peekcut := 'mark_commit';
+            }
+            if $min == 0 || $needmark {
+                $stmts.push(dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('mark_push'),
+                    $*re_cur, val(0), val($min == 0 ?? 0 !! -1),
+                    $q2idx
+                )));
+            }
+            $stmts.push($q1label);
+            $stmts.push($cdnst);
+            if $needmark {
+                $stmts.push(dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name($peekcut),
+                    $*re_cur, val(1), box_int($*re_rep_lit),
+                    $q2idx
+                )));
+                if $needrep {
+                    $stmts.push(DNST::Bind.new($*re_rep_lit,
+                        plus($*re_rep_lit, lit('1'))));
+                }
+            }
+            $stmts.push(if_then(ge($*re_rep_lit, lit($max)), $q2goto)) if $max > 1;
+            if $max != 1 {
+                $stmts.push(dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('mark_push'),
+                    $*re_cur, box_int($*re_rep_lit), box_int($*re_pos_lit),
+                    $q2idx
+                )));
+                $stmts.push($sepdnst) if pir::defined($sepdnst);
+                $stmts.push($q1goto);
+            }
+            $stmts.push($q2label);
+            $stmts.push(if_then(lt($*re_rep_lit, lit($min)), $*re_fail)) if $min > 1;
+        } else {
+            pir::die("Don't know how to compile frugal quant regex.");
         }
     }
     else {

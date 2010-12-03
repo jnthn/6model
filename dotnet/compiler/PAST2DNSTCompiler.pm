@@ -1259,7 +1259,7 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $*re_rep_lit := lit($re_rep.name);
     
     # target (string) register
-    my $re_tgt := temp_str(unbox_str(PAST::Op.new(
+    my $re_tgt := temp_str(unbox('str', PAST::Op.new(
         :pasttype('callmethod'), :name('target'),
         $*re_cur
     )), :name("tgt"));
@@ -1666,12 +1666,21 @@ sub box($type, $arg) {
     )
 }
 
-# Emits the unboxing of a str
-sub unbox_str($arg, :$name) {
+# Emits the unboxing of a str/num/int.
+sub unbox($type, $arg) {
     DNST::MethodCall.new(
-        :on('Ops'), :name('unbox_str'), :type('string'),
+        :on('Ops'), :name("unbox_$type"),
+        :type(vm_type_for($type)),
         'TC', dnst_for($arg)
     )
+}
+
+# Maps a hand-wavey type (one of the three we box/unbox with) to a CLR type.
+sub vm_type_for($type) {
+    $type eq 'num' ?? 'double' !!
+    $type eq 'str' ?? 'string' !!
+    $type eq 'int' ?? 'int'    !!
+    pir::die("Don't know VM type for $type")
 }
 
 sub plus($l, $r, $type?) {
@@ -1827,7 +1836,7 @@ sub returns_array($expr, *@result_slots) {
                 lit(~($i / 2))))
             !! 
             @result_slots[$i + 1] eq 'string'
-            ?? unbox_str(emit_op('lllist_get_at_pos',
+            ?? unbox('str', emit_op('lllist_get_at_pos',
                 DNST::Local.new(:name($tmp.name)),
                 lit(~($i / 2))))
             !! emit_op('lllist_get_at_pos',

@@ -1259,10 +1259,10 @@ our multi sub dnst_for(PAST::Regex $r) {
     my $*re_rep_lit := lit($re_rep.name);
     
     # target (string) register
-    my $re_tgt := unbox_str(PAST::Op.new(
+    my $re_tgt := temp_str(unbox_str(PAST::Op.new(
         :pasttype('callmethod'), :name('target'),
         $*re_cur
-    ), :name("tgt"));
+    )), :name("tgt"));
     $stmts.push($re_tgt);
     my $*re_tgt := $re_tgt.name;
     my $*re_tgt_lit := lit($re_tgt.name);
@@ -1668,10 +1668,10 @@ sub box($type, $arg) {
 
 # Emits the unboxing of a str
 sub unbox_str($arg, :$name) {
-    temp_str(dnst_for(DNST::MethodCall.new(
+    DNST::MethodCall.new(
         :on('Ops'), :name('unbox_str'), :type('string'),
         'TC', dnst_for($arg)
-    )), :name($name))
+    )
 }
 
 sub plus($l, $r, $type?) {

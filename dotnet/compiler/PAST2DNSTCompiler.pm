@@ -1528,8 +1528,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
         #    }
         #}
         my $qname := get_unique_id('rxquant' ~ $backtrack);
-        my $q1label := $*re_jt.mark($qname ~ 'loop');
-        my $q2label := $*re_jt.mark($qname ~ 'done');
+        my $q1label := $*re_jt.mark($qname ~ '_loop');
+        my $q2label := $*re_jt.mark($qname ~ '_done');
         my $q1idx := box_int(lit($*re_jt.get_index($q1label.name)));
         my $q2idx := box_int(lit($*re_jt.get_index($q2label.name)));
         my $q1goto := DNST::Goto.new(:label($q1label.name));
@@ -1538,6 +1538,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         my $sepdnst;
         my $seppast := $r.sep;
         $sepdnst := dnst_regex($seppast) if $seppast;
+        my $seplabel;
         
         #my $s0 := $max;
         my $needrep := $min > 1 || $max > 1 || $max == -1;
@@ -1584,7 +1585,48 @@ our multi sub dnst_regex(PAST::Regex $r) {
             $stmts.push($q2label);
             $stmts.push(if_then(lt($*re_rep_lit, lit($min)), $*re_fail)) if $min > 1;
         } else {
-            pir::die("Don't know how to compile frugal quant regex.");
+            my $ireg := temp_int(:name($qname ~ '_frugal'));
+            $stmts.push($ireg);
+            if $min == 0 {
+                $stmts.push(dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('mark_push'),
+                    $*re_cur, val(0), box_int($*re_pos_lit),
+                    $q1idx
+                )));
+                $stmts.push($q2goto);
+            } else {
+                $stmts.push(DNST::Bind.new($*re_rep_lit, lit('0'))) if $needrep;
+                if pir::defined($sepdnst) {
+                    $seplabel := DNST::Label.new(:name(get_unique_id($qname ~ '_frugal_sep')));
+                    $stmts.push(DNST::Goto.new(:label($seplabel)));
+                }
+            }
+            $stmts.push($q1label);
+            if pir::defined($sepdnst) {
+                $stmts.push($sepdnst);
+                $stmts.push($seplabel);
+            }
+            if $needrep {
+                $stmts.push(DNST::Bind.new(lit($ireg.name), $*re_rep_lit));
+                if $max > 1 {
+                    $stmts.push(if_then(
+                        ge($*re_rep_lit, lit($max)),
+                        $*re_fail
+                    ));
+                }
+            }
+            $stmts.push($cdnst);
+            $stmts.push(DNST::Bind.new($*re_rep_lit, plus(lit($ireg.name),
+                lit('1')))) if $needrep;
+            $stmts.push(if_then(lt($*re_rep_lit, lit($min)), $q1goto)) if $max > 1;
+            if $max != 1 {
+                $stmts.push(dnst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('mark_push'),
+                    $*re_cur, box_int($*re_rep_lit), box_int($*re_pos_lit),
+                    $q1idx
+                )));
+            }
+            $stmts.push($q2label);
         }
     }
     else {

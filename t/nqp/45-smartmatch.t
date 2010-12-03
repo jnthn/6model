@@ -2,7 +2,7 @@
 # to make sure the basic bits of regexes in place at the time it was
 # added didn't get regressed.
 
-plan(15);
+plan(16);
 
 my $match := 'abcdef' ~~ / abc /;
 ok( $match, "simple smart match, scanning form" );
@@ -27,3 +27,4 @@ ok(("abcd" ~~ /[[a|ab]|abc]d/) eq 'abcd', 'deep backtracking works');
 
 ok(("bbbbac" ~~ /[b+ b a $] | bbbbac/) eq 'bbbbac', 'greedy quantifier works');
 
+ok(("bbbbac" ~~ /[b+? b ac]/) eq 'bbbbac', 'frugal quantifier works');

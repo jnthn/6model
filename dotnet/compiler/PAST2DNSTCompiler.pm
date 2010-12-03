@@ -567,12 +567,10 @@ our multi sub dnst_for(PAST::Op $op) {
 
         # Method name, for indirectly named dotty calls
         my $name := $op.name ~~ PAST::Node
-          ?? DNST::MethodCall.new(
-                :on('Ops'), :name('unbox_str'), :type('string'), 'TC',
-                dnst_for(PAST::Op.new(
-                    :pasttype('callmethod'), :name('Str'),
-                    dnst_for($op.name)
-                )))
+          ?? unbox('str', PAST::Op.new(
+                 :pasttype('callmethod'), :name('Str'),
+                 dnst_for($op.name)
+             ))
           !! DNST::Literal.new( :value($op.name), :escape(1) );
         
         # Method lookup.

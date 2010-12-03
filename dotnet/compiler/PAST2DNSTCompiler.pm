@@ -642,20 +642,17 @@ our multi sub dnst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'if' {
-        my $cond_evaluated := get_unique_id('if_cond');
+        my $cond_evaluated := DNST::Local.new( :name(get_unique_id('if_cond')) );
         return DNST::Stmts.new(
             DNST::Temp.new(
-                :name($cond_evaluated), :type('RakudoObject'),
+                :name($cond_evaluated.name), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
                 ))
             ),
             DNST::If.new(
-                DNST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_evaluated
-                ),
+                unbox('int', $cond_evaluated),
                 dnst_for((@($op))[1]),
                 (+@($op) == 3 ?? dnst_for((@($op))[2]) !! $cond_evaluated)
             )
@@ -692,10 +689,9 @@ our multi sub dnst_for(PAST::Op $op) {
         # Need labels for start and end.
         my $test_label := get_unique_id('while_lab');
         my $end_label := get_unique_id('while_end_lab');
-        my $cond_result := get_unique_id('cond');
+        my $cond_result := DNST::Local.new( :name(get_unique_id('cond')) );
         
         # Compile the condition.
-        
         my $cop := $op.pasttype eq 'until'
           ?? PAST::Op.new(
                 :pasttype('call'), :name('&prefix:<!>'),
@@ -706,7 +702,7 @@ our multi sub dnst_for(PAST::Op $op) {
                 (@($op))[0]
             );
         my $cond := DNST::Temp.new(
-            :name($cond_result), :type('RakudoObject'),
+            :name($cond_result.name), :type('RakudoObject'),
             dnst_for($cop)
         );
 
@@ -718,10 +714,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::Label.new( :name($test_label) ),
             $cond,
             DNST::If.new(
-                DNST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_result
-                ),
+                unbox('int', $cond_result),
                 $body,
                 DNST::Stmts.new(
                     $cond_result,
@@ -737,10 +730,9 @@ our multi sub dnst_for(PAST::Op $op) {
         # Need labels for start and end.
         my $test_label := get_unique_id('while_lab');
         my $block_label := get_unique_id('block_lab');
-        my $cond_result := get_unique_id('cond');
+        my $cond_result := DNST::Local.new( :name(get_unique_id('cond')) );
         
         # Compile the condition.
-        
         my $cop := $op.pasttype eq 'repeat_until'
           ?? PAST::Op.new(
                 :pasttype('call'), :name('&prefix:<!>'),
@@ -751,7 +743,7 @@ our multi sub dnst_for(PAST::Op $op) {
                 (@($op))[0]
             );
         my $cond := DNST::Temp.new(
-            :name($cond_result), :type('RakudoObject'),
+            :name($cond_result.name), :type('RakudoObject'),
             dnst_for($cop)
         );
 
@@ -764,10 +756,7 @@ our multi sub dnst_for(PAST::Op $op) {
             $body,
             $cond,
             DNST::If.new(
-                DNST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_result
-                ),
+                unbox('int', $cond_result),
                 DNST::Stmts.new(
                     $cond_result,
                     DNST::Goto.new( :label($block_label) )

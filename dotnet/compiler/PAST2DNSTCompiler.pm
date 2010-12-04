@@ -1152,10 +1152,10 @@ our multi sub dnst_regex($r) {
 }
 
 # Regex nodes reached from non-regex nodes
-our multi sub dnst_for(PAST::Regex $r) {
+our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     my $rb; # regex block
     my $pasttype := $r.pasttype;
-    pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
+    #pir::die("Don't know how to compile toplevel regex pasttype $pasttype.") if $pasttype ne 'concat';
     my $stmts := PAST::Stmts.new;
     
     # create a name-based jump table for this CLR routine
@@ -1272,16 +1272,18 @@ our multi sub dnst_for(PAST::Regex $r) {
             :name('cursor_caparray'), $*re_cur, dnst_for(val(0)), |@caparray)))
                 if +@caparray;
     
-    $stmts.push(declare_lexical(PAST::Var.new( :name('$¢'), :scope('lexical') )));
-    $stmts.push(dnst_for(DNST::Bind.new(
-        emit_lexical_lookup( '$¢'),
-        $*re_cur
-    )));
-    $stmts.push(declare_lexical(PAST::Var.new( :name('$/'), :scope('lexical') )));
-    $stmts.push(dnst_for(DNST::Bind.new(
-        emit_lexical_lookup( '$/'),
-        $*re_cur
-    )));
+    unless pir::defined($rtype) {
+        $stmts.push(declare_lexical(PAST::Var.new( :name('$¢'), :scope('lexical') )));
+        $stmts.push(dnst_for(DNST::Bind.new(
+            emit_lexical_lookup( '$¢'),
+            $*re_cur
+        )));
+        $stmts.push(declare_lexical(PAST::Var.new( :name('$/'), :scope('lexical') )));
+        $stmts.push(dnst_for(DNST::Bind.new(
+            emit_lexical_lookup( '$/'),
+            $*re_cur
+        )));
+    }
     
     $stmts.push(if_then(gt($*re_pos_lit, $*re_pos_lit), $re_done));
     

@@ -3,6 +3,18 @@
 # and more of PAST.
 class PAST2DNSTCompiler;
 
+# Set up a hash of operator signatures. Only needed for those that do not
+# return and take just RakudoObject instances. First type is return type,
+# following ones are argument types.
+our %nqp_op_sigs;
+INIT {
+    %nqp_op_sigs                  := pir::new__pS('Hash');
+    %nqp_op_sigs<equal_nums>      := ('int', 'num', 'num');
+    %nqp_op_sigs<equal_ints>      := ('int', 'int', 'int');
+    %nqp_op_sigs<equal_strs>      := ('int', 'str', 'str');
+    %nqp_op_sigs<logical_not_int> := ('int', 'int');
+}
+
 # Entry point for the compiler.
 method compile(PAST::Node $node) {
     # This tracks the unique IDs we generate in this compilation unit.
@@ -30,6 +42,10 @@ method compile(PAST::Node $node) {
 
     # Current namespace path.
     my @*CURRENT_NS;
+
+    # The current type context, e.g. what result type the thing further
+    # up in the tree is expecting.
+    my $*TYPE_CONTEXT := 'obj';
 
     # Compile the node; ensure it is an immediate block.
     $node.blocktype('immediate');
@@ -490,7 +506,6 @@ our multi sub dnst_for(PAST::Block $block) {
 }
 
 # Compiles a bunch of parameter nodes down to a signature.
-# XXX Doesn't handle default values just yet.
 sub compile_signature(@params) {
     # Go through each of the parameters and compile them.
     my $params := DNST::ArrayLiteral.new( :type('Parameter') );
@@ -1701,7 +1716,8 @@ sub vm_type_for($type) {
     $type eq 'num' ?? 'double' !!
     $type eq 'str' ?? 'string' !!
     $type eq 'int' ?? 'int'    !!
-    pir::die("Don't know VM type for $type")
+    $type eq 'obj' ?? 'RakudoObject' !!
+                      pir::die("Don't know VM type for $type")
 }
 
 sub plus($l, $r, $type?) {
@@ -1814,16 +1830,45 @@ sub val($val) {
         !! dnst_for(PAST::Val.new( :value($val) ))
 }
 
-sub emit_op($name, :$type, *@args) {
-    my @dnst_args;
-    for @args {
-        @dnst_args.push(dnst_for($_))
+sub emit_op($name, *@args) {
+    # See if we have any info on this op's siggy.
+    my $sig := %nqp_op_sigs{$name};
+    my $type := 'obj';
+    if pir::defined($sig) {
+        $type := $sig[0];
     }
-    DNST::MethodCall.new(
+    
+    # Compile the args.
+    my @dnst_args;
+    my $i := 1;
+    for @args {
+        # Set the type context that is desired.
+        my $*TYPE_CONTEXT := pir::defined($sig) ?? $sig[$i] !! 'obj';
+        my $arg_dnst := dnst_for($_);
+        
+        # We may need to auto-unbox it if we don't have the desired type
+        # of thing.
+        if $*TYPE_CONTEXT ne 'obj' {
+            unless ($arg_dnst ~~ DNST::MethodCall || $arg_dnst ~~ DNST::Call)
+              && $arg_dnst.type eq vm_type_for($*TYPE_CONTEXT) {
+                $arg_dnst := unbox($*TYPE_CONTEXT, $arg_dnst);
+            }
+        }
+
+        @dnst_args.push($arg_dnst);
+    }
+
+    # Build op call.
+    my $call := DNST::MethodCall.new(
         :on('Ops'), :name($name),
-        :type($type || 'RakudoObject'),
+        :type(vm_type_for($type)),
         'TC', |@dnst_args
-    )
+    );
+
+    # We may need to auto-box it.
+    $type ne $*TYPE_CONTEXT && $*TYPE_CONTEXT eq 'obj' ??
+        box($type, $call) !!
+        $call
 }
 
 sub emit_call($on, $name, $type, *@args) {
@@ -1862,8 +1907,7 @@ sub returns_array($expr, *@result_slots) {
                 lit(~($i / 2))))
             !! emit_op('lllist_get_at_pos',
                 DNST::Local.new(:name($tmp.name)),
-                lit(~($i / 2)),
-                :type('RakudoObject'))
+                lit(~($i / 2)))
         ));
         $i := $i + 2;
     };

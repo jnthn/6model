@@ -16,43 +16,37 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Compares two floating point numbers for equality.
         /// </summary>
+        /// <param name="TC"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_nums(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int equal_nums(ThreadContext TC, double x, double y)
         {
-            return Ops.box_int(TC,
-                (Ops.unbox_num(TC, x) == Ops.unbox_num(TC, y) ? 1 : 0),
-                TC.DefaultBoolBoxType);
+            return x == y ? 1 : 0;
         }
 
         /// <summary>
         /// Compares two integers for equality.
         /// </summary>
+        /// <param name="TC"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_ints(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int equal_ints(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC,
-                (Ops.unbox_int(TC, x) == Ops.unbox_int(TC, y) ? 1 : 0),
-                TC.DefaultBoolBoxType);
+            return x == y ? 1 : 0;
         }
 
         /// <summary>
         /// Compares two strings for equality.
         /// </summary>
+        /// <param name="TC"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject equal_strs(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int equal_strs(ThreadContext TC, string x, string y)
         {
-            return Ops.box_int(TC,
-                (Ops.unbox_str(TC, x) == Ops.unbox_str(TC, y) ? 1 : 0),
-                TC.DefaultBoolBoxType);
+            return x == y ? 1 : 0;
         }
 
         /// <summary>

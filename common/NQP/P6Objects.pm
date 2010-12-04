@@ -23,7 +23,7 @@ class Mu {
     }
     
     method isa($type) {
-        return self.HOW.isa(self, $type);
+        self.HOW.isa(self, $type)
     }
     
     method Bool() {

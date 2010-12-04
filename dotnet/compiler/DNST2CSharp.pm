@@ -232,15 +232,6 @@ our multi sub cs_for(DNST::Goto $gt) {
     return "        goto " ~ $gt.label ~ ";\n";
 }
 
-our multi sub cs_for(DNST::Temp $tmp) {
-    unless +@($tmp) == 1 { pir::die('A DNST::Temp must have exactly one child') }
-    my $code := cs_for((@($tmp))[0]);
-    my $name := $tmp.name;
-    $code := $code ~ "        " ~ $tmp.type ~ " $name = $*LAST_TEMP;\n";
-    $*LAST_TEMP := $name;
-    return $code;
-}
-
 our multi sub cs_for(DNST::Bind $bind) {
     unless +@($bind) == 2 { pir::die('DNST::Bind nodes must have 2 children') }
     my $code := cs_for((@($bind))[0]);

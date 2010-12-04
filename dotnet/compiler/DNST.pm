@@ -494,15 +494,30 @@ class DNST::JumpTable is DNST::Node {
 
 class DNST::Local is DNST::Node {
     has $!name;
+    has $!type;
+    has $!isdecl;
 
     method name($set?) {
         if pir::defined($set) { $!name := $set }
         $!name
     }
 
-    method new(:$name!) {
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method isdecl($set?) {
+        if $set { $!isdecl := $set }
+        $!isdecl
+    }
+
+    method new(:$name!, :$type, :$isdecl, *@children) {
         my $obj := self.CREATE;
         $obj.name($name);
+        $obj.type($type);
+        $obj.isdecl($isdecl);
+        $obj.set_children(@children);
         $obj;
     }
 }

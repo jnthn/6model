@@ -260,8 +260,21 @@ our multi sub cs_for(DNST::Literal $lit) {
 }
 
 our multi sub cs_for(DNST::Local $loc) {
+    my $code := '';
+    if $loc.isdecl {
+        unless +@($loc) == 1 {
+            pir::die('A DNST::Local with isdecl set must have exactly one child')
+        }
+        unless $loc.type {
+            pir::die('DNST::Local with isdecl requires type');
+        }
+        $code := cs_for((@($loc))[0]);
+        $code := $code ~ '        ' ~ $loc.type ~ ' ' ~ $loc.name ~ " = $*LAST_TEMP;\n";
+    } elsif +@($loc) != 0 {
+        pir::die('A DNST::Local without isdecl set must have no children')
+    }
     $*LAST_TEMP := $loc.name;
-    return '';
+    return $code;
 }
 
 our multi sub cs_for(DNST::JumpTable $jt) {

@@ -1626,6 +1626,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
             }
             $stmts.push($q2label);
         }
+    } elsif $pasttype eq 'subrule' {
+        my $name := dnst_for($r, :rtype('*'));
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");

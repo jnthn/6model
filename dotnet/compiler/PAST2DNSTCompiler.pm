@@ -1721,15 +1721,15 @@ sub emit_say($arg) {
 }
 
 sub temp_int($arg?, :$name) {
-    DNST::Temp.new(
-        :name(get_unique_id('int_' ~ ($name || ''))), :type('int'),
+    DNST::Local.new(
+        :name(get_unique_id('int_' ~ ($name || ''))), :isdecl(1), :type('int'),
         pir::defined($arg) ?? dnst_for($arg) !! lit(0)
     )
 }
 
 sub temp_str($arg?, :$name) {
-    DNST::Temp.new(
-        :name(get_unique_id('string_' ~ ($name || ''))), :type('string'),
+    DNST::Local.new(
+        :name(get_unique_id('string_' ~ ($name || ''))), :isdecl(1), :type('string'),
         pir::defined($arg) ?? dnst_for($arg) !! lits("")
     )
 }

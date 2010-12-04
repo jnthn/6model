@@ -894,32 +894,33 @@ our multi sub dnst_for(PAST::Val $val) {
         return DNST::Literal.new( :value($val.value<SBI>) );
     }
 
-    # Look up the type to box to.
-    my $type;
+    # Work out type to box to.
     my $primitive;
     if pir::isa($val.value, 'Integer') {
         $primitive := 'int';
-        $type := 'NQPInt';
     }
     elsif pir::isa($val.value, 'String') {
         $primitive := 'str';
-        $type := 'NQPStr';
     }
     elsif pir::isa($val.value, 'Float') {
         $primitive := 'num';
-        $type := 'NQPNum';
     }
     else {
         pir::die("Can not detect type of value")
     }
-    my $*BIND_CONTEXT := 0;
-    my $type_dnst := emit_lexical_lookup($type);
+
+    # If we have a non-object type context, can hand back a literal value.
+    if $*TYPE_CONTEXT ne 'obj' {
+        return DNST::Literal.new(
+            :value($val.value),
+            :type(vm_type_for($primitive)),
+            :escape($primitive eq 'str')
+        );
+    }
     
-    # Add to constants table.
-    my $make_const := emit_op('box_' ~ $primitive,
-        DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
-        $type_dnst
-    );
+    # Otherwise, need to box it. Add to constants table if possible.
+    my $make_const := box($primitive, DNST::Literal.new(
+        :value($val.value), :escape($primitive eq 'str') ));
     if $*IN_LOADINIT || $*COMPILING_NQP_SETTING {
         return $make_const;
     }
@@ -1888,7 +1889,7 @@ sub emit_op($name, *@args) {
         # We may need to auto-unbox it if we don't have the desired type
         # of thing.
         if $*TYPE_CONTEXT ne 'obj' {
-            unless ($arg_dnst ~~ DNST::MethodCall || $arg_dnst ~~ DNST::Call)
+            unless ($arg_dnst ~~ DNST::MethodCall || $arg_dnst ~~ DNST::Call || $arg_dnst ~~ DNST::Literal)
               && $arg_dnst.type eq vm_type_for($*TYPE_CONTEXT) {
                 $arg_dnst := unbox($*TYPE_CONTEXT, $arg_dnst);
             }

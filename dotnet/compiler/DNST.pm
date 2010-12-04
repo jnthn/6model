@@ -375,6 +375,7 @@ class DNST::Bind is DNST::Node {
 class DNST::Literal is DNST::Node {
     has $!value;
     has $!escape;
+    has $!type;
 
     method value($set?) {
         if pir::defined($set) { $!value := $set }
@@ -386,10 +387,16 @@ class DNST::Literal is DNST::Node {
         $!escape
     }
 
-    method new(:$value!, :$escape) {
+    method type($set?) {
+        if pir::defined($set) { $!type := $set }
+        $!type
+    }
+
+    method new(:$value!, :$escape, :$type) {
         my $obj := self.CREATE;
         $obj.value($value);
         $obj.escape($escape);
+        $obj.type($type);
         $obj;
     }
 }

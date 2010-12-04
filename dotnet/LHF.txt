@@ -47,3 +47,17 @@ foundation for getting that in place. To do this:
    RakudoObject).
 3) Edit Actions.pm and make .WHO use the get_who op (see .WHAT and
    .HOW for examples).
+
+Constant Table Dupe Elimination
+-------------------------------
+DIFFICULTY: Intermediate
+SKILLS: NQP
+DETAILS:
+We have a constant table. This is good. However, in the program:
+  say("foo");
+  say("foo");
+The "foo" ends up in the constants table twice. This is not good.
+Take a look in multi sub dnst_for(PAST::Val $val) { ... } and see
+about eliminating the duplication. It happens for integer and
+numeric constants too. If you use some weird unique string you can
+easily look at x.cs to see it only appears once, not once per usage.

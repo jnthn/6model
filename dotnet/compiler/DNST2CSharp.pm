@@ -121,8 +121,11 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     }
 
     # What're we calling it on?
+    #$code := $code ~ "Console.WriteLine(\"arg_names count was " ~ +@arg_names ~ "\");\n";
+    #$code := $code ~ "Console.WriteLine(\"mc.on was " ~ ($mc.on ?? 'true' !! 'false' ) ~ "\");\n";
     my $invocant := $mc.on || @arg_names.shift;
 
+    #$code := $code ~ "Console.WriteLine(\"arg_names count was " ~ +@arg_names ~ "\");\n";
     # Code-gen the call.
     $code := $code ~ '        ';
     unless $mc.void {
@@ -339,16 +342,16 @@ our multi sub cs_for(DNST::BXOR $ops) {
 }
 
 our multi sub cs_for(DNST::NOT $ops) {
-    my $code := cs_for((@(ops))[0]);
+    my $code := cs_for((@($ops))[0]);
     my $lhs := $*LAST_TEMP;
     $*LAST_TEMP := get_unique_id('expr_result_negated');
     return "$code        bool $*LAST_TEMP = !$lhs;\n";
 }
 
 our multi sub cs_for(DNST::XOR $ops) {
-    my $code := cs_for((@(ops))[0]);
+    my $code := cs_for((@($ops))[0]);
     my $lhs := $*LAST_TEMP;
-    $code := $code ~ cs_for((@(ops))[0]);
+    $code := $code ~ cs_for((@($ops))[1]);
     my $rhs := $*LAST_TEMP;
     $*LAST_TEMP := get_unique_id('expr_result');
     return "$code        bool $*LAST_TEMP = $lhs ? ! $rhs : $rhs;\n";

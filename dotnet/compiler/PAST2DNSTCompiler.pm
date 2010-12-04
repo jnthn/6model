@@ -1633,12 +1633,47 @@ our multi sub dnst_regex(PAST::Regex $r) {
             $stmts.push($q2label);
         }
     } elsif $pasttype eq 'subrule' {
-        my $name := dnst_for($r, :rtype('*'));
+        my $name := $r.name;
+        my $cdnst := dnst_for((@($r))[0]);
+        my $posargs := dnst_for((@($r))[1]);
+        my $namedargs := pir::defined((@($r))[2])
+            ?? dnst_for((@($r))[2]) !! '';
+        
+        my $subdnst := $posargs.shift;
+        
+        my $negate := $r.negate;
+        my $testop := $negate ?? 'if' !! 'unless';
+        
+        my $subtype := $r.subtype;
+        my $backtrack := $r.backtrack;
+        
+        $stmts.push(cursorop('pos', box('int', $*re_pos_lit)));
+        
+        $stmts.push($cdnst);
+        
+        $stmts.push(if_then(:bool(0),
+            unbox('int', $namedargs eq ''
+                ?? cursorop($subdnst, $posargs)
+                !! cursorop($subdnst, $posargs, $namedargs)),
+            $*re_fail
+        ));
+        
+        if $subtype ne 'zerowidth' {
+            
+        }
     }
     else {
         pir::die("Don't know how to compile regex pasttype $pasttype.");
     }
     dnst_for($stmts)
+}
+
+# Emits a cursor operation
+sub cursorop($name, *@args) {
+    dnst_for(PAST::Op.new(
+        :pasttype('callmethod'), :name($name),
+        $*re_cur, |@args
+    ))
 }
 
 # Emits a lookup of a lexical.
@@ -1863,6 +1898,7 @@ sub emit_op($name, *@args) {
     }
 
     # Build op call.
+    #pir::say("name is $name; type is $type; dnst_arg count is " ~ +@dnst_args);
     my $call := DNST::MethodCall.new(
         :on('Ops'), :name($name),
         :type(vm_type_for($type)),

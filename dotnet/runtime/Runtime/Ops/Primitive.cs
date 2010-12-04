@@ -17,12 +17,12 @@ namespace Rakudo.Runtime
         /// <summary>
         /// Logical not.
         /// </summary>
+        /// <param name="TC"></param>
         /// <param name="x"></param>
-        /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject logical_not_int(ThreadContext TC, RakudoObject x)
+        public static int logical_not_int(ThreadContext TC, int x)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) == 0 ? 1 : 0, TC.DefaultBoolBoxType);
+            return x == 0 ? 1 : 0;
         }
 
         /// <summary>

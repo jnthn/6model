@@ -919,9 +919,8 @@ our multi sub dnst_for(PAST::Val $val) {
     }
     
     # Otherwise, need to box it. Add to constants table if possible.
-    my $make_const := emit_op('box_' ~ $primitive,
-        DNST::Literal.new( :value($val.value), :escape($primitive eq 'str') )
-    );
+    my $make_const := box($primitive, DNST::Literal.new(
+        :value($val.value), :escape($primitive eq 'str') ));
     if $*IN_LOADINIT || $*COMPILING_NQP_SETTING {
         return $make_const;
     }

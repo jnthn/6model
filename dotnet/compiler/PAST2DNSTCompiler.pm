@@ -1180,8 +1180,8 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     $stmts.push(DNST::Bind.new($*re_jt.register, lit('0')));
     
     # cursor register
-    my $re_cur_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_cur')), :type('RakudoObject'),
+    my $re_cur_tmp := DNST::Local.new(
+        :name(get_unique_id('re_cur')), :isdecl(1), :type('RakudoObject'),
         dnst_for(PAST::Var.new( :name('self'), :scope('lexical')))
     );
     my $*re_cur := DNST::Local.new( :name($re_cur_tmp.name) );
@@ -1189,8 +1189,8 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     $stmts.push($re_cur_tmp);
     
     # cursor self register
-    my $re_cur_self_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_cur_self')), :type('RakudoObject'),
+    my $re_cur_self_tmp := DNST::Local.new(
+        :name(get_unique_id('re_cur_self')), :isdecl(1), :type('RakudoObject'),
         lit($*re_cur_name)
     );
     my $*re_cur_self := DNST::Local.new( :name($re_cur_self_tmp.name) );
@@ -1812,13 +1812,13 @@ sub not($operand) {
 sub log_and($l, $r) {
     my $temp;
     DNST::Stmts.new(
-    ($temp := DNST::Temp.new(
-        :name(get_unique_id('log_and')), :type('bool'), lit('false')
+    ($temp := DNST::Local.new(
+        :name(get_unique_id('log_and')), :isdecl(1), :type('bool'), lit('false')
     )),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('left_bool')), :type('bool'), dnst_for($l)
-    ), if_then(DNST::Temp.new(
-        :name(get_unique_id('right_bool')), :type('bool'), dnst_for($r)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), dnst_for($l)
+    ), if_then(DNST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), dnst_for($r)
     ), DNST::Bind.new(
     ### XXX The next line works only with the C# backend (so far)
     ###   b/c the Bind causes the Temp to be redeclared without the lit(___.name)
@@ -1830,15 +1830,15 @@ sub log_and($l, $r) {
 sub log_or($l, $r) {
     my $temp;
     DNST::Stmts.new(
-    ($temp := DNST::Temp.new(
-        :name(get_unique_id('log_or')), :type('bool'), lit('false')
+    ($temp := DNST::Local.new(
+        :name(get_unique_id('log_or')), :isdecl(1), :type('bool'), lit('false')
     )),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('left_bool')), :type('bool'), dnst_for($l)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), dnst_for($l)
     ),
     DNST::Bind.new(lit($temp.name), lit('true')),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('right_bool')), :type('bool'), dnst_for($r)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), dnst_for($r)
     ),
     DNST::Bind.new(lit($temp.name), lit('true')),
     )));
@@ -1927,9 +1927,10 @@ sub emit_call($on, $name, $type, *@args) {
 sub returns_array($expr, *@result_slots) {
     my $tmp;
     my $stmts := DNST::Stmts.new(
-        $tmp := DNST::Temp.new(
+        $tmp := DNST::Local.new(
             :type('RakudoObject'),
             :name(get_unique_id('array_result')),
+            :isdecl(1),
             $expr
         )
     );

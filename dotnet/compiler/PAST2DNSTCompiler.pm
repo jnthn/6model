@@ -1621,13 +1621,8 @@ our multi sub dnst_regex(PAST::Regex $r) {
         my $name := $r.name;
         my $cdnst := dnst_for((@($r))[0]);
         my $posargs := dnst_for((@($r))[1]);
-        for @($posargs) {
-            pir::say($_);
-        }
-        #my $namedargs := pir::defined((@($r))[2])
-        #    ?? dnst_for((@($r))[2]) !! '';
         
-        my $subdnst := $posargs.shift;
+        #my $subdnst := $posargs.shift;
         
         my $negate := $r.negate;
         my $testop := $negate ?? 'if' !! 'unless';
@@ -1640,7 +1635,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         $stmts.push($cdnst);
         
         $stmts.push(if_then(:bool(0),
-            unbox('int', cursorop($subdnst, $posargs)),
+            unbox('int', cursorop($name, $posargs)),
             $*re_fail
         ));
         

@@ -121,11 +121,8 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     }
 
     # What're we calling it on?
-    #$code := $code ~ "Console.WriteLine(\"arg_names count was " ~ +@arg_names ~ "\");\n";
-    #$code := $code ~ "Console.WriteLine(\"mc.on was " ~ ($mc.on ?? 'true' !! 'false' ) ~ "\");\n";
     my $invocant := $mc.on || @arg_names.shift;
 
-    #$code := $code ~ "Console.WriteLine(\"arg_names count was " ~ +@arg_names ~ "\");\n";
     # Code-gen the call.
     $code := $code ~ '        ';
     unless $mc.void {

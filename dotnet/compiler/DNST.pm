@@ -381,6 +381,12 @@ class DNST::Literal is DNST::Node {
     }
 }
 
+class DNST::Null is DNST::Node {
+    method new() {
+        self.CREATE
+    }
+}
+
 class DNST::BinaryOp is DNST::Node {
     method new(*@children) {
         my $obj := self.CREATE;

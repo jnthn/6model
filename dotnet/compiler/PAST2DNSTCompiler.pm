@@ -96,7 +96,7 @@ method compile(PAST::Node $node) {
                 DNST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'),
                     :type('ThreadContext'),
-                    'null'
+                    DNST::Null.new()
                 )
             ),
             DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
@@ -187,7 +187,7 @@ sub make_blocks_init_method($name) {
         
         # Create array for storing these.
         DNST::Bind.new(
-            'StaticBlockInfo',
+            loc('StaticBlockInfo', 'RakudoCodeRef.Instance[]'),
             'new RakudoCodeRef.Instance[' ~ $*SBI_POS ~ ']'
         ),
 
@@ -197,7 +197,7 @@ sub make_blocks_init_method($name) {
             DNST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 :type('RakudoCodeRef.Instance'),
-                'null', 'null',
+                DNST::Null.new(), DNST::Null.new(),
                 DNST::ArrayLiteral.new( :type('String') )
             )
         ),
@@ -229,18 +229,18 @@ sub make_constants_init_method($name) {
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    DNST::Null.new(),
                     'StaticBlockInfo[1]',
                     DNST::ArrayLiteral.new( :type('string') )
                 ),
                 'TC.CurrentContext',
-                'null'
+                DNST::Null.new()
             )
         ),
         
         # Create array for storing these.
         DNST::Bind.new(
-            'ConstantsTable',
+            loc('ConstantsTable', 'RakudoObject[]'),
             'new RakudoObject[' ~ +@*CONSTANTS ~ ']'
         )
     );
@@ -361,7 +361,6 @@ our multi sub dnst_for(PAST::Block $block) {
         @*HANDLERS.push(%handler);
     }
 
-
     # Add signature generation/setup. We need to do this in the
     # correct lexical scope. Also this is handy place to set up
     # the handlers; keep a placeholder for that.
@@ -380,15 +379,15 @@ our multi sub dnst_for(PAST::Block $block) {
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    DNST::Null.new(),
                     "StaticBlockInfo[$our_sbi]",
                     DNST::ArrayLiteral.new( :type('string') ),
                 ),
                 'TC.CurrentContext',
-                'null'
+                DNST::Null.new()
             )
         ),
-        DNST::Bind.new( 'TC.CurrentContext', 'C' ),
+        DNST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ),
         DNST::Bind.new(
             "StaticBlockInfo[$our_sbi].Sig",
             compile_signature(@*PARAMS)
@@ -400,15 +399,16 @@ our multi sub dnst_for(PAST::Block $block) {
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(
-        :on('SignatureBinder'), :name('Bind'), :void(1), TC(), 'C', 'Capture'
+        :on('SignatureBinder'), :name('Bind'), :void(1),
+        TC(), loc('C', 'Context'), loc('Capture')
     ));
 
     # Wrap in block prelude/postlude.
     $result.push(DNST::Local.new(
         :name('C'), :isdecl(1), :type('Context'),
-        DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", "Capture" )
+        DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", loc("Capture") )
     ));
-    $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
+    $result.push(DNST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ));
     $result.push(DNST::TryFinally.new(
         DNST::TryCatch.new(
             :exception_type('LeaveStackUnwinderException'),
@@ -501,7 +501,7 @@ sub compile_signature(@params) {
             $param.push(dnst_for($_.multitype));
         }
         else {
-            $param.push('null');
+            $param.push(DNST::Null.new());
         }
 
         # Variable name to bind into.
@@ -513,7 +513,7 @@ sub compile_signature(@params) {
         # Named param or not?
         $param.push((!$_.slurpy && $_.named) ??
             DNST::Literal.new( :value(pir::substr($_.name, 1)), :escape(1) ) !!
-            'null');
+            DNST::Null.new());
 
         # Flags.
         $param.push(
@@ -532,7 +532,7 @@ sub compile_signature(@params) {
         # viviself.
         $param.push($_.viviself ~~ PAST::Node
             ?? dnst_for(PAST::Block.new(:closure(1), $_.viviself))
-            !! 'null');
+            !! DNST::Null.new());
 
         $params.push($param);
     }
@@ -1025,7 +1025,7 @@ our multi sub dnst_for(PAST::Var $var) {
                 $result.push(dnst_for($var.viviself));
             }
             else {
-                $result.push('null');
+                $result.push(DNST::Null.new());
             }
             return $result;
         }
@@ -1062,7 +1062,7 @@ our multi sub dnst_for(PAST::Var $var) {
             $lookup := DNST::Stmts.new(
                 $temp,
                 DNST::If.new( :bool(1),
-                    eq(DNST::Local.new( :name($viv_name) ), DNST::Literal.new( :value('null') )),
+                    eq(DNST::Local.new( :name($viv_name) ), DNST::Null.new()),
                     dnst_for($var.viviself),
                     DNST::Local.new( :name($viv_name) )
                 )
@@ -1936,7 +1936,13 @@ sub returns_array($expr, *@result_slots) {
     $stmts
 }
 
+# Returns a DNST::Local for looking up the variable name with the
+# given type. Default type is RakudoObject.
+sub loc($name, $type = 'RakudoObject') {
+    DNST::Local.new( :name($name), :type($type) )
+}
+
 # Returns a DNST::Local referencing the current thread context.
 sub TC() {
-    DNST::Local.new( :name('TC'), :type('ThreadContext') )
+    loc('TC', 'ThreadContext')
 }

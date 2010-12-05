@@ -204,6 +204,9 @@ class DNST::MethodCall is DNST::Node {
     method new(:$name!, :$on, :$void, :$type, *@children) {
         my $obj := self.CREATE;
         if $on { $obj.on($on); }
+        if !$void && !$type {
+            pir::die('Must supply a type for a DNST::MethodCall if it is not void');
+        }
         $obj.name($name);
         $obj.void($void);
         $obj.type($type);

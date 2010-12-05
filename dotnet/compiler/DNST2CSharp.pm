@@ -129,23 +129,10 @@ our multi sub cs_for(DNST::MethodCall $mc) {
     # Code-gen the call.
     $code := $code ~ '        ';
     unless $mc.void {
-        my $ret_type := $mc.type || 'var';
+        my $ret_type := $mc.type;
         $*LAST_TEMP := get_unique_id('result');
         my $method_name := $invocant ~ '.' ~ $mc.name;
-        # the next bit is very hacky, should be handled upstream in
-        # PAST2DNSTCompiler.pm
-        if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
-        {
-            $ret_type := 'string';
-        }
-        if $ret_type eq 'var' && (
-            $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
-            $method_name eq 'Ops.throw_dynamic'
-        ) {
-            $ret_type := 'RakudoObject';
-        }
         $code := $code ~ "$ret_type $*LAST_TEMP = ";
-        if $ret_type eq 'var' { $code := $code ~ "// var from " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ ");\n";

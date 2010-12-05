@@ -341,29 +341,6 @@ class DNST::Goto is DNST::Node {
     }
 }
 
-class DNST::Temp is DNST::Node {
-    has $!name;
-    has $!type;
-
-    method name($set?) {
-        if $set { $!name := $set }
-        $!name
-    }
-
-    method type($set?) {
-        if $set { $!type := $set }
-        $!type
-    }
-
-    method new(:$name!, :$type!, *@children) {
-        my $obj := self.CREATE;
-        $obj.name($name);
-        $obj.type($type);
-        $obj.set_children(@children);
-        $obj;
-    }
-}
-
 class DNST::Bind is DNST::Node {
     method new(*@children) {
         my $obj := self.CREATE;
@@ -443,7 +420,7 @@ class DNST::JumpTable is DNST::Node {
         $!label
     }
     
-    # DNST::Temp - int register in which to store the target
+    # DNST::Local - int register in which to store the target
     #   branch's index in the jumptable
     method register($set?) {
         if pir::defined($set) { $!register := $set }
@@ -483,8 +460,9 @@ class DNST::JumpTable is DNST::Node {
         my $obj := self.CREATE;
         $obj.set_children(@children);
         $obj.label(DNST::Label.new(:name(get_unique_id('jump_table'))));
-        $obj.register(DNST::Temp.new(
+        $obj.register(DNST::Local.new(
             :name(get_unique_id('jump_table_int_register')),
+            :isdecl(1),
             :type('int'),
             DNST::Literal.new( :value('0'), :escape(0))
         ));
@@ -494,15 +472,30 @@ class DNST::JumpTable is DNST::Node {
 
 class DNST::Local is DNST::Node {
     has $!name;
+    has $!type;
+    has $!isdecl;
 
     method name($set?) {
         if pir::defined($set) { $!name := $set }
         $!name
     }
 
-    method new(:$name!) {
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method isdecl($set?) {
+        if $set { $!isdecl := $set }
+        $!isdecl
+    }
+
+    method new(:$name!, :$type, :$isdecl, *@children) {
         my $obj := self.CREATE;
         $obj.name($name);
+        $obj.type($type);
+        $obj.isdecl($isdecl);
+        $obj.set_children(@children);
         $obj;
     }
 }

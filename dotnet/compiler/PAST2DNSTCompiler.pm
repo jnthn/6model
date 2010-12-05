@@ -92,18 +92,14 @@ method compile(PAST::Node $node) {
         $class.push(DNST::Method.new(
             :name('LoadSetting'),
             :return_type('Context'),
-            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
+            DNST::Local.new( :name('TC'), :isdecl(1), :type('ThreadContext'),
                 DNST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'),
                     :type('ThreadContext'),
                     'null'
                 )
             ),
-            DNST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
 
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
@@ -116,11 +112,7 @@ method compile(PAST::Node $node) {
             # We do the loadinit calls before building the constants, as we
             # may build some constants with types we're yet to define.
             $loadinit_calls,
-            DNST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('constants_init'), :void(1), TC() ),
             $main_block_call,
             "TC.CurrentContext"
         ));
@@ -134,16 +126,8 @@ method compile(PAST::Node $node) {
             :name('Init'),
             :params(@params),
             :return_type('void'),
-            DNST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
-            DNST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
+            DNST::Call.new( :name('constants_init'), :void(1), TC() ),
             $loadinit_calls
         ));
 
@@ -151,13 +135,13 @@ method compile(PAST::Node $node) {
         $class.push(DNST::Method.new(
             :name('Main'),
             :return_type('void'),
-            DNST::Temp.new( :name('TC'), :type('ThreadContext'),
+            DNST::Local.new( :name('TC'), :isdecl(1), :type('ThreadContext'),
                 DNST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
                     DNST::Literal.new( :value('NQPSetting'), :escape(1) )
                 )
             ),
-            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
+            DNST::Call.new( :name('Init'), :void(1), TC() ),
             $main_block_call
         ));
 
@@ -166,7 +150,7 @@ method compile(PAST::Node $node) {
             :name('Load'),
             :params('ThreadContext TC', 'Context Setting'),
             :return_type('RakudoObject'),
-            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
+            DNST::Call.new( :name('Init'), :void(1), TC() ),
             $main_block_call
         ));
     }
@@ -238,8 +222,8 @@ sub make_constants_init_method($name) {
         :return_type('void'),
 
         # Fake up a context with the outer being the main block.
-        DNST::Temp.new(
-            :name('C'), :type('Context'),
+        DNST::Local.new(
+            :name('C'), :isdecl(1), :type('Context'),
             DNST::New.new(
                 :type('Context'),
                 DNST::MethodCall.new(
@@ -389,8 +373,8 @@ our multi sub dnst_for(PAST::Block $block) {
         :return_type('void'),
         :name($sig_setup_block),
         :params(@params),
-        DNST::Temp.new(
-            :type('Context'), :name('C'),
+        DNST::Local.new(
+            :type('Context'), :name('C'), :isdecl(1),
             DNST::New.new(
                 :type('Context'),
                 DNST::MethodCall.new(
@@ -412,16 +396,16 @@ our multi sub dnst_for(PAST::Block $block) {
         $handlers_setup_placeholder,
         DNST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
-    @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), 'TC' ));
+    @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), TC() ));
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(
-        :on('SignatureBinder'), :name('Bind'), :void(1), 'TC', 'C', 'Capture'
+        :on('SignatureBinder'), :name('Bind'), :void(1), TC(), 'C', 'Capture'
     ));
 
     # Wrap in block prelude/postlude.
-    $result.push(DNST::Temp.new(
-        :name('C'), :type('Context'),
+    $result.push(DNST::Local.new(
+        :name('C'), :isdecl(1), :type('Context'),
         DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", "Capture" )
     ));
     $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
@@ -488,7 +472,7 @@ our multi sub dnst_for(PAST::Block $block) {
         return DNST::MethodCall.new(
             :name('STable.Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
-            'TC',
+            TC(),
             "StaticBlockInfo[$our_sbi]",
             DNST::MethodCall.new(
                 :on('CaptureHelper'),
@@ -575,8 +559,8 @@ our multi sub dnst_for(PAST::Op $op) {
         if +@args == 0 { pir::die("callmethod node must have at least an invocant"); }
         
         # Invocant.
-        my $inv := DNST::Temp.new(
-            :name(get_unique_id('inv')), :type('RakudoObject'),
+        my $inv := DNST::Local.new(
+            :name(get_unique_id('inv')), :isdecl(1), :type('RakudoObject'),
             dnst_for(@args.shift)
         );
 
@@ -589,11 +573,11 @@ our multi sub dnst_for(PAST::Op $op) {
           !! DNST::Literal.new( :value($op.name), :escape(1) );
         
         # Method lookup.
-        my $callee := DNST::Temp.new(
-            :name(get_unique_id('callee')), :type('RakudoObject'),
+        my $callee := DNST::Local.new(
+            :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'),
             DNST::MethodCall.new(
                 :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
-                'TC',
+                TC(),
                 $inv.name,
                 $name,
                 'Hints.NO_HINT'
@@ -606,7 +590,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::MethodCall.new(
                 :name('STable.Invoke'), :type('RakudoObject'),
                 $callee,
-                'TC',
+                TC(),
                 $callee.name,
                 form_capture(@args, $inv)
             )
@@ -627,13 +611,13 @@ our multi sub dnst_for(PAST::Op $op) {
             }
             $callee := dnst_for(@args.shift);
         }
-        $callee := DNST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
+        $callee := DNST::Local.new( :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'), $callee );
 
         # Emit call.
         return DNST::MethodCall.new(
             :name('STable.Invoke'), :type('RakudoObject'),
             $callee,
-            'TC',
+            TC(),
             $callee.name,
             form_capture(@args)
         );
@@ -659,8 +643,8 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'if' {
         my $cond_evaluated := DNST::Local.new( :name(get_unique_id('if_cond')) );
         return DNST::Stmts.new(
-            DNST::Temp.new(
-                :name($cond_evaluated.name), :type('RakudoObject'),
+            DNST::Local.new(
+                :name($cond_evaluated.name), :isdecl(1), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
@@ -678,11 +662,11 @@ our multi sub dnst_for(PAST::Op $op) {
         my $cond_evaluated := get_unique_id('unless_cond');
         my $temp;
         return DNST::Stmts.new(
-            ($temp := DNST::Temp.new(
-                :name(get_unique_id('unless_result')), :type('RakudoObject'), val(0)
+            ($temp := DNST::Local.new(
+                :name(get_unique_id('unless_result')), :isdecl(1), :type('RakudoObject'), val(0)
             )),
-            DNST::Temp.new(
-                :name($cond_evaluated), :type('RakudoObject'),
+            DNST::Local.new(
+                :name($cond_evaluated), :isdecl(1), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
                     DNST::Bind.new(lit($temp.name), dnst_for((@($op))[0]))
@@ -691,7 +675,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::If.new(
                 DNST::MethodCall.new(
                     :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_evaluated
+                    TC(), $cond_evaluated
                 ),
                 DNST::Bind.new(lit($temp.name), dnst_for((@($op))[1])),
                 DNST::Bind.new(lit($temp.name), dnst_for($cond_evaluated)),
@@ -716,8 +700,8 @@ our multi sub dnst_for(PAST::Op $op) {
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
             );
-        my $cond := DNST::Temp.new(
-            :name($cond_result.name), :type('RakudoObject'),
+        my $cond := DNST::Local.new(
+            :name($cond_result.name), :isdecl(1), :type('RakudoObject'),
             dnst_for($cop)
         );
 
@@ -757,8 +741,8 @@ our multi sub dnst_for(PAST::Op $op) {
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
             );
-        my $cond := DNST::Temp.new(
-            :name($cond_result.name), :type('RakudoObject'),
+        my $cond := DNST::Local.new(
+            :name($cond_result.name), :isdecl(1), :type('RakudoObject'),
             dnst_for($cop)
         );
 
@@ -783,8 +767,8 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'list' {
         my $tmp_name := get_unique_id('list_');
         my $result := DNST::Stmts.new(
-            DNST::Temp.new(
-                :name($tmp_name), :type('RakudoObject'),
+            DNST::Local.new(
+                :name($tmp_name), :isdecl(1), :type('RakudoObject'),
                 dnst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('new'),
                     PAST::Var.new( :name('NQPArray'), :scope('lexical') )
@@ -795,7 +779,7 @@ our multi sub dnst_for(PAST::Op $op) {
         for @($op) {
             $result.push(DNST::MethodCall.new(
                 :on('Ops'), :name('lllist_bind_at_pos'), :void(1), :type('RakudoObject'),
-                'TC',
+                TC(),
                 $tmp_name,
                 dnst_for(PAST::Val.new( :value($i) )),
                 dnst_for($_)
@@ -813,8 +797,8 @@ our multi sub dnst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'def_or' {
         # Evaluate and store the first item.
         my $first_name := get_unique_id('def_or_first_');
-        my $first := DNST::Temp.new(
-            :name($first_name), :type('RakudoObject'),
+        my $first := DNST::Local.new(
+            :name($first_name), :isdecl(1), :type('RakudoObject'),
             dnst_for((@($op))[0])
         );
 
@@ -1033,7 +1017,7 @@ our multi sub dnst_for(PAST::Var $var) {
     }
     elsif $scope eq 'register' {
         if $var.isdecl {
-            my $result := DNST::Temp.new( :name($var.name), :type('RakudoObject') );
+            my $result := DNST::Local.new( :name($var.name), :isdecl(1), :type('RakudoObject') );
             if $*BIND_CONTEXT {
                 $result.push($*BIND_VALUE);
             }
@@ -1074,7 +1058,7 @@ our multi sub dnst_for(PAST::Var $var) {
         elsif pir::defined($var.viviself) {
             # May need to auto-vivify.
             my $viv_name := get_unique_id('viv_attr_');
-            my $temp := DNST::Temp.new( :name($viv_name), :type('RakudoObject'), $lookup );
+            my $temp := DNST::Local.new( :name($viv_name), :isdecl(1), :type('RakudoObject'), $lookup );
             $lookup := DNST::Stmts.new(
                 $temp,
                 DNST::If.new( :bool(1),
@@ -1180,8 +1164,8 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     $stmts.push(DNST::Bind.new($*re_jt.register, lit('0')));
     
     # cursor register
-    my $re_cur_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_cur')), :type('RakudoObject'),
+    my $re_cur_tmp := DNST::Local.new(
+        :name(get_unique_id('re_cur')), :isdecl(1), :type('RakudoObject'),
         dnst_for(PAST::Var.new( :name('self'), :scope('lexical')))
     );
     my $*re_cur := DNST::Local.new( :name($re_cur_tmp.name) );
@@ -1189,8 +1173,8 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     $stmts.push($re_cur_tmp);
     
     # cursor self register
-    my $re_cur_self_tmp := DNST::Temp.new(
-        :name(get_unique_id('re_cur_self')), :type('RakudoObject'),
+    my $re_cur_self_tmp := DNST::Local.new(
+        :name(get_unique_id('re_cur_self')), :isdecl(1), :type('RakudoObject'),
         lit($*re_cur_name)
     );
     my $*re_cur_self := DNST::Local.new( :name($re_cur_self_tmp.name) );
@@ -1722,15 +1706,15 @@ sub emit_say($arg) {
 }
 
 sub temp_int($arg?, :$name) {
-    DNST::Temp.new(
-        :name(get_unique_id('int_' ~ ($name || ''))), :type('int'),
+    DNST::Local.new(
+        :name(get_unique_id('int_' ~ ($name || ''))), :isdecl(1), :type('int'),
         pir::defined($arg) ?? dnst_for($arg) !! lit(0)
     )
 }
 
 sub temp_str($arg?, :$name) {
-    DNST::Temp.new(
-        :name(get_unique_id('string_' ~ ($name || ''))), :type('string'),
+    DNST::Local.new(
+        :name(get_unique_id('string_' ~ ($name || ''))), :isdecl(1), :type('string'),
         pir::defined($arg) ?? dnst_for($arg) !! lits("")
     )
 }
@@ -1739,7 +1723,7 @@ sub temp_str($arg?, :$name) {
 sub box($type, $arg) {
     DNST::MethodCall.new(
         :on('Ops'), :name("box_$type"), :type('RakudoObject'),
-        'TC', dnst_for($arg)
+        TC(), dnst_for($arg)
     )
 }
 
@@ -1748,7 +1732,7 @@ sub unbox($type, $arg) {
     DNST::MethodCall.new(
         :on('Ops'), :name("unbox_$type"),
         :type(vm_type_for($type)),
-        'TC', dnst_for($arg)
+        TC(), dnst_for($arg)
     )
 }
 
@@ -1813,13 +1797,13 @@ sub not($operand) {
 sub log_and($l, $r) {
     my $temp;
     DNST::Stmts.new(
-    ($temp := DNST::Temp.new(
-        :name(get_unique_id('log_and')), :type('bool'), lit('false')
+    ($temp := DNST::Local.new(
+        :name(get_unique_id('log_and')), :isdecl(1), :type('bool'), lit('false')
     )),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('left_bool')), :type('bool'), dnst_for($l)
-    ), if_then(DNST::Temp.new(
-        :name(get_unique_id('right_bool')), :type('bool'), dnst_for($r)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), dnst_for($l)
+    ), if_then(DNST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), dnst_for($r)
     ), DNST::Bind.new(
     ### XXX The next line works only with the C# backend (so far)
     ###   b/c the Bind causes the Temp to be redeclared without the lit(___.name)
@@ -1831,15 +1815,15 @@ sub log_and($l, $r) {
 sub log_or($l, $r) {
     my $temp;
     DNST::Stmts.new(
-    ($temp := DNST::Temp.new(
-        :name(get_unique_id('log_or')), :type('bool'), lit('false')
+    ($temp := DNST::Local.new(
+        :name(get_unique_id('log_or')), :isdecl(1), :type('bool'), lit('false')
     )),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('left_bool')), :type('bool'), dnst_for($l)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), dnst_for($l)
     ),
     DNST::Bind.new(lit($temp.name), lit('true')),
-    if_then(DNST::Temp.new(
-        :name(get_unique_id('right_bool')), :type('bool'), dnst_for($r)
+    if_then(DNST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), dnst_for($r)
     ),
     DNST::Bind.new(lit($temp.name), lit('true')),
     )));
@@ -1904,7 +1888,7 @@ sub emit_op($name, *@args) {
     my $call := DNST::MethodCall.new(
         :on('Ops'), :name($name),
         :type(vm_type_for($type)),
-        'TC', |@dnst_args
+        TC(), |@dnst_args
     );
 
     # We may need to auto-box it.
@@ -1928,9 +1912,10 @@ sub emit_call($on, $name, $type, *@args) {
 sub returns_array($expr, *@result_slots) {
     my $tmp;
     my $stmts := DNST::Stmts.new(
-        $tmp := DNST::Temp.new(
+        $tmp := DNST::Local.new(
             :type('RakudoObject'),
             :name(get_unique_id('array_result')),
+            :isdecl(1),
             $expr
         )
     );
@@ -1954,4 +1939,9 @@ sub returns_array($expr, *@result_slots) {
         $i := $i + 2;
     };
     $stmts
+}
+
+# Returns a DNST::Local referencing the current thread context.
+sub TC() {
+    DNST::Local.new( :name('TC'), :type('ThreadContext') )
 }

@@ -99,11 +99,7 @@ method compile(PAST::Node $node) {
                     'null'
                 )
             ),
-            DNST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
 
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
@@ -116,11 +112,7 @@ method compile(PAST::Node $node) {
             # We do the loadinit calls before building the constants, as we
             # may build some constants with types we're yet to define.
             $loadinit_calls,
-            DNST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('constants_init'), :void(1), TC() ),
             $main_block_call,
             "TC.CurrentContext"
         ));
@@ -134,16 +126,8 @@ method compile(PAST::Node $node) {
             :name('Init'),
             :params(@params),
             :return_type('void'),
-            DNST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
-            DNST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
+            DNST::Call.new( :name('constants_init'), :void(1), TC() ),
             $loadinit_calls
         ));
 
@@ -157,7 +141,7 @@ method compile(PAST::Node $node) {
                     DNST::Literal.new( :value('NQPSetting'), :escape(1) )
                 )
             ),
-            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
+            DNST::Call.new( :name('Init'), :void(1), TC() ),
             $main_block_call
         ));
 
@@ -166,7 +150,7 @@ method compile(PAST::Node $node) {
             :name('Load'),
             :params('ThreadContext TC', 'Context Setting'),
             :return_type('RakudoObject'),
-            DNST::Call.new( :name('Init'), :void(1), 'TC' ),
+            DNST::Call.new( :name('Init'), :void(1), TC() ),
             $main_block_call
         ));
     }
@@ -412,11 +396,11 @@ our multi sub dnst_for(PAST::Block $block) {
         $handlers_setup_placeholder,
         DNST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
-    @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), 'TC' ));
+    @*SIGINITS.push(DNST::Call.new( :name($sig_setup_block), :void(1), TC() ));
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(
-        :on('SignatureBinder'), :name('Bind'), :void(1), 'TC', 'C', 'Capture'
+        :on('SignatureBinder'), :name('Bind'), :void(1), TC(), 'C', 'Capture'
     ));
 
     # Wrap in block prelude/postlude.
@@ -488,7 +472,7 @@ our multi sub dnst_for(PAST::Block $block) {
         return DNST::MethodCall.new(
             :name('STable.Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
-            'TC',
+            TC(),
             "StaticBlockInfo[$our_sbi]",
             DNST::MethodCall.new(
                 :on('CaptureHelper'),
@@ -593,7 +577,7 @@ our multi sub dnst_for(PAST::Op $op) {
             :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'),
             DNST::MethodCall.new(
                 :on($inv.name), :name('STable.FindMethod'), :type('RakudoObject'),
-                'TC',
+                TC(),
                 $inv.name,
                 $name,
                 'Hints.NO_HINT'
@@ -606,7 +590,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::MethodCall.new(
                 :name('STable.Invoke'), :type('RakudoObject'),
                 $callee,
-                'TC',
+                TC(),
                 $callee.name,
                 form_capture(@args, $inv)
             )
@@ -633,7 +617,7 @@ our multi sub dnst_for(PAST::Op $op) {
         return DNST::MethodCall.new(
             :name('STable.Invoke'), :type('RakudoObject'),
             $callee,
-            'TC',
+            TC(),
             $callee.name,
             form_capture(@args)
         );
@@ -691,7 +675,7 @@ our multi sub dnst_for(PAST::Op $op) {
             DNST::If.new(
                 DNST::MethodCall.new(
                     :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_evaluated
+                    TC(), $cond_evaluated
                 ),
                 DNST::Bind.new(lit($temp.name), dnst_for((@($op))[1])),
                 DNST::Bind.new(lit($temp.name), dnst_for($cond_evaluated)),
@@ -795,7 +779,7 @@ our multi sub dnst_for(PAST::Op $op) {
         for @($op) {
             $result.push(DNST::MethodCall.new(
                 :on('Ops'), :name('lllist_bind_at_pos'), :void(1), :type('RakudoObject'),
-                'TC',
+                TC(),
                 $tmp_name,
                 dnst_for(PAST::Val.new( :value($i) )),
                 dnst_for($_)
@@ -1738,7 +1722,7 @@ sub temp_str($arg?, :$name) {
 sub box($type, $arg) {
     DNST::MethodCall.new(
         :on('Ops'), :name("box_$type"), :type('RakudoObject'),
-        'TC', dnst_for($arg)
+        TC(), dnst_for($arg)
     )
 }
 
@@ -1747,7 +1731,7 @@ sub unbox($type, $arg) {
     DNST::MethodCall.new(
         :on('Ops'), :name("unbox_$type"),
         :type(vm_type_for($type)),
-        'TC', dnst_for($arg)
+        TC(), dnst_for($arg)
     )
 }
 
@@ -1903,7 +1887,7 @@ sub emit_op($name, *@args) {
     my $call := DNST::MethodCall.new(
         :on('Ops'), :name($name),
         :type(vm_type_for($type)),
-        'TC', |@dnst_args
+        TC(), |@dnst_args
     );
 
     # We may need to auto-box it.
@@ -1954,4 +1938,9 @@ sub returns_array($expr, *@result_slots) {
         $i := $i + 2;
     };
     $stmts
+}
+
+# Returns a DNST::Local referencing the current thread context.
+sub TC() {
+    DNST::Local.new( :name('TC'), :type('ThreadContext') )
 }

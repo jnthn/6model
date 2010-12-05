@@ -96,7 +96,7 @@ method compile(PAST::Node $node) {
                 DNST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'),
                     :type('ThreadContext'),
-                    'null'
+                    DNST::Null.new()
                 )
             ),
             DNST::Call.new( :name('blocks_init'), :void(1), TC() ),
@@ -197,7 +197,7 @@ sub make_blocks_init_method($name) {
             DNST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 :type('RakudoCodeRef.Instance'),
-                'null', 'null',
+                DNST::Null.new(), DNST::Null.new(),
                 DNST::ArrayLiteral.new( :type('String') )
             )
         ),
@@ -229,12 +229,12 @@ sub make_constants_init_method($name) {
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    DNST::Null.new(),
                     'StaticBlockInfo[1]',
                     DNST::ArrayLiteral.new( :type('string') )
                 ),
                 'TC.CurrentContext',
-                'null'
+                DNST::Null.new()
             )
         ),
         
@@ -379,12 +379,12 @@ our multi sub dnst_for(PAST::Block $block) {
                 DNST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    DNST::Null.new(),
                     "StaticBlockInfo[$our_sbi]",
                     DNST::ArrayLiteral.new( :type('string') ),
                 ),
                 'TC.CurrentContext',
-                'null'
+                DNST::Null.new()
             )
         ),
         DNST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ),
@@ -501,7 +501,7 @@ sub compile_signature(@params) {
             $param.push(dnst_for($_.multitype));
         }
         else {
-            $param.push('null');
+            $param.push(DNST::Null.new());
         }
 
         # Variable name to bind into.
@@ -513,7 +513,7 @@ sub compile_signature(@params) {
         # Named param or not?
         $param.push((!$_.slurpy && $_.named) ??
             DNST::Literal.new( :value(pir::substr($_.name, 1)), :escape(1) ) !!
-            'null');
+            DNST::Null.new());
 
         # Flags.
         $param.push(
@@ -532,7 +532,7 @@ sub compile_signature(@params) {
         # viviself.
         $param.push($_.viviself ~~ PAST::Node
             ?? dnst_for(PAST::Block.new(:closure(1), $_.viviself))
-            !! 'null');
+            !! DNST::Null.new());
 
         $params.push($param);
     }
@@ -1025,7 +1025,7 @@ our multi sub dnst_for(PAST::Var $var) {
                 $result.push(dnst_for($var.viviself));
             }
             else {
-                $result.push('null');
+                $result.push(DNST::Null.new());
             }
             return $result;
         }
@@ -1062,7 +1062,7 @@ our multi sub dnst_for(PAST::Var $var) {
             $lookup := DNST::Stmts.new(
                 $temp,
                 DNST::If.new( :bool(1),
-                    eq(DNST::Local.new( :name($viv_name) ), DNST::Literal.new( :value('null') )),
+                    eq(DNST::Local.new( :name($viv_name) ), DNST::Null.new()),
                     dnst_for($var.viviself),
                     DNST::Local.new( :name($viv_name) )
                 )

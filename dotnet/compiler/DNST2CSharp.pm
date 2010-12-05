@@ -237,6 +237,11 @@ our multi sub cs_for(DNST::Literal $lit) {
     return '';
 }
 
+our multi sub cs_for(DNST::Null $null) {
+    $*LAST_TEMP := 'null';
+    return '';
+}
+
 our multi sub cs_for(DNST::Local $loc) {
     my $code := '';
     if $loc.isdecl {

@@ -187,7 +187,7 @@ sub make_blocks_init_method($name) {
         
         # Create array for storing these.
         DNST::Bind.new(
-            'StaticBlockInfo',
+            loc('StaticBlockInfo', 'RakudoCodeRef.Instance[]'),
             'new RakudoCodeRef.Instance[' ~ $*SBI_POS ~ ']'
         ),
 
@@ -240,7 +240,7 @@ sub make_constants_init_method($name) {
         
         # Create array for storing these.
         DNST::Bind.new(
-            'ConstantsTable',
+            loc('ConstantsTable', 'RakudoObject[]'),
             'new RakudoObject[' ~ +@*CONSTANTS ~ ']'
         )
     );
@@ -361,7 +361,6 @@ our multi sub dnst_for(PAST::Block $block) {
         @*HANDLERS.push(%handler);
     }
 
-
     # Add signature generation/setup. We need to do this in the
     # correct lexical scope. Also this is handy place to set up
     # the handlers; keep a placeholder for that.
@@ -388,7 +387,7 @@ our multi sub dnst_for(PAST::Block $block) {
                 'null'
             )
         ),
-        DNST::Bind.new( 'TC.CurrentContext', 'C' ),
+        DNST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ),
         DNST::Bind.new(
             "StaticBlockInfo[$our_sbi].Sig",
             compile_signature(@*PARAMS)
@@ -400,15 +399,16 @@ our multi sub dnst_for(PAST::Block $block) {
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(DNST::MethodCall.new(
-        :on('SignatureBinder'), :name('Bind'), :void(1), TC(), 'C', 'Capture'
+        :on('SignatureBinder'), :name('Bind'), :void(1),
+        TC(), loc('C', 'Context'), loc('Capture')
     ));
 
     # Wrap in block prelude/postlude.
     $result.push(DNST::Local.new(
         :name('C'), :isdecl(1), :type('Context'),
-        DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", "Capture" )
+        DNST::New.new( :type('Context'), "Block", "TC.CurrentContext", loc("Capture") )
     ));
-    $result.push(DNST::Bind.new( 'TC.CurrentContext', 'C' ));
+    $result.push(DNST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ));
     $result.push(DNST::TryFinally.new(
         DNST::TryCatch.new(
             :exception_type('LeaveStackUnwinderException'),
@@ -1940,7 +1940,13 @@ sub returns_array($expr, *@result_slots) {
     $stmts
 }
 
+# Returns a DNST::Local for looking up the variable name with the
+# given type. Default type is RakudoObject.
+sub loc($name, $type = 'RakudoObject') {
+    DNST::Local.new( :name($name), :type($type) )
+}
+
 # Returns a DNST::Local referencing the current thread context.
 sub TC() {
-    DNST::Local.new( :name('TC'), :type('ThreadContext') )
+    loc('TC', 'ThreadContext')
 }

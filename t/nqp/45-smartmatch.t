@@ -28,3 +28,5 @@ ok(("abcd" ~~ /[[a|ab]|abc]d/) eq 'abcd', 'deep backtracking works');
 ok(("bbbbac" ~~ /[b+ b a $] | bbbbac/) eq 'bbbbac', 'greedy quantifier works');
 
 ok(("bbbbac" ~~ /[b+? b ac]/) eq 'bbbbac', 'frugal quantifier works');
+
+ok(("ab" ~~ /<?before ab> a/) eq 'a', 'subrule "before" works');

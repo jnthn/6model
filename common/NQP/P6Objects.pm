@@ -130,6 +130,12 @@ class Regex::Cursor {
         self.CREATE();
     }
     
+    method Bool() {
+        nqp::repr_defined($!match)
+            ?? ?$!match
+            !! 0
+    }
+    
     method CREATE() {
         nqp::instance_of(self)
     }
@@ -490,6 +496,16 @@ class Regex::Cursor {
     method DEBUG($arg?) {
         $!debug := nqp::repr_defined($arg) ?? $arg !! $TRUE;
         1
+    }
+    
+    method before($regex?) {
+        my @ret := self.cursor_start;
+        my $cur := @ret[0];
+        my $pos := @ret[1];
+        
+        $cur.cursor_pass($pos, 'before')
+            if nqp::repr_defined($regex) && $regex($cur);
+        $cur;
     }
 }
 

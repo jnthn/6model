@@ -1625,7 +1625,6 @@ our multi sub dnst_regex(PAST::Regex $r) {
         #my $subdnst := $posargs.shift;
         
         my $negate := $r.negate;
-        my $testop := $negate ?? 'if' !! 'unless';
         
         my $subtype := $r.subtype;
         my $backtrack := $r.backtrack;
@@ -1634,12 +1633,25 @@ our multi sub dnst_regex(PAST::Regex $r) {
         
         $stmts.push($cdnst);
         
+        my $call := dnst_for(PAST::Op.new(
+            :pasttype('callmethod'), :name('Bool'),
+            cursorop($name, $posargs)
+        ));
+        
+        # the logic here *appears* inverted because of the if_then.
+        $call := dnst_for(PAST::Op.new(
+            :pasttype('call'), :name('&prefix:<!>'),
+            $call
+        )) unless $negate;
+        
         $stmts.push(if_then(:bool(0),
-            unbox('int', cursorop($name, $posargs)),
+            unbox('int', $call),
             $*re_fail
         ));
         
-        if $subtype ne 'zerowidth' {
+        if $subtype eq 'zerowidth' {
+            
+        } else {
             
         }
     }

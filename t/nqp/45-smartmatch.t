@@ -2,7 +2,7 @@
 # to make sure the basic bits of regexes in place at the time it was
 # added didn't get regressed.
 
-plan(16);
+plan(17);
 
 my $match := 'abcdef' ~~ / abc /;
 ok( $match, "simple smart match, scanning form" );

@@ -599,12 +599,13 @@ my knowhow NQPClassHOW {
 
         # Incorporate any new multi candidates (needs MRO built).
         self.incorporate_multi_candidates($obj);
-
-        # Publish type cache.
-        self.publish_type_cache($obj);
         
         # Compose attributes.
         for @!attributes { $_.compose($obj) }
+
+        # Publish type and method caches.
+        self.publish_type_cache($obj);
+        self.publish_method_cache($obj);
 
         $obj
     }
@@ -690,6 +691,21 @@ my knowhow NQPClassHOW {
     method publish_type_cache($obj) {
         # XXX TODO: when we have roles, need these here too.
         nqp::publish_type_check_cache($obj, @!mro)
+    }
+    
+    method publish_method_cache($obj) {
+        # Walk MRO and add methods to cache, unless another method
+        # lower in the class hierarchy "shadowed" it.
+        # XXX Or we should, but no hash iteration yet, so cheat and
+        # just publish method table of lowest class.
+        my %cache := %!methods;
+        for @!mro {
+            my %methods := $_.HOW.method_table($_);
+            # for %methods.keys {
+            #     XXX
+            # }
+        }
+        nqp::publish_method_cache($obj, %cache)
     }
 
     ##

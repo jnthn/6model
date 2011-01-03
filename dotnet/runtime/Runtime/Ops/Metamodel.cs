@@ -209,5 +209,27 @@ namespace Rakudo.Runtime
                 throw new Exception("publish_type_check_cache expects a P6list");
             }
         }
+
+        /// <summary>
+        /// Publishes a method dispatch cache - essentially, a set of name to code object
+        /// mappings.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="WHAT"></param>
+        /// <param name="MethodCacheHash"></param>
+        /// <returns></returns>
+        public static RakudoObject publish_method_cache(ThreadContext TC, RakudoObject WHAT, RakudoObject MethodCacheHash)
+        {
+            var Cache = MethodCacheHash as P6mapping.Instance;
+            if (Cache != null)
+            {
+                WHAT.STable.MethodCache = Cache.Storage;
+                return Cache;
+            }
+            else
+            {
+                throw new Exception("publish_method_cache expects a P6mapping");
+            }
+        }
     }
 }

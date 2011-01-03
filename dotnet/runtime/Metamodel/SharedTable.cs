@@ -38,6 +38,12 @@ namespace Rakudo.Metamodel
         internal RakudoObject CachedFindMethod;
 
         /// <summary>
+        /// Cache of methods by name. Published by meta-objects that choose
+        /// to do so.
+        /// </summary>
+        internal Dictionary<string, RakudoObject> MethodCache;
+
+        /// <summary>
         /// Sometimes, we may want to install a hook for overriding method
         /// finding. This does that. (We used to just give this a default
         /// closure, but it makes dispatch a bit more expensive, and this is
@@ -50,6 +56,8 @@ namespace Rakudo.Metamodel
         /// </summary>
         public RakudoObject FindMethod(ThreadContext TC, RakudoObject Obj, string Name, int Hint)
         {
+            RakudoObject CachedMethod;
+
             // Does this s-table have a special overridden finder?
             if (SpecialFindMethod != null)
                 return SpecialFindMethod(TC, Obj, Name, Hint);
@@ -60,6 +68,12 @@ namespace Rakudo.Metamodel
                 // Yes, just grab it from the v-table.
                 return Obj.STable.VTable[Hint];
             }
+
+            // Otherwise, try method cache.
+            else if (MethodCache != null && MethodCache.TryGetValue(Name, out CachedMethod))
+                return CachedMethod;
+
+            // Otherwise, go ask the meta-object.
             else
             {
                 // Find the find_method method.

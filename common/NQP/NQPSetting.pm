@@ -250,47 +250,47 @@ multi sub &infix:<!=>(NQPNum $x, NQPNum $y) {
     nqp::logical_not_int(nqp::equal_nums($x, $y))
 }
 
-proto sub &infix:«<=»($x, $y) { * }
-multi sub &infix:«<=»($x, $y) {
+proto sub &infix:Â«<=Â»($x, $y) { * }
+multi sub &infix:Â«<=Â»($x, $y) {
     nqp::less_than_or_equal_nums($x.Num, $y.Num)
 }
-multi sub &infix:«<=»(NQPInt $x, NQPInt $y) {
+multi sub &infix:Â«<=Â»(NQPInt $x, NQPInt $y) {
     nqp::less_than_or_equal_ints($x, $y)
 }
-multi sub &infix:«<=»(NQPNum $x, NQPNum $y) {
+multi sub &infix:Â«<=Â»(NQPNum $x, NQPNum $y) {
     nqp::less_than_or_equal_nums($x, $y)
 }
 
-proto sub &infix:«<»($x, $y) { * }
-multi sub &infix:«<»($x, $y) {
+proto sub &infix:Â«<Â»($x, $y) { * }
+multi sub &infix:Â«<Â»($x, $y) {
     nqp::less_than_nums($x.Num, $y.Num)
 }
-multi sub &infix:«<»(NQPInt $x, NQPInt $y) {
+multi sub &infix:Â«<Â»(NQPInt $x, NQPInt $y) {
     nqp::less_than_ints($x, $y)
 }
-multi sub &infix:«<»(NQPNum $x, NQPNum $y) {
+multi sub &infix:Â«<Â»(NQPNum $x, NQPNum $y) {
     nqp::less_than_nums($x, $y)
 }
 
-proto sub &infix:«>=»($x, $y) { * }
-multi sub &infix:«>=»($x, $y) {
+proto sub &infix:Â«>=Â»($x, $y) { * }
+multi sub &infix:Â«>=Â»($x, $y) {
     nqp::greater_than_or_equal_nums($x.Num, $y.Num)
 }
-multi sub &infix:«>=»(NQPInt $x, NQPInt $y) {
+multi sub &infix:Â«>=Â»(NQPInt $x, NQPInt $y) {
     nqp::greater_than_or_equal_ints($x, $y)
 }
-multi sub &infix:«>=»(NQPNum $x, NQPNum $y) {
+multi sub &infix:Â«>=Â»(NQPNum $x, NQPNum $y) {
     nqp::greater_than_or_equal_nums($x, $y)
 }
 
-proto sub &infix:«>»($x, $y) { * }
-multi sub &infix:«>»($x, $y) {
+proto sub &infix:Â«>Â»($x, $y) { * }
+multi sub &infix:Â«>Â»($x, $y) {
     nqp::greater_than_nums($x.Num, $y.Num)
 }
-multi sub &infix:«>»(NQPInt $x, NQPInt $y) {
+multi sub &infix:Â«>Â»(NQPInt $x, NQPInt $y) {
     nqp::greater_than_ints($x, $y)
 }
-multi sub &infix:«>»(NQPNum $x, NQPNum $y) {
+multi sub &infix:Â«>Â»(NQPNum $x, NQPNum $y) {
     nqp::greater_than_nums($x, $y)
 }
 

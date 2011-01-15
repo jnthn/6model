@@ -31,6 +31,7 @@
     .local pmc fh
     filename = args[1]
     fh = open filename, 'r'
+    fh.'encoding'('utf8')
     file = fh.'readall'()
     fh.'close'()
     

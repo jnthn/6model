@@ -582,7 +582,7 @@ our multi sub jst_for(PAST::Op $op) {
         # Just a call on the Ops class. Always pass thread context
         # as the first parameter.
         my $result := JST::MethodCall.new(
-            :on('Ops'), :name($op.name), 'TC' # TODO: :type()
+            :on('Ops'), :name($op.name), :type('RakudoObject'), 'TC' # TODO: :type()
         );
         for @($op) {
             $result.push(jst_for($_));

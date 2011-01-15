@@ -16,14 +16,14 @@ public class Parameter
     /// <param name="Name"></param>
     /// <param name="Flags"></param>
     public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
-        String name, int flags, DefinednessConstraint definedness)
+        String name, int flags)
     {
         this.Type = type;
         this.VariableName = variableName;
         this.VariableLexpadPosition = variableLexpadPosition;
         this.Name = name;
         this.Flags = flags;
-        this.Definedness = definedness;
+        this.Definedness = DefinednessConstraint.None;
     }
 
     /// <summary>

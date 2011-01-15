@@ -388,8 +388,8 @@ Rakudo/Runtime/MultiDispatch/DispatchCache.java: ../../dotnet/runtime/Runtime/Mu
 Rakudo/Runtime/MultiDispatch/MultiDispatcher.java: ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs
 	@echo "todo: Rakudo/Runtime/MultiDispatch/MultiDispatcher.java is older than ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs"
 
-Rakudo/Runtime/Ops.java: ../../dotnet/runtime/Runtime/Ops.cs
-	@echo "todo: Rakudo/Runtime/Ops.java is older than ../../dotnet/runtime/Runtime/Ops.cs"
+#Rakudo/Runtime/Ops.java: ../../dotnet/runtime/Runtime/Ops.cs
+#	@echo "todo: Rakudo/Runtime/Ops.java is older than ../../dotnet/runtime/Runtime/Ops.cs"
 
 Rakudo/Runtime/Parameter.java: ../../dotnet/runtime/Runtime/Signatures/Parameter.cs
 	@echo "todo: Rakudo/Runtime/Parameter.java is older than ../../dotnet/runtime/Runtime/Signatures/Parameter.cs"

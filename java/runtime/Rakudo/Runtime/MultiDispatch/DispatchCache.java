@@ -199,6 +199,9 @@ public class DispatchCache
             // The above replaces the following C#, which should be more
             // performant in multithreaded programs.
             // Interlocked.CompareExchange<ArityCache>(ref ArityCaches[ToAdd.Length], New, Previous);
+            // See: http://www.ibm.com/developerworks/java/library/j-jtp10264
+            // and http://javamex.com/tutorials/synchronization_concurrency_9_locks_j5.shtml
+            // and http://download.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/locks/ReentrantReadWriteLock.WriteLock.html
         }
     }
 

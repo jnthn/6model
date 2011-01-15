@@ -91,7 +91,7 @@ method compile(PAST::Node $node) {
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
             JST::MethodCall.new(
-                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'),
+                :on('StaticBlockInfo[1].StaticLexPad'), :name('SetByName'), :void(1), :type('RakudoObject'),
                 JST::Literal.new( :value('NQPStr'), :escape(1) ),
                 'REPRRegistry.get_REPR_by_name("P6str").type_object_for(null, null)'
             ),
@@ -537,7 +537,7 @@ our multi sub jst_for(PAST::Op $op) {
 
         # How is capture formed?
         my $capture := JST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith')
+            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
         );
         my $pos_part := JST::ArrayLiteral.new( :type('RakudoObject') );
         my $named_part := JST::DictionaryLiteral.new(

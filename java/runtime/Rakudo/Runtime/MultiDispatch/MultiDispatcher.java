@@ -16,6 +16,28 @@ import Rakudo.Runtime.DefinednessConstraint;
 public class MultiDispatcher
 {
     /// <summary>
+    /// Represents a node in the multi-dispatch DAG used to do the topological
+    /// sort.
+    /// <returns></returns>
+    private class CandidateGraphNode
+    {
+        public RakudoCodeRef.Instance Candidate;
+        public CandidateGraphNode[] Edges;
+        public int EdgesIn;
+        public int EdgesOut;
+    }
+
+    /// <summary>
+    /// Indicates an edge should be removed in the next iteration.
+    /// </summary>
+    private final int EDGE_REMOVAL_TODO = -1; // C# has const
+
+    /// <summary>
+    /// Indicates that an edge was already removed.
+    /// </summary>
+    private final int EDGE_REMOVED = -2; // C# has const
+
+    /// <summary>
     /// Finds the best candidate, if one exists, and returns it.
     /// </summary>
     /// <param name="Candidates"></param>

@@ -49,7 +49,7 @@ public class KnowHOWBootstrapper  // public static in the C# version
             {
                 // We first create a new HOW instance.
                 RakudoObject knowHOWTypeObj = CaptureHelper.GetPositional(capture, 0);
-                RakudoObject HOW = knowHOWTypeObj.getSTable().REPR.instance_of(tc, knowHOWTypeObj.getSTable().WHAT);
+                    RakudoObject HOW = knowHOWTypeObj.getSTable().REPR.instance_of(tc, knowHOWTypeObj.getSTable().WHAT);
 
                 // Now create a new type object to go with it of the
                 // desired REPR; we default to P6opaque (note that the

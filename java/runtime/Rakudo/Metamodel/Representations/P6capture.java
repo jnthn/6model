@@ -11,7 +11,7 @@ import Rakudo.Serialization.SerializationContext;
 /// <summary>
 /// A representation that we use (for now) for native captures.
 /// </summary>
-public final class P6capture implements Representation
+public final class P6capture implements Representation // C# has sealed
 {
     /// <summary>
     /// This is how a Capture looks.
@@ -20,6 +20,7 @@ public final class P6capture implements Representation
     {
         public RakudoObject[] Positionals;
         public HashMap<String, RakudoObject> Nameds;
+        public int[] flattenSpec;
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);

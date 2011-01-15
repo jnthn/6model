@@ -54,6 +54,7 @@ public class Init  // public static in the C# version
 
         // Create an execution domain and a thread context for it.
         ExecutionDomain executionDomain  = new ExecutionDomain();
+        executionDomain.Setting          = settingContext;
         ThreadContext threadContext      = new ThreadContext();
         threadContext.Domain             = executionDomain;
         threadContext.CurrentContext     = settingContext;
@@ -99,17 +100,6 @@ public class Init  // public static in the C# version
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
             { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
-        RakudoCodeRef.IFunc_Body funcBody = new RakudoCodeRef.IFunc_Body()
-        { // create an anonymous class
-            public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
-                RakudoObject nqpList = Ops.get_lex(tc, "NQPList");
-                P6list.Instance list = (P6list.Instance)(nqpList.getSTable().REPR.instance_of(tc, nqpList));
-                P6capture.Instance nativeCapture = (P6capture.Instance)capture;
-                for (RakudoObject obj : nativeCapture.Positionals)
-                    list.Storage.add(obj);
-                return list;
-            }
-        };
         settingContext.LexPad.Storage = new RakudoObject[]
             {
                 knowHOW,
@@ -120,7 +110,17 @@ public class Init  // public static in the C# version
                 REPRRegistry.get_REPR_by_name("P6str").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("P6list").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,knowHOW.getSTable().REPR.instance_of(null,knowHOW)),
-                CodeObjectUtility.WrapNativeMethod(funcBody)
+                CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body()
+                    { // an anonymous class instead of the lambda in the C# version
+                        public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
+                            RakudoObject nqpList = Ops.get_lex(tc, "NQPList");
+                            P6list.Instance list = (P6list.Instance)(nqpList.getSTable().REPR.instance_of(tc, nqpList));
+                            P6capture.Instance nativeCapture = (P6capture.Instance)capture;
+                            for (RakudoObject obj : nativeCapture.Positionals)
+                                list.Storage.add(obj);
+                            return list;
+                        }
+                    })
             };
         return settingContext;
     }

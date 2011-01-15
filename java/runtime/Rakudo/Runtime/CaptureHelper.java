@@ -14,6 +14,21 @@ import Rakudo.Metamodel.Representations.P6capture;
 public class CaptureHelper   // the C# version has a static class
 {
     /// <summary>
+    /// Don't flatten.
+    /// </summary>
+    public final int FLATTEN_NONE = 0; // C# has public const
+
+    /// <summary>
+    /// Flatten positionally.
+    /// </summary>
+    public final int FLATTEN_POS = 1;
+
+    /// <summary>
+    /// Flatten named.
+    /// </summary>
+    public final int FLATTEN_NAMED = 2;
+
+    /// <summary>
     /// Cache of the native capture type object.
     /// </summary>
     public static RakudoObject CaptureTypeObject;  // the C# version has internal

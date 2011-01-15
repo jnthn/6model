@@ -22,13 +22,21 @@ sub block_immediate($block) {
 }
 
 sub vivitype($sigil) {
-    # XXX Needs to change to be more portable...
-    $sigil eq '%'
-    ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'Hash']"))
-    !! ($sigil eq '@'
-        ?? PAST::Op.new(:inline("    %r = root_new ['parrot';'ResizablePMCArray']"))
-        # XXX ...and this is really wrong.
-        !! undef);
+    if $sigil eq '%' {
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('new'),
+            PAST::Var.new( :name('NQPHash'), :scope('lexical') )
+        )
+    }
+    elsif $sigil eq '@' {
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('new'),
+            PAST::Var.new( :name('NQPArray'), :scope('lexical') )
+        )
+    }
+    else {
+        PAST::Var.new( :name('Any'), :scope('lexical') )
+    }
 }
 
 
@@ -49,10 +57,24 @@ sub colonpair_str($ast) {
 }
 
 method comp_unit($/) {
+    # Make the main unit.
     my $mainline := $<statementlist>.ast;
     my $unit     := @BLOCK.shift;
     $unit.push($mainline);
     $unit.node($/);
+
+    # The first thing we ever want to do is load the core libraries
+    # (unless passed the flag to tell us not to, which probably means
+    # we're actually compiling those libraries.)
+#   unless $*NQP_NO_CORE_LIBS {
+#       $unit.unshift(PAST::Block.new(
+#           :blocktype('declaration'),
+#           :loadinit(PAST::Stmts.new(
+#               PAST::Op.new( :pasttype('nqpop'), :name('load_module'), 'P6Objects' )
+#           ))
+#       ));
+#   }
+
     make $unit;
 }
 
@@ -319,7 +341,12 @@ method variable($/) {
             $past.viviself( vivitype( $<sigil> ) );
             $past.lvalue(1);
         }
-        if $<twigil>[0] eq '*' {
+        if $<sigil> eq '::' {
+            $past.isdecl(1);
+            $past.name(~$<desigilname>);
+            @BLOCK[0].symbol($past.name(), :scope('lexical'));
+        }
+        elsif $<twigil>[0] eq '*' {
             $past.scope('contextual');
             $past.viviself( 
                 PAST::Var.new( 
@@ -357,24 +384,37 @@ sub package($/) {
             PAST::Var.new( :name('type_obj'), :scope('register'), :isdecl(1) ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
-                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('package') )
+                PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') ),
+                PAST::Val.new( :value($name), :named('name') )
             )
         ),
         PAST::Op.new( :pasttype('bind'),
-            PAST::Var.new( :name($name) ),
+            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package') ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         PAST::Op.new( :pasttype('bind'),
             PAST::Var.new( :name('$?CLASS') ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
-        ),
-        # XXX name
-        # XXX is parent
+        )
     ));
     if $<package_def><repr> {
         my $repr_name := $<package_def><repr>[0].ast;
         $repr_name.named('repr');
         $*PACKAGE-SETUP[0][0][1].push($repr_name);
+    }
+
+    # Parent class, if any. (XXX need to handle package vs lexical scope
+    # properly, nested packages, etc).
+    if $<package_def><parent> {
+        $*PACKAGE-SETUP.push(PAST::Op.new(
+            :pasttype('callmethod'), :name('add_parent'),
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('get_how'),
+                PAST::Var.new( :name('type_obj'), :scope('register') )
+            ),
+            PAST::Var.new( :name('type_obj'), :scope('register') ),
+            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('package') )
+        ));
     }
 
     # Postfix it with a call to compose.
@@ -387,9 +427,15 @@ sub package($/) {
         PAST::Var.new( :name('type_obj'), :scope('register') )
     ));
 
-    # Set up lexical for the type object to live in.
-    @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
-    @BLOCK[0].symbol($name, :scope('lexical'));
+    # Set up lexical for lexical packages; otherwise, just record that it
+    # lives in the package.
+    if $*SCOPE eq 'my' {
+        @BLOCK[0][0].unshift(PAST::Var.new( :name($name), :scope('lexical'), :isdecl(1) ));
+        @BLOCK[0].symbol($name, :scope('lexical'));
+    }
+    else {
+        @BLOCK[0].symbol($name, :scope('package'));
+    }
 
     # Evaluate anything else in the package in-line; also give it a $?CLASS
     # lexical.
@@ -415,9 +461,9 @@ method scope_declarator:sym<our>($/) { make $<scoped>.ast; }
 method scope_declarator:sym<has>($/) { make $<scoped>.ast; }
 
 method scoped($/) {
-    make $<declarator>
-         ?? $<declarator>.ast
-         !! $<multi_declarator>.ast;
+    make $<declarator>       ?? $<declarator>.ast       !!
+         $<multi_declarator> ?? $<multi_declarator>.ast !!
+                                $<package_declarator>.ast;
 }
 
 method declarator($/) {
@@ -451,7 +497,7 @@ method variable_declarator($/) {
             PAST::Var.new( :name('type_obj'), :scope('register') ),
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new'),
-                PAST::Var.new( :name($meta-attr-type), :scope('package') ),
+                PAST::Var.new( :name($meta-attr-type), :scope('lexical') ),
                 PAST::Val.new( :value($name), :named('name') )
             )
         ));
@@ -472,58 +518,87 @@ method routine_declarator:sym<sub>($/) { make $<routine_def>.ast; }
 method routine_declarator:sym<method>($/) { make $<method_def>.ast; }
 
 method routine_def($/) {
-    my $past := $<blockoid>.ast;
-    $past.blocktype('declaration');
-    $past.control('return_pir');
+    # If it's just got * as a body, make a multi-dispatch enterer.
+    # Otherwise, need to build a sub.
+    my $past;
+    if $<onlystar> {
+        $past := only_star_block();
+    }
+    else {
+        $past := $<blockoid>.ast;
+        $past.blocktype('declaration');
+        $past.control('return_pir');
+    }
+
     if $<deflongname> {
         my $name := ~$<sigil>[0] ~ $<deflongname>[0].ast;
         $past.name($name);
         if $*SCOPE eq '' || $*SCOPE eq 'my' {
             if $*MULTINESS eq 'multi' {
-                my $chname := '!' ~ $name ~ '-candidates';
-                my $cholder;
                 # Does the current block have a candidate holder in place?
-                my %sym := @BLOCK[0].symbol($chname);
-                if %sym {
+                my $cholder;
+                my %sym := @BLOCK[0].symbol($name);
+                if %sym<cholder> {
                     $cholder := %sym<cholder>;
                 }
                 
                 # Otherwise, no candidate holder, so add one.
                 else {
                     # Check we have a proto in scope.
-                    my $found := 0;
+                    if %sym<proto> {
+                        # WTF, a proto is in this scope, but didn't set up a
+                        # candidate holder?!
+                        $/.CURSOR.panic('Internal Error: Current scope has a proto, but no candidate list holder was set up. (This should never happen.)');
+                    }
+                    my $found_proto;
                     for @BLOCK {
                         my %sym := $_.symbol($name);
-                        if %sym {
-                            if %sym<proto> {
-                                $found := 1;
-                                last;
-                            }
-                            else {
-                                $/.CURSOR.panic("multi cannot be declared when only in scope");
-                            }
+                        if %sym<proto> || %sym<cholder> {
+                            $found_proto := 1;
+                        }
+                        elsif %sym {
+                            $/.CURSOR.panic("Cannot declare a multi when an only is already in scope.");
                         }
                     }
-                    unless $found {
-                        $/.CURSOR.panic("multi cannot be declared without a proto in scope");
+
+                    # If we didn't find a proto, error for now.
+                    unless $found_proto {
+                        $/.CURSOR.panic("Sorry, no proto sub in scope, and auto-generation of protos is not yet implemented.");
                     }
 
-                    # Valid to add a candidate holder, so do so.
-                    $cholder := PAST::Op.new(
-                        :pasttype('call'), :name('list'),
+                    # Set up dispatch routine in this scope.
+                    $cholder := PAST::Op.new( :pasttype('list') );
+                    my $dispatch_setup := PAST::Op.new(
+                        :pasttype('nqpop'), :name('create_dispatch_and_add_candidates'),
+                        PAST::Var.new( :name($name), :scope('outer') ),
+                        $cholder
                     );
-                    @BLOCK[0][0].push(PAST::Var.new( :name($chname), :isdecl(1),
-                                      :viviself($cholder), :scope('lexical') ) );
-                    @BLOCK[0].symbol($chname, :cholder($cholder) );
+                    @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
+                                      :viviself($dispatch_setup), :scope('lexical') ) );
+                    @BLOCK[0].symbol($name, :scope('lexical'), :cholder($cholder) );
                 }
 
                 # Add this candidate to the holder.
                 $cholder.push($past);
             }
+            elsif $*MULTINESS eq 'proto' {
+                # Create a candidate list holder for the dispatchees
+                # this proto will work over, and install them along
+                # with the proto.
+                my $cholder := PAST::Op.new( :pasttype('list') );
+                @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
+                                      :viviself($past), :scope('lexical') ) );
+                @BLOCK[0][0].push(PAST::Op.new(
+                    :pasttype('nqpop'), :name('set_dispatchees'),
+                    PAST::Var.new( :name($name) ),
+                    $cholder
+                ));
+                @BLOCK[0].symbol($name, :scope('lexical'), :proto(1), :cholder($cholder) );
+            }
             else {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
-                @BLOCK[0].symbol($name, :scope('lexical'), :proto($*MULTINESS eq 'proto') );
+                @BLOCK[0].symbol($name, :scope('lexical') );
             }
             $past := PAST::Var.new( :name($name) );
         }
@@ -536,20 +611,37 @@ method routine_def($/) {
 
 
 method method_def($/) {
-    # Build method block PAST.
-    my $past := $<blockoid>.ast;
-    $past.blocktype('declaration');
-    if $*SCOPE eq 'our' {
-        $past.pirflags(':nsentry');
+    # If it's just got * as a body, make a multi-dispatch enterer.
+    # Otherwise, build method block PAST.
+    my $past;
+    if $<onlystar> {
+        $past := only_star_block();
     }
-    $past.control('return_pir');
+    else {
+        $past := $<blockoid>.ast;
+        $past.blocktype('declaration');
+        $past.control('return_pir');
+    }
+
+    # Always need an invocant.
     $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
     $past.symbol('self', :scope('lexical') );
     
     # Provided it's named, install it in the methods table.
     if $<deflongname> {
+        # Set name.
         my $name := ~$<deflongname>[0].ast;
         $past.name($name);
+
+        # If it's a proto, we'll mark it as such by giving it an empty candidate
+        # list.
+        my $to_add := $*MULTINESS ne 'proto' ??
+            PAST::Val.new( :value($past) )   !!
+            PAST::Op.new(
+                :pasttype('nqpop'), :name('set_dispatchees'),
+                PAST::Val.new( :value($past) ),
+                PAST::Op.new( :pasttype('list') )
+            );
         $*PACKAGE-SETUP.push(PAST::Op.new(
             :pasttype('callmethod'), :name($*MULTINESS eq 'multi' ?? 'add_multi_method' !! 'add_method'),
             PAST::Op.new(
@@ -558,13 +650,21 @@ method method_def($/) {
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
             PAST::Val.new( :value($name) ),
-            PAST::Val.new( :value($past) )
+            $to_add
         ));
     }
     
     make $past;
 }
 
+sub only_star_block() {
+    my $past := @BLOCK.shift;
+    $past.closure(1);
+    $past.push(PAST::Op.new(
+        :pasttype('nqpop'), :name('multi_dispatch_over_lexical_candidates')
+    ));
+    $past
+}
 
 method signature($/) {
     my $BLOCKINIT := @BLOCK[0][0];
@@ -607,16 +707,57 @@ method parameter($/) {
         $past.multitype($<typename>[0].ast);
     }
 
+    # Set definedness flag (XXX perhaps want a better way to do this).
+    if $<definedness> {
+        $past<definedness> := ~$<definedness>[0];
+    }
+
     make $past;
 }
 
 method typename($/) {
-    my @name := HLL::Compiler.parse_name(~$/);
-    make PAST::Var.new(
-        :name(@name.pop),
-        :namespace(@name),
-        :scope('package')
-    );
+    if is_lexical(~$/) {
+        make PAST::Var.new(
+            :name(~$/),
+            :scope('lexical')
+        );
+    }
+    else {
+        my @name := HLL::Compiler.parse_name(~$/);
+        make PAST::Var.new(
+            :name(@name.pop),
+            :namespace(@name),
+            :scope('package')
+        );
+    }
+}
+
+# Check if something is a lexical or not.
+sub is_lexical($name) {
+    # XXX Big hack for now, until we can really look at the contents
+    # of the setting.
+    my %setting_names;
+    %setting_names<KnowHOW>          := 1;
+    %setting_names<KnowHOWAttribute> := 1;
+    %setting_names<NQPStr>           := 1;
+    %setting_names<NQPInt>           := 1;
+    %setting_names<NQPNum>           := 1;
+    %setting_names<NQPList>          := 1;
+    %setting_names<NQPArray>         := 1;
+    %setting_names<NQPHash>          := 1;
+    %setting_names<Any>              := 1;
+    if %setting_names{$name} {
+        return 1;
+    }
+    for @BLOCK {
+        my %sym := $_.symbol($name);
+        if %sym {
+            if %sym<scope> eq 'lexical' {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 method param_var($/) {
@@ -731,11 +872,16 @@ method term:sym<identifier>($/) {
 }
 
 method term:sym<name>($/) {
-    my @ns := pir::clone__PP($<name><identifier>);
-    my $name := @ns.pop;
-    @ns.shift if @ns && @ns[0] eq 'GLOBAL';
-    my $var :=
-        PAST::Var.new( :name(~$name), :namespace(@ns), :scope('package') );
+    my $var;
+    if is_lexical(~$<name>) {
+        $var := PAST::Var.new( :name(~$<name>), :scope('lexical') );
+    }
+    else {
+        my @ns := pir::clone__PP($<name><identifier>);
+        my $name := @ns.pop;
+        @ns.shift if @ns && @ns[0] eq 'GLOBAL';
+        $var := PAST::Var.new( :name(~$name), :namespace(@ns), :scope('package') );
+    }
     my $past := $var;
     if $<args> {
         $past := $<args>[0].ast;
@@ -750,6 +896,12 @@ method term:sym<nqp::op>($/) {
     $past.name($op_name);
     $past.pasttype('nqpop');
     make $past;
+}
+
+method term:sym<onlystar>($/) {
+    make PAST::Op.new(
+        :pasttype('nqpop'), :name('multi_dispatch_over_lexical_candidates')
+    );
 }
 
 method args($/) { make $<arglist>.ast; }
@@ -827,19 +979,19 @@ method semilist($/) { make $<statement>.ast }
 
 method postcircumfix:sym<[ ]>($/) {
     make PAST::Var.new( $<EXPR>.ast , :scope('keyed_int'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('@')) );
 }
 
 method postcircumfix:sym<{ }>($/) {
     make PAST::Var.new( $<EXPR>.ast , :scope('keyed'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('%')) );
 }
 
 method postcircumfix:sym<ang>($/) {
     make PAST::Var.new( $<quote_EXPR>.ast, :scope('keyed'),
-                        :viviself('Undef'),
+                        :viviself(vivitype('$')),
                         :vivibase(vivitype('%')) );
 }
 
@@ -855,6 +1007,32 @@ method number($/) {
     my $value := $<dec_number> ?? $<dec_number>.ast !! $<integer>.ast;
     if ~$<sign> eq '-' { $value := -$value; }
     make PAST::Val.new( :value($value) );
+}
+
+# XXX Overridden from HLL::Actions because it relies on PIR concat.
+method quote_delimited($/) {
+    my @parts;
+    my $lastlit := '';
+    for $<quote_atom> {
+        my $ast := $_.ast;
+        if !PAST::Node.ACCEPTS($ast) {
+            $lastlit := $lastlit ~ $ast;
+        }
+        elsif $ast.isa(PAST::Val) {
+            $lastlit := $lastlit ~ $ast.value;
+        }
+        else {
+            if $lastlit gt '' { @parts.push($lastlit); }
+            @parts.push($ast);
+            $lastlit := '';
+        }
+    }
+    if $lastlit gt '' { @parts.push($lastlit); }
+    my $past := @parts ?? @parts.shift !! '';
+    while @parts {
+        $past := PAST::Op.new( :pasttype('call'), :name('&infix:<~>'), $past, @parts.shift );
+    }
+    make $past;
 }
 
 method quote:sym<apos>($/) { make $<quote_EXPR>.ast; }
@@ -894,7 +1072,7 @@ method quote:sym</ />($/, $key?) {
 method quote_escape:sym<$>($/) { make $<variable>.ast; }
 method quote_escape:sym<{ }>($/) {
     make PAST::Op.new(
-        :pirop('set S*'), block_immediate($<block>.ast), :node($/)
+        :pasttype('callmethod'), :name('Stringy'), block_immediate($<block>.ast), :node($/)
     );
 }
 method quote_escape:sym<esc>($/) { make "\c[27]"; }

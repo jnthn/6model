@@ -1,5 +1,11 @@
 package Rakudo.Runtime;
 
+import Rakudo.Runtime.Context;
+
+
+
+
+
 /// <summary>
 /// An execution domain is the root of all state we keep around for a
 /// running Perl 6 program. We may manage to have multiple of these in
@@ -7,6 +13,9 @@ package Rakudo.Runtime;
 /// </summary>
 public class ExecutionDomain
 {
-
+    /// <summary>
+    /// The currently active setting.
+    /// </summary>
+    public Context Setting;
 }
 

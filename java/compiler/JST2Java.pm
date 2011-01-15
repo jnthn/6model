@@ -103,6 +103,22 @@ our multi sub java_for(JST::TryFinally $tf) {
     return $code;
 }
 
+our multi sub java_for(JST::TryCatch $tc) {
+    unless +@($tc) == 2 { pir::die('JST::TryCatch nodes must have 2 children') }
+    my $try_result := get_unique_global_name('trycatch_result','');
+    my $code := "        RakudoObject $try_result;\n" ~
+                "        try \{\n" ~
+                java_for((@($tc))[0]);
+    $code := $code ~
+                "        $try_result = $*LAST_TEMP;\n" ~
+                "        } catch(" ~ $tc.exception_type ~ " " ~ $tc.exception_var ~ ")\{\n" ~
+                java_for((@($tc))[1]) ~
+                "        $try_result = $*LAST_TEMP;\n" ~
+                "        }\n";
+    $*LAST_TEMP := $try_result;
+    return $code;
+}
+
 our multi sub java_for(JST::MethodCall $mc) {
     # Code generate all the arguments.
     my @arg_names;
@@ -120,40 +136,44 @@ our multi sub java_for(JST::MethodCall $mc) {
     unless $mc.void {
         my $ret_type := $mc.type || 'var';
         $*LAST_TEMP := get_unique_global_name('result','methcall');
-        my $method_name := "$invocant." ~ $mc.name;
+        my $method_name := $invocant ~ "." ~ $mc.name;
+        # the next bit is very hacky, should be handled upstream in
+        # PAST2JSTCompiler.pm
         if $ret_type eq 'var' && $method_name eq 'Ops.unbox_str'
         {
             $ret_type := 'String';
         }
         if $ret_type eq 'var' && (
-            $method_name eq 'CaptureHelper.FormWith' ||
-            $method_name eq 'Ops.add_int' ||
-            $method_name eq 'Ops.box_str' ||
-            $method_name eq 'Ops.coerce_int_to_num' ||
-            $method_name eq 'Ops.coerce_int_to_str' ||
-            $method_name eq 'Ops.coerce_num_to_int' ||
-            $method_name eq 'Ops.coerce_num_to_str' ||
-            $method_name eq 'Ops.concat' ||
-            $method_name eq 'Ops.div_int' ||
-            $method_name eq 'Ops.equal_ints' ||
-            $method_name eq 'Ops.equal_nums' ||
-            $method_name eq 'Ops.equal_strs' ||
-            $method_name eq 'Ops.get_how' ||
-            $method_name eq 'Ops.get_what' ||
-            $method_name eq 'Ops.instance_of' ||
-            $method_name eq 'Ops.lllist_elems' ||
-            $method_name eq 'Ops.lllist_get_at_pos' ||
-            $method_name eq 'Ops.logical_not_int' ||
+#           $method_name eq 'CaptureHelper.FormWith' ||
+#           $method_name eq 'Ops.add_int' ||
+#           $method_name eq 'Ops.box_str' ||
+#           $method_name eq 'Ops.coerce_int_to_num' ||
+#           $method_name eq 'Ops.coerce_int_to_str' ||
+#           $method_name eq 'Ops.coerce_num_to_int' ||
+#           $method_name eq 'Ops.coerce_num_to_str' ||
+#           $method_name eq 'Ops.concat' ||
+#           $method_name eq 'Ops.div_int' ||
+#           $method_name eq 'Ops.equal_ints' ||
+#           $method_name eq 'Ops.equal_nums' ||
+#           $method_name eq 'Ops.equal_strs' ||
+#           $method_name eq 'Ops.get_how' ||
+#           $method_name eq 'Ops.get_what' ||
+#           $method_name eq 'Ops.instance_of' ||
+            $method_name eq 'Ops.leave_block' ||
+#           $method_name eq 'Ops.lllist_elems' ||
+#           $method_name eq 'Ops.lllist_get_at_pos' ||
+#           $method_name eq 'Ops.logical_not_int' ||
             $method_name eq 'Ops.multi_dispatch_over_lexical_candidates' ||
-            $method_name eq 'Ops.mod_int' ||
-            $method_name eq 'Ops.mul_int' ||
-            $method_name eq 'Ops.sub_int' ||
-            $method_name eq 'StaticBlockInfo[1].StaticLexPad.SetByName' # WTF?
+#           $method_name eq 'Ops.mod_int' ||
+#           $method_name eq 'Ops.mul_int' ||
+#           $method_name eq 'Ops.sub_int' ||
+            $method_name eq 'Ops.throw_dynamic' ||
+            $method_name eq 'Ops.throw_lexical'
         ) {
             $ret_type := 'RakudoObject';
         }
         $code := $code ~ "$ret_type $*LAST_TEMP = ";
-        if $ret_type eq 'var' { $code := $code ~ "// var should be " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
+        if $ret_type eq 'var' { $code := $code ~ "// var from " ~ $invocant ~ "." ~ $mc.name ~ "\n"; }
     }
     $code := $code ~ "$invocant." ~ $mc.name ~
         "(" ~ pir::join(', ', @arg_names) ~ "); // JST::MethodCall\n";
@@ -213,17 +233,19 @@ our multi sub java_for(JST::If $if) {
     # Get the conditional and emit if.
     my $code := java_for((@($if))[0]);
     $code := $code ~
-             "        RakudoObject $if_result = null; // JST::If\n" ~
+             "        RakudoObject $if_result = null; // JST::If A\n" ~
              "        if ($*LAST_TEMP != 0) \{\n";
 
     # Compile branch(es).
+    $*LAST_TEMP := 'null';
     $code := $code ~ java_for((@($if))[1]);
-    $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
+    $code := $code ~ "        // $if_result = $*LAST_TEMP; // JST::If B\n" ~
                      "        }\n";
     if +@($if) == 3 {
+        $*LAST_TEMP := 'null';
         $code := $code ~ "        else \{\n";
         $code := $code ~ java_for((@($if))[2]);
-        $code := $code ~ "        $if_result = $*LAST_TEMP;\n" ~
+        $code := $code ~ "        $if_result = $*LAST_TEMP; // JST::If C\n" ~
                          "        }\n";
     }
 
@@ -232,11 +254,11 @@ our multi sub java_for(JST::If $if) {
 }
 
 our multi sub java_for(JST::Label $lab) {
-    return "      " ~ $lab.name ~ ": // JST::Label\n";
+    return "      " ~ $lab.name ~ ": ; // JST::Label\n";
 }
 
 our multi sub java_for(JST::Goto $gt) {
-    return "        goto " ~ $gt.label ~ "; // JST::Goto\n";
+    return "// DO NOT WANT  goto " ~ $gt.label ~ "; // JST::Goto\n";
 }
 
 our multi sub java_for(JST::Temp $tmp) {
@@ -260,7 +282,7 @@ our multi sub java_for(JST::Bind $bind) {
 }
 
 our multi sub java_for(JST::Literal $lit) {
-    if $lit.escape {
+    if $lit.escape {  # the C# version is much simpler because @"" strings can contain control characters
         my $str_in := $lit.value;
         my $str_out := '';
         while pir::length($str_in) {
@@ -275,6 +297,11 @@ our multi sub java_for(JST::Literal $lit) {
         $*LAST_TEMP := $lit.value;
     }
     return '';
+}
+
+our multi sub java_for(JST::Throw $throw) {
+    $*LAST_TEMP := 'null';
+    return "        throw new UnsupportedOperationException(); // JST::Throw\n";
 }
 
 our multi sub java_for(String $s) {

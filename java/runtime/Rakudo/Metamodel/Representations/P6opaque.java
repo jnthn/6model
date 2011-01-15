@@ -18,8 +18,7 @@ import Rakudo.Serialization.SerializationContext;
 /// can. Alas, that's Quite Tricky to write, so for now we just do
 /// something easy, but at least with the hints.
 /// </summary>
-public final class P6opaque implements Representation
-//public sealed class P6opaque : Representation
+public final class P6opaque implements Representation // C# has sealed
 {
     /// <summary>
     /// This stores a mapping of classes/names to slots in the event

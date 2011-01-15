@@ -262,7 +262,7 @@ token variable {
     | $<sigil>=['$'] $<desigilname>=[<[/_!]>]
 }
 
-token sigil { <[$@%&]> }
+token sigil { <[$@%&]> | '::' }
 
 token twigil { <[*!?]> }
 
@@ -308,6 +308,7 @@ token scope_declarator:sym<has> { <sym> <scoped('has')> }
 rule scoped($*SCOPE) {
     | <declarator>
     | <multi_declarator>
+    | <package_declarator>
 }
 
 token typename { <name> }
@@ -328,7 +329,10 @@ rule routine_def {
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
-    <blockoid>
+    [
+    | <onlystar>
+    | <blockoid>
+    ]
 }
 
 rule method_def {
@@ -336,7 +340,17 @@ rule method_def {
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
-    <blockoid>
+    [
+    | <onlystar>
+    | <blockoid>
+    ]
+}
+
+token onlystar {
+    <?{ $*MULTINESS eq 'proto' }>
+    '{' <.ws> '*' <.ws> '}'
+    <?ENDSTMT>
+    <.finishpad>
 }
 
 proto token multi_declarator { <...> }
@@ -358,7 +372,7 @@ token multi_declarator:sym<null> {
 token signature { [ [<.ws><parameter><.ws>] ** ',' ]? }
 
 token parameter {
-    [ <typename> <.ws> ]*                   # <type_constraint>
+    [ <typename> [ ':' $<definedness>=<[_DU]> ]? <.ws> ]*                   # <type_constraint>
     [
     | $<quant>=['*'] <param_var>
     | [ <param_var> | <named_param> ] $<quant>=['?'|'!'|<?>]
@@ -422,6 +436,11 @@ token term:sym<name> {
 
 token term:sym<nqp::op> {
     'nqp::' $<op>=[\w+] <args>?
+}
+
+token term:sym<onlystar> {
+    '{*}' <?ENDSTMT>
+    [ <?{ $*MULTINESS eq 'proto' }> || <.panic: '{*} may only appear in proto'> ]
 }
 
 token args {

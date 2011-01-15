@@ -1,3 +1,5 @@
+// Ops.java is equivalent to the combination of Ops partial class
+// definitions in the following files: Boxing.cs, 
 package Rakudo.Runtime;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class Ops  // public static in the C# version
 {
     /// <summary>
     /// Creates a type object associated with the given HOW and of the
-    /// given representation.
+    /// given representation. See Representation.cs
     /// </summary>
     /// <param name="HOW"></param>
     /// <param name="REPRName"></param>
@@ -34,7 +36,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Create an instance of an object.
+    /// Create an instance of an object. See Representation.cs
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
@@ -44,7 +46,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Checks if the representation considers the object defined.
+    /// Checks if the representation considers the object defined. See Representation.cs
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
@@ -54,7 +56,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Gets the value of an attribute.
+    /// Gets the value of an attribute. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="Class"></param>
@@ -66,7 +68,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Gets the value of an attribute, using the given hint.
+    /// Gets the value of an attribute, using the given hint. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="Class"></param>
@@ -79,7 +81,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Binds the value of an attribute to the given value.
+    /// Binds the value of an attribute to the given value. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="Class"></param>
@@ -90,9 +92,9 @@ public class Ops  // public static in the C# version
         return value;
     }
 
-    /// Binds the value of an attribute to the given value, using the
     /// <summary>
-    /// given hint.
+    /// Binds the value of an attribute to the given value, using the
+    /// given hint. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="Class"></param>
@@ -105,7 +107,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Finds a method to call by name.
+    /// Finds a method to call by name. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="name"></param>
@@ -116,7 +118,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Finds a method to call, using the hint if available.
+    /// Finds a method to call, using the hint if available. See Representation.cs
     /// </summary>
     /// <param name="object"></param>
     /// <param name="name"></param>
@@ -128,7 +130,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Invokes the given method.
+    /// Invokes the given method. See Representation.cs
     /// </summary>
     /// <param name="Invokee"></param>
     /// <param name="Capture"></param>
@@ -139,7 +141,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Gets the HOW (higher order workings, e.g. meta-package).
+    /// Gets the HOW (higher order workings, e.g. meta-package). See Representation.cs
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
@@ -149,7 +151,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Gets the WHAT (type object).
+    /// Gets the WHAT (type object). See Representation.cs
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
@@ -159,7 +161,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Boxes a native int into its matching value type.
+    /// Boxes a native int into its matching value type.  See Boxing.cs
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
@@ -172,7 +174,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Boxes a native num into its matching value type.
+    /// Boxes a native num into its matching value type. See Boxing.cs
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
@@ -185,7 +187,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Boxes a native string into its matching value type.
+    /// Boxes a native string into its matching value type. See Boxing.cs
     /// </summary>
     /// <param name="Value"></param>
     /// <returns></returns>
@@ -198,7 +200,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Unboxes a boxed int.
+    /// Unboxes a boxed int. See Boxing.cs
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
@@ -208,7 +210,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Unboxes a boxed num.
+    /// Unboxes a boxed num. See Boxing.cs
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
@@ -218,7 +220,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Unboxes a boxed string.
+    /// Unboxes a boxed string. See Boxing.cs
     /// </summary>
     /// <param name="Boxed"></param>
     /// <returns></returns>
@@ -228,7 +230,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Coerces an integer into a string.
+    /// Coerces an integer into a string. See Coercion.cs
     /// </summary>
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
@@ -240,7 +242,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Coerces a floating point number into a string.
+    /// Coerces a floating point number into a string. See Coercion.cs
     /// </summary>
     /// <param name="Num"></param>
     /// <param name="TargetType"></param>
@@ -252,7 +254,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Coerces an integer into a floating point number.
+    /// Coerces an integer into a floating point number.  See Coercion.cs
     /// </summary>
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
@@ -264,7 +266,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Coerces a floating point number into an integer.
+    /// Coerces a floating point number into an integer.  See Coercion.cs
     /// </summary>
     /// <param name="Int"></param>
     /// <param name="TargetType"></param>
@@ -276,7 +278,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Coerces a string into an integer.
+    /// Coerces a string into an integer.  See Coercion.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Str"></param>
@@ -290,7 +292,7 @@ public class Ops  // public static in the C# version
 
 
     /// <summary>
-    /// Coerces a string into an number.
+    /// Coerces a string into an number.  See Coercion.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Str"></param>
@@ -304,7 +306,7 @@ public class Ops  // public static in the C# version
 
 
     /// <summary>
-    /// Gets a lexical variable of the given name.
+    /// Gets a lexical variable of the given name. See Variables.cs
     /// </summary>
     /// <param name="i"></param>
     /// <param name="name"></param>
@@ -324,7 +326,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Gets a lexical variable of the given name, but skips the current
-    /// scope.
+    /// scope. See Variables.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="name"></param>
@@ -344,7 +346,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Binds the given value to a lexical variable of the given name.
+    /// Binds the given value to a lexical variable of the given name. See Variables.cs
     /// </summary>
     /// <param name="i"></param>
     /// <param name="name"></param>
@@ -366,7 +368,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Looks up a variable in the dynamic scope.
+    /// Looks up a variable in the dynamic scope. See Variables.cs
     /// </summary>
     /// <param name="C"></param>
     /// <param name="name"></param>
@@ -385,7 +387,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Binds the given value to a variable in the dynamic scope.
+    /// Binds the given value to a variable in the dynamic scope. See Variables.cs
     /// </summary>
     /// <param name="C"></param>
     /// <param name="name"></param>
@@ -407,7 +409,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two floating point numbers for equality.
+    /// Compares two floating point numbers for equality.  See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -421,7 +423,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two integers for equality.
+    /// Compares two integers for equality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -435,7 +437,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two strings for equality.
+    /// Compares two strings for equality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -449,7 +451,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares reference equality.
+    /// Compares reference equality. See Comparison.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="x"></param>
@@ -461,7 +463,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two floating point numbers for less-than inequality.
+    /// Compares two floating point numbers for less-than inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -475,7 +477,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two integers for less-than inequality.
+    /// Compares two integers for less-than inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -489,7 +491,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two floating point numbers for less-than-or-equal inequality.
+    /// Compares two floating point numbers for less-than-or-equal inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -503,7 +505,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two integers for less-than-or-equal inequality.
+    /// Compares two integers for less-than-or-equal inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -517,7 +519,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two floating point numbers for greater-than inequality.
+    /// Compares two floating point numbers for greater-than inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -531,7 +533,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two integers for greater-than inequality.
+    /// Compares two integers for greater-than inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -545,7 +547,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two floating point numbers for greater-than-or-equal inequality.
+    /// Compares two floating point numbers for greater-than-or-equal inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -559,7 +561,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Compares two integers for greater-than-or-equal inequality.
+    /// Compares two integers for greater-than-or-equal inequality. See Comparison.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -573,13 +575,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Logical not.
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="ResultType"></param>
-    /// <returns></returns>
-    /// <summary>
-    /// Logical not.
+    /// Logical not. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="ResultType"></param>
@@ -590,7 +586,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs an integer addition.
+    /// Performs an integer addition. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -602,7 +598,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs an integer subtraction.
+    /// Performs an integer subtraction. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -614,7 +610,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs an integer multiplication.
+    /// Performs an integer multiplication. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -626,7 +622,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs an integer division.
+    /// Performs an integer division. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -638,7 +634,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs an integer modulo.
+    /// Performs an integer modulo. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -650,7 +646,7 @@ public class Ops  // public static in the C# version
     }
 
     /// <summary>
-    /// Performs a string concatenation.
+    /// Performs a string concatenation. See Primitive.cs
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -663,11 +659,11 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Entry point to multi-dispatch over the candidates in the inner
-    /// dispatcher.
+    /// dispatcher. See Dispatch.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <returns></returns>
-    public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext tc, RakudoObject name)
+    public static RakudoObject multi_dispatch_over_lexical_candidates(ThreadContext tc)
     {
         Context curOuter = tc.CurrentContext;
         while (curOuter != null)
@@ -686,7 +682,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Sets the dispatches of the given code object. Expects something with
-    /// RakudoCodeRef and P6list representation respectively.
+    /// RakudoCodeRef and P6list representation respectively. See Dispatch.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="CodeObject"></param>
@@ -715,7 +711,7 @@ public class Ops  // public static in the C# version
     /// candidates. This may or may not hold up in the long run; it works out
     /// in the Perl 6-y "you can make a new instance from any object" sense
     /// though, and seems more likely to get the closure semantics right than
-    /// any of the other approaches I've considered so far.
+    /// any of the other approaches I've considered so far. See Dispatch.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="ToInstantiate"></param>
@@ -756,7 +752,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Adds a single new candidate to the end of a dispatcher's candidate
-    /// list.
+    /// list. See Dispatch.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Dispatcher"></param>
@@ -783,7 +779,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Checks if a routine is considered a dispatcher (that is, if it has a
-    /// candidate list).
+    /// candidate list). See Dispatch.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Check"></param>
@@ -800,7 +796,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Gets a value at a given positional index from a low level list
-    /// (something that uses the P6list representation).
+    /// (something that uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -820,7 +816,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Binds a value at a given positional index from a low level list
-    /// (something that uses the P6list representation).
+    /// (something that uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -854,7 +850,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Binds a value at a given positional index from a low level list
-    /// (something that uses the P6list representation).
+    /// (something that uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -873,7 +869,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Pushes a value to a low level list (something that
-    /// uses the P6list representation).
+    /// uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -893,7 +889,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Pops a value from a low level list (something that
-    /// uses the P6list representation).
+    /// uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -920,7 +916,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Shifts a value from a low level list (something that
-    /// uses the P6list representation).
+    /// uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -947,7 +943,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Unshifts a value to a low level list (something that
-    /// uses the P6list representation).
+    /// uses the P6list representation). See P6list.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLList"></param>
@@ -968,7 +964,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Gets a value at a given key from a low level mapping (something that
-    /// uses the P6mapping representation).
+    /// uses the P6mapping representation). See P6mapping.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
@@ -993,7 +989,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Binds a value at a given key from a low level mapping (something that
-    /// uses the P6mapping representation).
+    /// uses the P6mapping representation). See P6mapping.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
@@ -1020,7 +1016,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Gets the number of elements in a low level mapping (something that
-    /// uses the P6mapping representation).
+    /// uses the P6mapping representation). See P6mapping.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="LLMapping"></param>
@@ -1041,7 +1037,7 @@ public class Ops  // public static in the C# version
     /// If the first passed object reference is not null, returns it. Otherwise,
     /// returns the second passed object reference. (Note, we should one day drop
     /// this and implement it as a compiler transformation, to avoid having to
-    /// look up the thing to vivify).
+    /// look up the thing to vivify). See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Check"></param>
@@ -1054,7 +1050,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Leaves the specified block, returning the specified value from it. This
-    /// unwinds the stack.
+    /// unwinds the stack. See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Block"></param>
@@ -1067,7 +1063,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Throws the specified exception, looking for an exception handler in the
-    /// dynmaic scope.
+    /// dynamic scope. See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="ExceptionObject"></param>
@@ -1096,7 +1092,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Throws the specified exception, looking for an exception handler in the
-    /// lexical scope.
+    /// lexical scope. See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="ExceptionObject"></param>
@@ -1125,7 +1121,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Makes the outer context of the provided block be set to the current
-    /// context.
+    /// context. See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Block"></param>
@@ -1138,7 +1134,7 @@ public class Ops  // public static in the C# version
 
     /// <summary>
     /// Creates a clone of the given code object, and makes its outer context
-    /// be set to the current context.
+    /// be set to the current context. See ControlFlow.cs
     /// </summary>
     /// <param name="tc"></param>
     /// <param name="Block"></param>
@@ -1161,6 +1157,31 @@ public class Ops  // public static in the C# version
         // Set the outer for next invocation and return the cloned block.
         newBlock.OuterForNextInvocation = tc.CurrentContext;
         return newBlock;
+    }
+
+    /// <summary>
+    /// Loads a module (that is, some pre-compiled compilation unit that
+    /// was compiled using NQP). Expects the path minus an extension
+    /// (that is, the .class will be added). Returns what the body of the
+    /// compilation unit evaluated to. See Library.cs
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="Path"></param>
+    /// <returns></returns>
+    public static RakudoObject load_module(ThreadContext tc, RakudoObject path)
+    {
+        // Load the assembly and grab the first type in it.
+        //var assembly = AppDomain.CurrentDomain.Load(Ops.unbox_str(tc, path));
+        //var class = Assembly.GetTypes()[0];
+        
+        // Call the Load method, passing along the current thread context
+        // and the setting to use with it. What's returned is what the main
+        // body of the compilation unit evaluates to.
+        //var method = class.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static);
+        if (true) // sneak by the "unreachable code" monster
+            throw new UnsupportedOperationException("load_module NYI");        
+        return (RakudoObject)null;
+        //return (RakudoObject)method.Invoke.Invoke(null, new Object[] { tc, tc.Domain.Setting });
     }
 }
 

@@ -1,8 +1,7 @@
-# The Java Syntax Tree set of nodes is designed to represent fundemental
+# The Java Syntax Tree set of nodes is designed to represent fundamental
 # JVM concepts. This allows most of a PAST compiler for JVM to be
 # written and used to generate Java for now, but later we can generate
-# bytecode IL.
-# A tree must have the form:
+# bytecode IL.  A tree must have the form:
 #
 #    JST::CompilationUnit
 #        JST::Using
@@ -58,7 +57,7 @@ class JST::Stmts is JST::Node {
     }
 }
 
-class JST::Using is JST::Node {
+class JST::Using is JST::Node { # though Java's word for using is import
     has $!namespace;
 
     method namespace($set?) {
@@ -228,6 +227,36 @@ class JST::TryFinally is JST::Node {
     method new(*@children) {
         my $obj := self.CREATE;
         $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class JST::TryCatch is JST::Node {
+    has $!exception_type;
+    has $!exception_var;
+
+    method exception_type($set?) {
+        if $set { $!exception_type := $set }
+        $!exception_type
+    }
+
+    method exception_var($set?) {
+        if $set { $!exception_var := $set }
+        $!exception_var
+    }
+
+    method new(*@children, :$exception_type!, :$exception_var!) {
+        my $obj := self.CREATE;
+        $obj.exception_type($exception_type);
+        $obj.exception_var($exception_var);
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class JST::Throw is JST::Node {
+    method new() {
+        my $obj := self.CREATE;
         $obj;
     }
 }

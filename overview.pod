@@ -1,0 +1,212 @@
+=head1 6model Overview
+
+This document discusses the scope, aims, design principles and high-level
+architecture of 6model.
+
+
+=head2 Project Scope
+
+The Rakudo * release marked an important milestone in the development of
+the Rakudo Perl 6 compiler. However, it was a point on a journey, not a
+destination. Amongst the challenges facing Rakudo going forward were:
+
+=over 4
+
+=item Serious performance issues, in part because of the object model
+implementation. This was in many places due to semantic mismatches,
+which had been "fixed" by building a layer on top of what Parrot made
+available.
+
+=item No clear path to take advantage of gradual typing, both from an
+optimization angle and a static analysis angle.
+
+=item No way to support representation polymorphism, as required by the
+Perl 6 specification.
+
+=item Related to this, no obvious way forward with regard to supporting
+natively typed attributes, including complex packed structs.
+
+=item Insufficient meta-programming capabilities.
+
+=item Very close coupling to the Parrot VM, which would hinder any efforts
+to port Rakudo to other backends - something considered desirable in the
+medium term.
+
+=back
+
+The 6model project was started in order to research, design and implement
+a metamodel core that provided a way forward on all of these issues. While
+the Perl 6 project was the immediate customer for 6model, the high level
+of customizability that Perl 6 demands called for a design that would be
+flexible enough to implement a wide range of object orientated and
+type-related features.
+
+Currently, there is interest from the Parrot VM team in adopting 6model.
+Furtheremore, just as the compiler toolkit used to implement Rakudo aims
+to provide general solutions for implementing compilation for a range
+of languages, 6model is also built with a secondary aim of providing a
+starting point for implementing the object oriented aspects of a range
+of languages.
+
+It's useful to distinguish 6model from the various NQP porting efforts,
+which at the time of writing also live in the 6model repository. The term
+"6model" was intended to only relate to the meta-model core itself. Since
+one can't actually *do* anything with just that, and since it helped with
+other goals, there is a parallel effort to port the NQP language to the
+.Net CLR and the JVM. These implementations use 6model for all their OO
+needs, but actually provide an awful lot more (that is, all the other bits
+of compiler and runtime support that are needed to have an increasingly
+complete implementation of the NQP language). Additionally, the Parrot NQP
+implementation is being (or by the time you read this, maybe has been)
+forked and re-built to use 6model rather than the Parrot object model.
+
+
+=head2 Design Principles
+
+The following principles guide a lot of the design decisions made with
+regard to 6model, and are a good starting point for understanding why
+it is structured the way it is.
+
+=over 4
+
+=item Minimal, non-commital core: out of the box, 6model provides very
+minimal object oriented functionality. It provides one meta-object that
+implements objects with attributes (state) and methods (behavior) - and
+that's about it. It doesn't enforce one definition of method dispatch,
+inheritance, interfaces, introspection and so forth. These are all built
+up by implementing meta-objects that specify their semantics.
+
+=item Representation polymorphism: rather than committing to one view of
+how to lay out an object in memory, 6model supports "representations".
+Representations define how attributes are actually stored and accessed,
+how primitive types (integers, floating point values and strings) are
+boxed and unboxed - or perhaps both. Additionally, representations are
+orthogonal to meta-objects, meaning it is possible to define one type
+(e.g. a class) and use it with different storage stratergies.
+
+=item Gradual typing support: 6model tries to provide ways to pick points
+on the static-dynamic typing scale. For languages that themselves support
+gradual typing, this is directly useful. However, it means that one could
+implement object models that are completely dynamic or completely static.
+Objects where method calls are dispatched by a fast lookup in a v-table
+are just as possible as objects where method calls dynamically build a
+call to a web service.
+
+=item Portable between virtual machines: by using 6model, it should
+become easier to make a compiler that is portable between VMs. Currently
+6model implementations in varying states of completeness exist on Parrot,
+the .Net CLR and the JVM.
+
+=item Meta-objects are authoritative: in an ideal world, every single
+method dispatch we perform would be conducted by delegating to the
+meta-object's method that implements method dispatch semantics. In the
+real world, that's not practical from a performance point of view. Thus
+6model provides various mechanisms that a meta-object can "opt in" to in
+order to allow for muchly increased performance. However, it considers all
+of these to really just be a kind of "cache". A v-table is just an array
+of invokable objects published by the meta-object, which it is responsible
+for maintaining. Similar things apply to type-checking.
+
+=back
+
+
+=head2 Data Structures
+
+At the heart of 6model are three core types of data structure.
+
+=over 4
+
+=item Objects: other than native types, everything that the user ever interacts
+with directly - that is, anything that makes it into lexpads, locals, packages,
+attributes and other storage locations - is an object. This is the only user-facing
+data structure in 6model. An object is a blob of memory. The only constraint is
+that the first thing in the blob must be a pointer/reference to a Shared Table
+data structure.
+
+=item Representations: an object may in the abstract be a blob of memory that starts
+with a pointer to a Shared Table, but of course something has to know what the rest
+of it means. That's what representations do. A representation is responsible for
+object allocation, attribute storage and access (both in terms of memory layout and
+operation), boxing from and unboxing to native types and (depending on the VM) GC
+interaction. Representations may be like singletons, or they may act more like
+instances. How a representation is implemented is VM-specific; in fact, pretty much
+everything the representation has to do is also VM-specific. While it's expected
+that users of programming languages will (relatively) frequently engage in creating
+or customizing meta-objects, the use cases for writing custom representations are
+fewer.
+
+=item Shared Tables: for every object, there is a meta-object defining its
+semantics and a representation defining its memory layout. There are also some
+entities that should live outside of either of them, such as the cached v-table
+that some meta-objects may publish and a reference to the type object. However,
+many objects share these (for example, every instance of a class with the same
+representation). Rather than every object starting with a bunch of pointers, it
+instead has one pointer to a shared table containing these things. Thus individual
+objects stay small.
+
+=back
+
+So diagramatically:
+
+    +--------+       +----------------+
+    | Object |   +-->|  Shared Table  |
+    +--------+   |   +----------------+
+    | STABLE |---+   | Meta-object    |-----> Just another Object
+    |  ....  |       | Representation |-----> Representation data structure
+    |  ....  |       | V-table Cache  |-----> Array
+    +--------+       | Type object    |-----> Just another Object
+                     | <other bits>   |
+                     +----------------+
+
+Notice how meta-objects are in no way special; they are, in fact, just plain
+old objects that implement a special API. Similarly, type objects are just
+"empty instances" of objects. Whether an instance is empty or not is decided
+by the representation API.
+
+
+=head2 The relationship of representations and meta-objects
+
+Representations and meta-objects are orthogonal and take charge of different
+roles in an object's overall semantics. Being able to pair representations and
+meta-objects together gives rise to representation polymorphism. However,
+orthogonality does not mean they have no relationship at all. In particular,
+a representation will always know the meta-object of the type that it needs
+to provide a memory layout for.
+
+For example, take a class definition:
+
+  class Vodka {
+      has $!flavour;
+      has $!name;
+  }
+
+Now imagine a representation that has an object layout where attributes are
+stored as an array of pointers, with the name being mapped to a numbered slot.
+The representation needs to know that this class has two attributes, so that
+it can allocate enough memory to store them.
+
+There are representations that need not care about the meta-object. For example,
+a representation where attributes are simply stored in a hash table keyed on
+attribute name could just store whatever attribute name it is asked to. This
+would suit languages where the programmer need not declare what attributes they
+will have up front.
+
+The other case that can come up is a representation dedicated to cheaply boxing
+some native type, or that maps to some internal VM structure that should also
+be available to pass around as an opaque object (the CLR and JVM implementations
+of NQP make heavy use of this pattern). In this case, the representation doesn't
+have the capability to store attributes at all, so would just use the meta-object
+to check that it does not need to do so.
+
+
+=head2 Bootstrapping and circularity
+
+At "startup", a little bit of work is done to bootstrap the meta-model. At the
+heart of this is the setting up of KnowHOW, the single type of meta-object that
+is defined in the 6model core. An instance of it is created using a special
+representation (only special in that it's not used or useful for anything other
+than this bootstrap). This instance acts as the meta-object for all KnowHOW
+meta-objects, and is thus self-describing. Therefore, its meta-object pointer is
+set to point back on itself. Sound loopy? Good. That's the point.
+
+=cut

@@ -215,7 +215,8 @@ our multi sub java_for(JST::New $new) {
     $code := $code ~ "        " ~ $new.type ~ " $*LAST_TEMP = new ";
     $code := $code ~ $new.type;
     if $new.type eq 'RakudoCodeRef.IFunc_Body' {
-        $code := $code ~ "() \{ public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap ) \{ return ((RakudoCodeRef.Instance)Obj).Body.Invoke(TC, Obj, Cap);\}\}";
+        my $block_name := (@($new))[0];
+        $code := $code ~ "() \{ public RakudoObject Invoke( ThreadContext TC, RakudoObject Obj, RakudoObject Cap ) \{ return $block_name(TC, Obj, Cap);\}\}";
     }
     else {
         $code := $code ~ "(" ~ pir::join(', ', @arg_names) ~ ")";

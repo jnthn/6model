@@ -1,4 +1,4 @@
-knowhow NQPStr is repr('P6str') {
+my knowhow NQPStr is repr('P6str') {
     method new() {
         nqp::instance_of(self.WHAT);
     }
@@ -23,7 +23,7 @@ knowhow NQPStr is repr('P6str') {
     }
 }
 
-knowhow NQPInt is repr('P6int') {
+my knowhow NQPInt is repr('P6int') {
     method new() {
         nqp::instance_of(self.WHAT);
     }
@@ -47,7 +47,7 @@ knowhow NQPInt is repr('P6int') {
     }
 }
 
-knowhow NQPNum is repr('P6num') {
+my knowhow NQPNum is repr('P6num') {
     method new() {
         nqp::instance_of(self.WHAT);
     }
@@ -71,7 +71,7 @@ knowhow NQPNum is repr('P6num') {
     }
 }
 
-knowhow NQPList is repr('P6list') {
+my knowhow NQPList is repr('P6list') {
     method new() {
         nqp::instance_of(self.WHAT)
     }
@@ -86,7 +86,7 @@ knowhow NQPList is repr('P6list') {
     }
 }
 
-knowhow NQPArray is repr('P6list') {
+my knowhow NQPArray is repr('P6list') {
     method new() {
         nqp::instance_of(self.WHAT)
     }
@@ -104,7 +104,7 @@ knowhow NQPArray is repr('P6list') {
     }
 }
 
-knowhow NQPHash is repr('P6mapping') {
+my knowhow NQPHash is repr('P6mapping') {
     method new() {
         nqp::instance_of(self.WHAT)
     }

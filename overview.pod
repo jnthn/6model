@@ -83,7 +83,7 @@ Rather than committing to one view of how to lay out an object in memory,
 actually stored and accessed, how primitive types (integers, floating point
 values and strings) are boxed and unboxed - or perhaps both. Additionally,
 representations are orthogonal to meta-objects, meaning it is possible to
-define one type (e.g. a class) and use it with different storage stratergies.
+define one type (e.g. a class) and use it with different storage strategies.
 This is known as representation polymorphism.
 
 =head3 Gradual typing support

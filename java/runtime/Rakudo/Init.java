@@ -142,6 +142,7 @@ public class Init  // public static in the C# version
         }
         catch (ClassNotFoundException ex) {
             System.err.println("Class " + settingName + " not found: " + ex.getMessage());
+            ex.printStackTrace();
             System.exit(1);
         }
         catch ( Exception ex ) {
@@ -166,6 +167,7 @@ public class Init  // public static in the C# version
         }
         catch ( Exception ex ) {
             System.err.println("getMethod(\"LoadSetting\") exception: " + ex.getMessage());
+            ex.printStackTrace();
             System.exit(1);
         }
 

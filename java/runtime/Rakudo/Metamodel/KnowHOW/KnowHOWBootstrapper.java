@@ -96,6 +96,9 @@ public class KnowHOWBootstrapper  // public static in the C# version
                 // We go to some effort to be really fast in here, 'cus it's a
                 // hot path for dynamic dispatches.
                 RakudoObject[] Positionals = ((P6capture.Instance)capture).Positionals;
+                if (Positionals.length < 3) {
+                    throw new IllegalArgumentException("Positionals has only " + Positionals.length + " elements");
+                }
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)Positionals[0];
                 if (HOW.Methods.containsKey(Ops.unbox_str(tc, Positionals[2])))
                     return HOW.Methods.get(Ops.unbox_str(tc, Positionals[2]));

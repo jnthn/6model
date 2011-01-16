@@ -18,8 +18,10 @@
 #        |            |            |   | |    |     |    |     |
 #        |  +--+------+---------> RakudoCodeRef     |    |     |
 #        |  |  |                           |        |    |     |
-#        1  2  3         ExecutionDomain  Context   |    |     |
-#        |  |  |                      |      |      |    |     |
+#        |  |  |                       Context      |    |     |
+#        |  |  |                        |   |       |    |     |
+#        1  2  3           ExecutionDomain  |       |    |     |
+#        |  |  |                        |   |       |    |     |
 #        |  |  +--------------------- ThreadContext |    |     |
 #        |  |                                    |  |    |     |
 #        |  |              P6capture             |  |    |     |
@@ -49,6 +51,7 @@ CLASSES = classes/
 ALL_BUILD_TARGETS = \
 	$(CLASSES)Rakudo/Metamodel/Hints.class \
 	$(CLASSES)Rakudo/Serialization/SerializationContext.class \
+	$(CLASSES)Rakudo/Runtime/Context.class \
 	$(CLASSES)Rakudo/Runtime/ExecutionDomain.class \
 	$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
 	$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
@@ -77,7 +80,6 @@ OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6list.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/P6mapping.class \
 	$(CLASSES)Rakudo/Metamodel/Representations/RakudoCodeRef.class \
-	$(CLASSES)Rakudo/Runtime/Context.class \
 	$(CLASSES)Rakudo/Runtime/MultiDispatch/DispatchCache.class \
 	$(CLASSES)Rakudo/Runtime/MultiDispatch/MultiDispatcher.class \
 	$(CLASSES)Rakudo/Runtime/Ops.class \
@@ -112,8 +114,9 @@ $(CLASSES)Rakudo/Runtime/DefinednessConstraint.class: Rakudo/Runtime/Definedness
 $(CLASSES)Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.class: Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java
 	$(JAVAC) Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java
 
-$(CLASSES)Rakudo/Runtime/ExecutionDomain.class: Rakudo/Runtime/ExecutionDomain.java
-	$(JAVAC) Rakudo/Runtime/ExecutionDomain.java
+$(CLASSES)Rakudo/Runtime/Context.class: $(CLASSES)Rakudo/Metamodel/RakudoObject.class
+
+#	$(JAVAC) Rakudo/Runtime/ExecutionDomain.java
 
 # There is a long circular dependency from RakudoObject to SharedTable.
 # Handle it by compiling all the interdependent files in a single step.
@@ -132,6 +135,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/ExecutionDomain.java \
 		Rakudo/Runtime/Exceptions/ExceptionDispatcher.java \
 		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
@@ -154,6 +158,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
+		Rakudo/Runtime/ExecutionDomain.java \
 		Rakudo/Runtime/Exceptions/ExceptionDispatcher.java \
 		Rakudo/Runtime/Exceptions/Handler.java \
 		Rakudo/Runtime/Exceptions/LeaveStackUnwinderException.java \
@@ -244,8 +249,7 @@ $(CLASSES)Rakudo/Runtime/CodeObjectUtility.class: Rakudo/Runtime/CodeObjectUtili
 
 $(CLASSES)Rakudo/Runtime/SignatureBinder.class: Rakudo/Runtime/SignatureBinder.java \
 		$(CLASSES)Rakudo/Metamodel/RakudoObject.class \
-		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class \
-		$(CLASSES)Rakudo/Runtime/Context.class
+		$(CLASSES)Rakudo/Metamodel/Representations/P6capture.class
 	$(JAVAC) Rakudo/Runtime/SignatureBinder.java
 
 $(CLASSES)Rakudo/Init.class: Rakudo/Init.java \
@@ -261,8 +265,6 @@ $(CLASSES)Rakudo/Init.class: Rakudo/Init.java \
 		$(CLASSES)Rakudo/Metamodel/Representations/P6opaque.class \
 		$(CLASSES)Rakudo/Metamodel/REPRRegistry.class \
 		$(CLASSES)Rakudo/Runtime/CaptureHelper.class \
-		$(CLASSES)Rakudo/Runtime/Context.class \
-		$(CLASSES)Rakudo/Runtime/ExecutionDomain.class \
 		$(CLASSES)Rakudo/Runtime/Lexpad.class \
 		$(CLASSES)Rakudo/Runtime/ThreadContext.class
 	$(JAVAC) Rakudo/Init.java
@@ -317,7 +319,7 @@ Rakudo/Metamodel/Hints.java: ../../dotnet/runtime/Metamodel/Representation.cs
 	# There is no Hints.cs file, the Hints class is in Representation.cs.
 
 Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java: ../../dotnet/runtime/Metamodel/KnowHOW/KnowHOWBootstrapper.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/KnowHOW/KnowHOWBootstrapper.java is older than ../../dotnet/runtime/Metamodel/KnowHOW/KnowHOWBootstrapper.cs"
 
 Rakudo/Metamodel/RakudoObject.java: ../../dotnet/runtime/Metamodel/RakudoObject.cs
 	@echo "todo: Rakudo/Metamodel/RakudoObject.java is older than ../../dotnet/runtime/Metamodel/RakudoObject.cs"
@@ -326,31 +328,31 @@ Rakudo/Metamodel/Representation.java: ../../dotnet/runtime/Metamodel/Representat
 	@echo "todo: Rakudo/Metamodel/Representation.java is older than ../../dotnet/runtime/Metamodel/Representation.cs"
 
 Rakudo/Metamodel/Representations/P6capture.java: ../../dotnet/runtime/Metamodel/Representations/P6capture.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6capture.java is older than ../../dotnet/runtime/Metamodel/Representations/P6capture.cs"
 
 Rakudo/Metamodel/Representations/P6hash.java: ../../dotnet/runtime/Metamodel/Representations/P6hash.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6hash.java is older than ../../dotnet/runtime/Metamodel/Representations/P6hash.cs"
 
 Rakudo/Metamodel/Representations/P6int.java: ../../dotnet/runtime/Metamodel/Representations/P6int.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6int.java is older than ../../dotnet/runtime/Metamodel/Representations/P6int.cs"
 
 Rakudo/Metamodel/Representations/P6list.java: ../../dotnet/runtime/Metamodel/Representations/P6list.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6list.java is older than ../../dotnet/runtime/Metamodel/Representations/P6list.cs"
 
 Rakudo/Metamodel/Representations/P6mapping.java: ../../dotnet/runtime/Metamodel/Representations/P6mapping.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6mapping.java is older than ../../dotnet/runtime/Metamodel/Representations/P6mapping.cs"
 
 Rakudo/Metamodel/Representations/P6num.java: ../../dotnet/runtime/Metamodel/Representations/P6num.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6num.java is older than ../../dotnet/runtime/Metamodel/Representations/P6num.cs"
 
 Rakudo/Metamodel/Representations/P6opaque.java: ../../dotnet/runtime/Metamodel/Representations/P6opaque.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6opaque.java is older than ../../dotnet/runtime/Metamodel/Representations/P6opaque.cs"
 
 Rakudo/Metamodel/Representations/P6str.java: ../../dotnet/runtime/Metamodel/Representations/P6str.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/P6str.java is older than ../../dotnet/runtime/Metamodel/Representations/P6str.cs"
 
 Rakudo/Metamodel/Representations/RakudoCodeRef.java: ../../dotnet/runtime/Metamodel/Representations/RakudoCodeRef.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Metamodel/Representations/RakudoCodeRef.java is older than ../../dotnet/runtime/Metamodel/Representations/RakudoCodeRef.cs"
 
 Rakudo/Metamodel/SharedTable.java: ../../dotnet/runtime/Metamodel/SharedTable.cs
 	@echo "todo: Rakudo/Metamodel/SharedTable.java is older than ../../dotnet/runtime/Metamodel/SharedTable.cs"
@@ -359,13 +361,13 @@ Rakudo/Runtime/CaptureHelper.java: ../../dotnet/runtime/Runtime/CaptureHelper.cs
 	@echo "todo: Rakudo/Runtime/CaptureHelper.java is older than ../../dotnet/runtime/Runtime/Signatures/CaptureHelper.cs"
 
 Rakudo/Runtime/CodeObjectUtility.java: ../../dotnet/runtime/Runtime/CodeObjectUtility.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Runtime/CodeObjectUtility.java is older than ../../dotnet/runtime/Runtime/CodeObjectUtility.cs"
 
 Rakudo/Runtime/Context.java: ../../dotnet/runtime/Runtime/Context.cs
 	@echo "todo: Rakudo/Runtime/Context.java is older than ../../dotnet/runtime/Runtime/Context.cs"
 
 Rakudo/Runtime/DefinednessConstraint.java: ../../dotnet/runtime/Runtime/Signatures/DefinednessConstraint.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Runtime/DefinednessConstraint.java is older than ../../dotnet/runtime/Runtime/Signatures/DefinednessConstraint.cs"
 
 Rakudo/Runtime/Exceptions/ExceptionDispatcher.java: ../../dotnet/runtime/Runtime/Exceptions/ExceptionDispatcher.cs
 	@echo "todo: Rakudo/Runtime/Exceptions/ExceptionDispatcher.java is older than ../../dotnet/runtime/Runtime/Exceptions/ExceptionDispatcher.cs"
@@ -398,7 +400,7 @@ Rakudo/Runtime/Signature.java: ../../dotnet/runtime/Runtime/Signatures/Signature
 	@echo "todo: Rakudo/Runtime/Signature.java is older than ../../dotnet/runtime/Metamodel/Signatures/Signature.cs"
 
 Rakudo/Runtime/SignatureBinder.java: ../../dotnet/runtime/Runtime/Signatures/SignatureBinder.cs
-	@echo "todo: $@ is older than $<"
+	@echo "todo: Rakudo/Runtime/SignatureBinder.java is older than ../../dotnet/runtime/Runtime/Signatures/SignatureBinder.cs"
 
 Rakudo/Runtime/ThreadContext.java: ../../dotnet/runtime/Runtime/ThreadContext.cs
 	@echo "todo: Rakudo/Runtime/ThreadContext.java is older than ../../dotnet/runtime/Runtime/ThreadContext.cs"

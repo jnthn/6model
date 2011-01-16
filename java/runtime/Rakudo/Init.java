@@ -50,7 +50,7 @@ public class Init  // public static in the C# version
 
         // Cache native capture and LLCode type object.
         CaptureHelper.CaptureTypeObject = settingContext.LexPad.GetByName("capture");
-        CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)settingContext.LexPad.GetByName("LLCode");
+        CodeObjectUtility.LLCodeTypeObject = (RakudoCodeRef.Instance)settingContext.LexPad.GetByName("NQPCode");
 
         // Create an execution domain and a thread context for it.
         ExecutionDomain executionDomain  = new ExecutionDomain();
@@ -189,6 +189,7 @@ public class Init  // public static in the C# version
         }
         catch (java.lang.reflect.InvocationTargetException ex) {
             System.err.println("Invocation target exception: " + ex.getMessage());
+            ex.printStackTrace();
             System.exit(1);
         }
 

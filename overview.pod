@@ -68,6 +68,7 @@ regard to 6model, and are a good starting point for understanding why
 it is structured the way it is.
 
 =head3 Minimal, non-commital core
+
 Out of the box, 6model provides very minimal object oriented functionality.
 It provides one meta-object that implements objects with attributes (state)
 and methods (behavior) - and that's about it. It doesn't enforce one
@@ -76,6 +77,7 @@ so forth. These are all built up by implementing meta-objects that specify
 their semantics.
 
 =head3 Representation polymorphism
+
 Rather than committing to one view of how to lay out an object in memory,
 6model supports "representations". Representations define how attributes are
 actually stored and accessed, how primitive types (integers, floating point
@@ -85,6 +87,7 @@ define one type (e.g. a class) and use it with different storage stratergies.
 This is known as representation polymorphism.
 
 =head3 Gradual typing support
+
 6model tries to provide ways to pick points on the static-dynamic typing scale.
 For languages that themselves support gradual typing, this is directly useful.
 However, it means that one could implement object models that are completely
@@ -93,11 +96,13 @@ fast lookup in a v-table are just as possible as objects where method calls
 dynamically build a call to a web service.
 
 =head3 Portable between virtual machines
+
 By using 6model, it should become easier to make a compiler that is portable
 between VMs. Currently 6model implementations in varying states of completeness
 exist on Parrot, the .Net CLR and the JVM.
 
 =head3 Meta-objects are authoritative
+
 In an ideal world, every single method dispatch we perform would be conducted
 by delegating to the meta-object's method that implements method dispatch
 semantics. In the real world, that's not practical from a performance point of
@@ -113,6 +118,7 @@ for maintaining. Similar things apply to type-checking.
 At the heart of 6model are three core types of data structure.
 
 =head3 Objects
+
 Other than native types, everything that the user ever interacts
 with directly - that is, anything that makes it into lexpads, locals, packages,
 attributes and other storage locations - is an object. This is the only user-facing
@@ -121,6 +127,7 @@ that the first thing in the blob must be a pointer/reference to a Shared Table
 data structure.
 
 =head3 Representations
+
 An object may in the abstract be a blob of memory that starts
 with a pointer to a Shared Table, but of course something has to know what the rest
 of it means. That's what representations do. A representation is responsible for
@@ -134,6 +141,7 @@ or customizing meta-objects, the use cases for writing custom representations ar
 fewer.
 
 =head3 Shared Tables
+
 For every object, there is a meta-object defining its
 semantics and a representation defining its memory layout. There are also some
 entities that should live outside of either of them, such as the cached v-table

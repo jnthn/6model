@@ -122,3 +122,11 @@ my knowhow NQPHash is repr('P6mapping') {
     }
 }
 
+my knowhow NQPCode is repr('RakudoCodeRef') {
+    method leave($with) {
+        nqp::leave_block(self, $with)
+    }
+    method defined() {
+        nqp::repr_defined(self)
+    }
+}

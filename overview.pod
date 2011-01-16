@@ -67,63 +67,61 @@ The following principles guide a lot of the design decisions made with
 regard to 6model, and are a good starting point for understanding why
 it is structured the way it is.
 
-=over 4
+=head3 Minimal, non-commital core
+Out of the box, 6model provides very minimal object oriented functionality.
+It provides one meta-object that implements objects with attributes (state)
+and methods (behavior) - and that's about it. It doesn't enforce one
+definition of method dispatch, inheritance, interfaces, introspection and
+so forth. These are all built up by implementing meta-objects that specify
+their semantics.
 
-=item Minimal, non-commital core: out of the box, 6model provides very
-minimal object oriented functionality. It provides one meta-object that
-implements objects with attributes (state) and methods (behavior) - and
-that's about it. It doesn't enforce one definition of method dispatch,
-inheritance, interfaces, introspection and so forth. These are all built
-up by implementing meta-objects that specify their semantics.
+=head3 Representation polymorphism
+Rather than committing to one view of how to lay out an object in memory,
+6model supports "representations". Representations define how attributes are
+actually stored and accessed, how primitive types (integers, floating point
+values and strings) are boxed and unboxed - or perhaps both. Additionally,
+representations are orthogonal to meta-objects, meaning it is possible to
+define one type (e.g. a class) and use it with different storage stratergies.
+This is known as representation polymorphism.
 
-=item Representation polymorphism: rather than committing to one view of
-how to lay out an object in memory, 6model supports "representations".
-Representations define how attributes are actually stored and accessed,
-how primitive types (integers, floating point values and strings) are
-boxed and unboxed - or perhaps both. Additionally, representations are
-orthogonal to meta-objects, meaning it is possible to define one type
-(e.g. a class) and use it with different storage stratergies.
+=head3 Gradual typing support
+6model tries to provide ways to pick points on the static-dynamic typing scale.
+For languages that themselves support gradual typing, this is directly useful.
+However, it means that one could implement object models that are completely
+dynamic or completely static. Objects where method calls are dispatched by a
+fast lookup in a v-table are just as possible as objects where method calls
+dynamically build a call to a web service.
 
-=item Gradual typing support: 6model tries to provide ways to pick points
-on the static-dynamic typing scale. For languages that themselves support
-gradual typing, this is directly useful. However, it means that one could
-implement object models that are completely dynamic or completely static.
-Objects where method calls are dispatched by a fast lookup in a v-table
-are just as possible as objects where method calls dynamically build a
-call to a web service.
+=head3 Portable between virtual machines
+By using 6model, it should become easier to make a compiler that is portable
+between VMs. Currently 6model implementations in varying states of completeness
+exist on Parrot, the .Net CLR and the JVM.
 
-=item Portable between virtual machines: by using 6model, it should
-become easier to make a compiler that is portable between VMs. Currently
-6model implementations in varying states of completeness exist on Parrot,
-the .Net CLR and the JVM.
-
-=item Meta-objects are authoritative: in an ideal world, every single
-method dispatch we perform would be conducted by delegating to the
-meta-object's method that implements method dispatch semantics. In the
-real world, that's not practical from a performance point of view. Thus
-6model provides various mechanisms that a meta-object can "opt in" to in
-order to allow for muchly increased performance. However, it considers all
-of these to really just be a kind of "cache". A v-table is just an array
+=head3 Meta-objects are authoritative
+In an ideal world, every single method dispatch we perform would be conducted
+by delegating to the meta-object's method that implements method dispatch
+semantics. In the real world, that's not practical from a performance point of
+view. Thus 6model provides various mechanisms that a meta-object can "opt in"
+to in order to allow for muchly increased performance. However, it considers
+all of these to really just be a kind of "cache". A v-table is just an array
 of invokable objects published by the meta-object, which it is responsible
 for maintaining. Similar things apply to type-checking.
-
-=back
 
 
 =head2 Data Structures
 
 At the heart of 6model are three core types of data structure.
 
-=over 4
-
-=item Objects: other than native types, everything that the user ever interacts
+=head3 Objects
+Other than native types, everything that the user ever interacts
 with directly - that is, anything that makes it into lexpads, locals, packages,
 attributes and other storage locations - is an object. This is the only user-facing
 data structure in 6model. An object is a blob of memory. The only constraint is
 that the first thing in the blob must be a pointer/reference to a Shared Table
 data structure.
 
-=item Representations: an object may in the abstract be a blob of memory that starts
+=head3 Representations
+An object may in the abstract be a blob of memory that starts
 with a pointer to a Shared Table, but of course something has to know what the rest
 of it means. That's what representations do. A representation is responsible for
 object allocation, attribute storage and access (both in terms of memory layout and
@@ -135,7 +133,8 @@ that users of programming languages will (relatively) frequently engage in creat
 or customizing meta-objects, the use cases for writing custom representations are
 fewer.
 
-=item Shared Tables: for every object, there is a meta-object defining its
+=head3 Shared Tables
+For every object, there is a meta-object defining its
 semantics and a representation defining its memory layout. There are also some
 entities that should live outside of either of them, such as the cached v-table
 that some meta-objects may publish and a reference to the type object. However,
@@ -143,10 +142,6 @@ many objects share these (for example, every instance of a class with the same
 representation). Rather than every object starting with a bunch of pointers, it
 instead has one pointer to a shared table containing these things. Thus individual
 objects stay small.
-
-=back
-
-So diagramatically:
 
     +--------+       +----------------+
     | Object |   +-->|  Shared Table  |

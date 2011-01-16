@@ -54,7 +54,7 @@ public final class SharedTable  // public sealed in the C# version
                         tc, HOW, "find_method", Hints.NO_HINT);
 
                 // Call it.
-                RakudoObject capt = CaptureHelper.FormWith(new RakudoObject[] { HOW, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
+                RakudoObject capt = CaptureHelper.FormWith(new RakudoObject[] { HOW, obj, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
                 return meth.getSTable().Invoke.Invoke(tc, meth, capt);
             }
         }

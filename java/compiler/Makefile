@@ -39,6 +39,9 @@ NQPSetting.jar: NQPSetting.java
 test: all
 	prove -r --exec try.sh ..\..\t\nqp
 
+test-unixy: all
+	prove -r --exec ./try.sh ../../t/nqp
+
 clean:
 	perl -MExtUtils::Command -e rm_f gen_*.pir *.class *.jar *.java
 	perl -MExtUtils::Command -e rm_rf $(CLASSES)

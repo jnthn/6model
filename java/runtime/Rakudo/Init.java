@@ -24,7 +24,7 @@ import Rakudo.Runtime.ThreadContext;
 /// <summary>
 /// Does initialization of the Rakudo library.
 /// </summary>
-public class Init  // public static in the C# version
+public class Init  // C# has public static
 {
     /// <summary>
     /// Have we already registered the representations?
@@ -63,6 +63,8 @@ public class Init  // public static in the C# version
         threadContext.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
         threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
         threadContext.DefaultListType    = settingContext.LexPad.GetByName("NQPList");
+// TODO threadContext.DefaultArrayType   = settingContext.LexPad.GetByName("NQPArray");
+// TODO threadContext.DefaultHashType    = settingContext.LexPad.GetByName("NQPHash");
 
         return threadContext;
     }
@@ -96,7 +98,7 @@ public class Init  // public static in the C# version
     /// <returns></returns>
     private static Context BootstrapSetting(RakudoObject knowHOW, RakudoObject knowHOWAttribute)
     {
-        System.err.println( "calling new Context from Init" );
+        // System.err.println( "calling new Context from Init" );
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
             { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
@@ -111,7 +113,7 @@ public class Init  // public static in the C# version
                 REPRRegistry.get_REPR_by_name("P6list").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,knowHOW.getSTable().REPR.instance_of(null,knowHOW)),
                 CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body()
-                    { // an anonymous class instead of the lambda in the C# version
+                    { // C# has a lambda instead of the anonymous class
                         public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
                             RakudoObject nqpList = Ops.get_lex(tc, "NQPList");
                             P6list.Instance list = (P6list.Instance)(nqpList.getSTable().REPR.instance_of(tc, nqpList));
@@ -120,7 +122,9 @@ public class Init  // public static in the C# version
                                 list.Storage.add(obj);
                             return list;
                         }
-                    })
+                    }) // TODO ,
+                // TODO null,
+                // TODO null
             };
         return settingContext;
     }
@@ -134,7 +138,7 @@ public class Init  // public static in the C# version
     public static Context LoadSetting(String settingName, RakudoObject knowHOW, RakudoObject knowHOWAttribute)
     {
         // Load the assembly.
-        System.err.println("Init.LoadSetting begin loading " + settingName );
+        // System.err.println("Init.LoadSetting begin loading " + settingName );
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         Class<?> classNQPSetting = null; // grrr, a wildcard type :-(
         try {
@@ -177,7 +181,7 @@ public class Init  // public static in the C# version
             System.exit(1);
         }
         else {
-            System.err.println("methodLoadSetting is ok: " + methodLoadSetting );
+            // System.err.println("methodLoadSetting is ok: " + methodLoadSetting );
         }
 
         // Run it to get the context we want.
@@ -198,7 +202,7 @@ public class Init  // public static in the C# version
         // Fudge a few more things in.
         // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
-            { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture", "LLCode" });
+            { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture" });
 
         settingContext.LexPad.SetByName("KnowHOW", knowHOW);
         settingContext.LexPad.SetByName("KnowHOWAttribute", knowHOWAttribute);

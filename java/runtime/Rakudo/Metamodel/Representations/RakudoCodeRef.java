@@ -16,28 +16,30 @@ import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Serialization.SerializationContext;
 
 /// <summary>
-/// A representation for low-level code references. This is something
-/// specific to this Rakudo backend, not something standard accross all
-/// Rakudo backends.
+/// A representation for a low-level code object (something that actually
+/// references a piece of code that we'll run). This is used for things
+/// that serve the role of an only sub (that has a body) and a dispatcher
+/// (which has a body as well as a list of candidates that it operates
+/// on).
 /// </summary>
-public final class RakudoCodeRef implements Representation
+public final class RakudoCodeRef implements Representation // C# has public sealed class
 {
     // Interface for the purpose of constructing anonymous classes that
     // implement it, as the Java equivalent of a C# lambda expression.
     // Used in for example: CodeObjectUtility
     public interface IFunc_Body {
         public RakudoObject Invoke(ThreadContext tc, RakudoObject meth, RakudoObject capt);
-    }  // C# has public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>; // TODO: why 4 parameters and not 3? Is the last one the return type?
+    }  // C# has public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>;
 
     /// <summary>
-    /// This is how the boxed form of a P6str looks.
+    /// Instance that uses the RakudoCodeRef representation.
     /// </summary>
-    public final class Instance extends RakudoObject
+    public final class Instance extends RakudoObject // C# has public sealed class
     {
         /// <summary>
         /// The code body - the thing that actually runs instructions.
         /// </summary>
-        public RakudoCodeRef.IFunc_Body Body; // IFunc_Body is defined above Instance
+        public RakudoCodeRef.IFunc_Body Body; // see above IFunc_Body interface explanation
 
         /// <summary>
         /// The static lexpad.
@@ -81,8 +83,9 @@ public final class RakudoCodeRef implements Representation
         public Context OuterForNextInvocation;
         
         /// <summary>
-        /// Constructor.
+        /// Creates a new instance with the given S-Table.
         /// </summary>
+        /// <param name="STable"></param>
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);
@@ -102,9 +105,9 @@ public final class RakudoCodeRef implements Representation
         sharedTable.REPR = this;
         sharedTable.WHAT = new Instance(sharedTable);
 
-        // Also twiddle the S-Table's Invoke to invoke the contained
+        // Also twiddle the Shared Table's Invoke to invoke the contained
         // function.
-        sharedTable.Invoke = new IFunc_Body() { // the C# version has a lambda
+        sharedTable.Invoke = new IFunc_Body() { // C# has a lambda
             public RakudoObject Invoke(ThreadContext tci, RakudoObject methObj, RakudoObject capture)
             {
                 return ((RakudoCodeRef.Instance)methObj).Body.Invoke(tci, methObj, capture);
@@ -118,9 +121,9 @@ public final class RakudoCodeRef implements Representation
     /// </summary>
     /// <param name="WHAT"></param>
     /// <returns></returns>
-    public RakudoObject instance_of(ThreadContext tc, RakudoObject rakudoObject)
+    public RakudoObject instance_of(ThreadContext tc, RakudoObject typeObject)
     {
-        return new Instance(rakudoObject.getSTable());
+        return new Instance(typeObject.getSTable());
     }
 
     /// <summary>

@@ -43,7 +43,7 @@ public class Context
     /// </summary>
     public Context() // it could be private, except that Init() calls it.
     {
-        System.err.println( "new empty Context created" );
+        // System.err.println( "new empty Context created" );
         // this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
     }
 

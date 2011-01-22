@@ -13,6 +13,11 @@ INIT {
     %nqp_op_sigs<equal_ints>      := ('int', 'int', 'int');
     %nqp_op_sigs<equal_strs>      := ('int', 'str', 'str');
     %nqp_op_sigs<logical_not_int> := ('int', 'int');
+    %nqp_op_sigs<add_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<sub_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<mul_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<div_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<mod_int>         := ('int', 'int', 'int');
 }
 
 # Entry point for the compiler.

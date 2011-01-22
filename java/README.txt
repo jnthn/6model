@@ -45,6 +45,8 @@ C# abstract class becomes Java interface.
 
 C# Add(item) (to a List) becomes Java add(item) (to an ArrayList).
 
+C# AddRange(...) (to a List) becomes Java XXX TODO ???
+
 C# bool becomes Java boolean.
 
 C# Console.Write becomes Java System.out.print.

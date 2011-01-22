@@ -9,4 +9,4 @@ echo -n 'compiler: '; make || exit 2
 parrot compile.pir $1 > RakudoOutput.java || exit 3
 javac -classpath ../runtime/RakudoRuntime.jar RakudoOutput.java || exit 4
 echo ---
-java -classpath classes:../runtime/RakudoRuntime.jar:. RakudoOutput
+java -enableassertions -classpath classes:../runtime/RakudoRuntime.jar:. RakudoOutput

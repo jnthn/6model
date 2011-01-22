@@ -1307,7 +1307,7 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
         $stmts.push(dnst_regex($_));
     }
     
-	$stmts.push(DNST::Label.new(:name($re_restart_label)));
+    $stmts.push(DNST::Label.new(:name($re_restart_label)));
     #$stmts.push(emit_say(lits("re restartlabel at position ")));
     #$stmts.push(emit_say($*re_pos_lit));
     
@@ -1327,16 +1327,16 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
         $*I10_lit, 'int',
         #$*P10_lit, 'RakudoObject'  # XXX 
     ));
-	# ops.'push_pirop'('lt', pos, CURSOR_FAIL, donelabel)
-	$stmts.push(if_then(lt($*re_pos_lit, lit('-1')), $re_done));
-	# ops.'push_pirop'('eq', pos, CURSOR_FAIL, faillabel)
-	$stmts.push(if_then(eq($*re_pos_lit, lit('-1')), $*re_fail));
+    # ops.'push_pirop'('lt', pos, CURSOR_FAIL, donelabel)
+    $stmts.push(if_then(lt($*re_pos_lit, lit('-1')), $re_done));
+    # ops.'push_pirop'('eq', pos, CURSOR_FAIL, faillabel)
+    $stmts.push(if_then(eq($*re_pos_lit, lit('-1')), $*re_fail));
     # ops.'push_pirop'('jump', '$I10')
-	$stmts.push($*re_jt.jump($*I10_lit));
+    $stmts.push($*re_jt.jump($*I10_lit));
     
     $stmts.push($*re_jt);
-	
-	$stmts.push(DNST::Label.new(:name($re_done_label)));
+
+    $stmts.push(DNST::Label.new(:name($re_done_label)));
     #$stmts.push(emit_say(lits("re donelabel at position ")));
     #$stmts.push(emit_say($*re_pos_lit));
     
@@ -1351,7 +1351,7 @@ our multi sub dnst_for(PAST::Regex $r, :$rtype) {
     )));
     
     $stmts.push(DNST::Return.new($*re_cur));
-	
+
     dnst_for($stmts);
 }
 
@@ -1370,9 +1370,9 @@ our multi sub dnst_regex(PAST::Regex $r) {
         #$stmts.push(emit_say($*re_pos_lit));
         # Code for initial regex scan.
         my $s0 := get_unique_id('rxscan');
-		my $looplabel := $*re_jt.mark($s0 ~ '_loop');
-		my $scanlabel := DNST::Label.new(:name($s0 ~ '_scan'));
-		my $donelabel := DNST::Label.new(:name($s0 ~ '_done'));
+        my $looplabel := $*re_jt.mark($s0 ~ '_loop');
+        my $scanlabel := DNST::Label.new(:name($s0 ~ '_scan'));
+        my $donelabel := DNST::Label.new(:name($s0 ~ '_done'));
         
         #$stmts.push(emit_say(lits("scan from returned ")));
         #$stmts.push(emit_say(
@@ -1418,7 +1418,7 @@ our multi sub dnst_regex(PAST::Regex $r) {
         $stmts.push(if_then(
             log_and(lt($*re_pos_lit, $*re_eos_lit), eq(emit_call($*re_tgt, 'IndexOf', 'int', lits((@($r))[0]), $*re_pos_lit), $*re_pos_lit)),
             DNST::Bind.new($*re_pos_lit, plus($*re_pos_lit, lit(pir::length((@($r))[0])))),
-			$*re_fail
+            $*re_fail
         ));
         #$stmts.push(emit_say(lits("literal succeeded at position ")));
         #$stmts.push(emit_say($*re_pos_lit));

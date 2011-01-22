@@ -1,4 +1,4 @@
-# auto-generatored accessors & mutators
+# auto-generated accessors & mutators
 #   but not lvalue as in Perl 6, just "fluent" mutator methods
 
 plan(4);

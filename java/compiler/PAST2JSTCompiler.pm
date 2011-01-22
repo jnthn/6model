@@ -1,4 +1,4 @@
-# This is the beginings of a PAST to Java Syntax Tree translator. It'll
+# This is the beginnings of a PAST to Java Syntax Tree translator. It'll
 # no doubt evolve somewhat over time, and get filled out as we support
 # more and more of PAST.
 class PAST2JSTCompiler;
@@ -370,7 +370,7 @@ our multi sub jst_for(PAST::Block $block) {
         @*INNER_BLOCKS.push($_);
     }
 
-    # Finish geneating code setup block call.
+    # Finish generating code setup block call.
     $our_sbi_setup.push(JST::New.new(
         :type('RakudoCodeRef.IFunc_Body'),
         # :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),

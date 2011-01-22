@@ -43,7 +43,7 @@ namespace Rakudo.Runtime
 
         /// <summary>
         /// Throws the specified exception, looking for an exception handler in the
-        /// dynmaic scope.
+        /// dynamic scope.
         /// </summary>
         /// <param name="TC"></param>
         /// <param name="ExceptionObject"></param>

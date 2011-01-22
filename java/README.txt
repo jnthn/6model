@@ -130,7 +130,7 @@ an unspecified order.  Useful for multicast notification, event handlers
 and publish and subscribe architectures.
 
 The C# implementation of 6model uses the 'Func' and '=>' combination in
-KnowHOWBoostrapper and RakudoCodeRef for example.  The Java
+KnowHOWBootstrapper and RakudoCodeRef for example.  The Java
 implementation replaces the Func declaration with an IFunc_XXX interface
 declaration that defines a suitably typed Invoke method, and replaces
 the => with an anonymous class definition that implements that

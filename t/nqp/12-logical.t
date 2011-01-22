@@ -25,7 +25,7 @@ ok(!$and_no_branch, "logical && shortcuts, branch not taken");
 
 my $and_branch := 0;
 1 && ( $and_branch := 1 );
-ok($and_branch, "logicl && shortcuts, branch taken");
+ok($and_branch, "logical && shortcuts, branch taken");
 
 my $err_no_branch := 1;
 $err_no_branch // ( $err_no_branch := -1 );

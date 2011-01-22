@@ -20,7 +20,7 @@ public class Lexpad  // struct in the C# version
     public HashMap<String, Integer> SlotMapping;
 
     /// <summary>
-    /// The storage assocaited with the lexpad.
+    /// The storage associated with the lexpad.
     /// </summary>
     public RakudoObject[] Storage;
 

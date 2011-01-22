@@ -1,4 +1,4 @@
-# This is the beginings of a PAST to Dotnet Syntax Tree translator. It'll
+# This is the beginnings of a PAST to Dotnet Syntax Tree translator. It'll
 # no doubt evolve somewhat over time, and get filled out as we support more
 # and more of PAST.
 class PAST2DNSTCompiler;

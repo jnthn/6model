@@ -139,7 +139,7 @@ namespace Rakudo
             var SettingContext = (Context)Method.Invoke(null, new object[] { });
 
             // Fudge a few more things in.
-            // XXX Should be able to toss all of thse but KnowHOW.
+            // XXX Should be able to toss all of these but KnowHOW.
             SettingContext.LexPad.Extend(new string[]
                 { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture" });
             SettingContext.LexPad.SetByName("KnowHOW", KnowHOW);

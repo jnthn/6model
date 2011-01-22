@@ -83,7 +83,7 @@ namespace Rakudo.Runtime
                     CurPositional++;
                 }
 
-                // Positonal optional?
+                // Positional optional?
                 else if (Param.Flags == Parameter.OPTIONAL_FLAG)
                 {
                     if (CurPositional < Positionals.Length)

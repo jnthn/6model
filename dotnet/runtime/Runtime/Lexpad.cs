@@ -20,7 +20,7 @@ namespace Rakudo.Runtime
         public Dictionary<string, int> SlotMapping;
 
         /// <summary>
-        /// The storage assocaited with the lexpad.
+        /// The storage associated with the lexpad.
         /// </summary>
         public RakudoObject[] Storage;
 

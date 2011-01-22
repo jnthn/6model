@@ -306,7 +306,7 @@ namespace Rakudo.Metamodel.Representations
                 }
                 else if (ParentElems > 1)
                 {
-                    // Multiple inheritnace, so we can't compute this hierarchy.
+                    // Multiple inheritance, so we can't compute this hierarchy.
                     SlotAllocation = new Dictionary<RakudoObject, Dictionary<string, int>>();
                     return;
                 }

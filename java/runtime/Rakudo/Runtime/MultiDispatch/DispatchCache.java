@@ -41,7 +41,7 @@ public class DispatchCache
     private int MAX_ARITY = 3;  // const int in C#
 
     /// <summary>
-    /// Maximum entires we cache per arity. (Good to make it a
+    /// Maximum entries we cache per arity. (Good to make it a
     /// power of 2, minus 1.)
     /// </summary>
     private int MAX_ENTRIES = 15;  // const int in C#

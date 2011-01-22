@@ -42,7 +42,7 @@ flexible enough to implement a wide range of object orientated and
 type-related features.
 
 Currently, there is interest from the Parrot VM team in adopting 6model.
-Furtheremore, just as the compiler toolkit used to implement Rakudo aims
+Furthermore, just as the compiler toolkit used to implement Rakudo aims
 to provide general solutions for implementing compilation for a range
 of languages, 6model is also built with a secondary aim of providing a
 starting point for implementing the object oriented aspects of a range

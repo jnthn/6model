@@ -42,7 +42,7 @@ namespace Rakudo.Runtime.MultiDispatch
         private const int MAX_ARITY = 3;
 
         /// <summary>
-        /// Maximum entires we cache per arity. (Good to make it a
+        /// Maximum entries we cache per arity. (Good to make it a
         /// power of 2, minus 1.)
         /// </summary>
         private const int MAX_ENTRIES = 15;

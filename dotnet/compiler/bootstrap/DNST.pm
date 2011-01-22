@@ -1,4 +1,4 @@
-# The Dotnet Syntax Tree set of nodes is designed to represent fundemental
+# The Dotnet Syntax Tree set of nodes is designed to represent fundamental
 # .Net concepts. This allows most of a PAST compiler for .Net to be
 # written and used to generate C# for now, but later we can generate IL.
 # A tree must have the form:

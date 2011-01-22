@@ -91,13 +91,13 @@ namespace Rakudo.Runtime.MultiDispatch
                     }
                 }
                 
-                /* Check if it's admissable by arity. */
+                /* Check if it's admissible by arity. */
                 var NumArgs = NativeCapture.Positionals.Length;
                 if (NumArgs < Candidate.Sig.NumRequiredPositionals ||
                     NumArgs > Candidate.Sig.NumPositionals)
                     continue;
 
-                /* Check if it's admissable by types and definedness. */
+                /* Check if it's admissible by types and definedness. */
                 var TypeCheckCount = Math.Min(NumArgs, Candidate.Sig.NumPositionals);
                 var TypeMismatch = false;
                 for (int i = 0; i < TypeCheckCount; i++) {
@@ -123,7 +123,7 @@ namespace Rakudo.Runtime.MultiDispatch
                 if (TypeMismatch)
                     continue;
 
-                /* If we get here, it's an admissable candidate; add to list. */
+                /* If we get here, it's an admissible candidate; add to list. */
                 PossiblesList.Add(Candidate);
             }
 

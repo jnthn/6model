@@ -32,7 +32,7 @@ the ones it depends on should be done.
 
 
 === Port PAST::Regex compilation
-This mostly invovles getting regexes, then grammars to compile and run. This
+This mostly involves getting regexes, then grammars to compile and run. This
 is mostly a guess at an ordering.
 
 * Stub in basic bits of Capture, Cursor, Match

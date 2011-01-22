@@ -26,7 +26,7 @@ The things in this repository that work out well may end up being
 migrated elsewhere when the time is right (for example, it may be
 decided that all NQP implementations should live in the nqp-rx
 repository). For now, though, development of the .Net and JVM
-implemenations of NQP and the Perl 6 object model remains in here.
+implementations of NQP and the Perl 6 object model remains in here.
 
 Note that things in here may change very rapidly - if you rely on
 anything in this repo for anything then you're nuts. :-)

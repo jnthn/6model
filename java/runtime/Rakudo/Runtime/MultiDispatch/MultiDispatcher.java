@@ -94,13 +94,13 @@ public class MultiDispatcher
                 }
             }
             
-            /* Check if it's admissable by arity. */
+            /* Check if it's admissible by arity. */
             int numArgs = nativeCapture.Positionals.length;
             if (numArgs < candidate.Sig.NumRequiredPositionals ||
                 numArgs > candidate.Sig.NumPositionals)
                 continue;
 
-            /* Check if it's admissable by type. */
+            /* Check if it's admissible by type. */
             int typeCheckCount = Math.min(numArgs, candidate.Sig.NumPositionals);
             boolean typeMismatch = false;
             for (int i = 0; i < typeCheckCount; i++) {
@@ -126,7 +126,7 @@ public class MultiDispatcher
             if (typeMismatch)
                 continue;
 
-            /* If we get here, it's an admissable candidate; add to list. */
+            /* If we get here, it's an admissible candidate; add to list. */
             possiblesList.add(candidate);
         }
 
@@ -145,7 +145,7 @@ public class MultiDispatcher
         for (RakudoObject obj : unsorted) {
             sorted.add(obj);
         }
-        sorted.add(null); // XXX does this akshually sort?
+        sorted.add(null); // XXX does this actually sort?
         return sorted;
     }
 

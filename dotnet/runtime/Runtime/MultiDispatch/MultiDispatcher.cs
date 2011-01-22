@@ -90,7 +90,7 @@ namespace Rakudo.Runtime.MultiDispatch
                         continue;
                     }
                 }
-                
+
                 /* Check if it's admissible by arity. */
                 var NumArgs = NativeCapture.Positionals.Length;
                 if (NumArgs < Candidate.Sig.NumRequiredPositionals ||

@@ -118,7 +118,7 @@ public final class P6hash implements Representation
             I.Storage = new HashMap<RakudoObject, HashMap<String, RakudoObject>>();
         if (!I.Storage.containsKey(ClassHandle))
             I.Storage.put(ClassHandle, new HashMap<String, RakudoObject>());
-        
+
         // Now stick in the name slot for the class storage, creating if it
         // needed.
         HashMap<String, RakudoObject> ClassStore = I.Storage.get(ClassHandle);

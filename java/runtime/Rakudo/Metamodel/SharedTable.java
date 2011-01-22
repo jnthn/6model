@@ -27,7 +27,7 @@ public final class SharedTable  // public sealed in the C# version
     public RakudoObject HOW;
 
     /// <summary>
-    /// The type-object. If we do $obj.WHAT then it will refer to a 
+    /// The type-object. If we do $obj.WHAT then it will refer to a
     /// getting of this field.
     /// </summary>
     public RakudoObject WHAT;

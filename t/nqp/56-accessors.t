@@ -16,7 +16,7 @@ ok($foo.bar eq "baz");
 
 class Foo4 {
     has $.foo;
-    
+
     method set_foo($val) {
         $.foo := $val
     }

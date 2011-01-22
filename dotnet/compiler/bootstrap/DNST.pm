@@ -2,7 +2,7 @@
 # .Net concepts. This allows most of a PAST compiler for .Net to be
 # written and used to generate C# for now, but later we can generate IL.
 # A tree must have the form:
-# 
+#
 #    DNST::CompilationUnit
 #        DNST::Using
 #        ...more usings...
@@ -11,7 +11,7 @@
 #                Binding and method call nodes
 #            ...more methods...
 #        ...more classes...
-# 
+#
 # That is, we must have a compilation unit at the top level, which may
 # contain Using or Class nodes. The Class nodes may only contain Method
 # nodes.
@@ -172,7 +172,7 @@ class DNST::MethodCall is DNST::Node {
     has $!name;
     has $!void;
     has $!type;
-    
+
     method on($set?) {
         if $set { $!on := $set }
         $!on

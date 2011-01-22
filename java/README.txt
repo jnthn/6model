@@ -94,7 +94,7 @@ NoSuchMethodException.
 
 C# override does not become anything in Java (just delete it).
 
-C# out parameters become... 
+C# out parameters become...
 
 C# sealed class becomes Java final class.  Effect is not quite the same.
 

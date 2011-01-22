@@ -127,7 +127,7 @@ namespace Rakudo.Runtime
             NewBlock.Body = Block.Body;
             NewBlock.CurrentContext = Block.CurrentContext;
             NewBlock.Dispatchees = Block.Dispatchees;
-            NewBlock.Handlers = Block.Handlers;            
+            NewBlock.Handlers = Block.Handlers;
             NewBlock.OuterBlock = Block.OuterBlock;
             NewBlock.Sig = Block.Sig;
             NewBlock.StaticLexPad = Block.StaticLexPad;

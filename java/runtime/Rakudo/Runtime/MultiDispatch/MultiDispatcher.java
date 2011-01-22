@@ -93,7 +93,7 @@ public class MultiDispatcher
                     continue;
                 }
             }
-            
+
             /* Check if it's admissible by arity. */
             int numArgs = nativeCapture.Positionals.length;
             if (numArgs < candidate.Sig.NumRequiredPositionals ||

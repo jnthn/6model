@@ -26,12 +26,12 @@ namespace Rakudo.Metamodel.Representations
             /// The code body - the thing that actually runs instructions.
             /// </summary>
             public Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject> Body;
-            
+
             /// <summary>
             /// The static lexpad.
             /// </summary>
             public Lexpad StaticLexPad;
-            
+
             /// <summary>
             /// Our static outer block.
             /// </summary>
@@ -67,7 +67,7 @@ namespace Rakudo.Metamodel.Representations
             /// The outer context to use for the next invocation, if any.
             /// </summary>
             public Context OuterForNextInvocation;
-            
+
             /// <summary>
             /// Creates a new instance with the given S-Table.
             /// </summary>

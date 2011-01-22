@@ -45,7 +45,7 @@ public final class RakudoCodeRef implements Representation // C# has public seal
         /// The static lexpad.
         /// </summary>
         public Lexpad StaticLexPad;
-        
+
         /// <summary>
         /// Our static outer block.
         /// </summary>
@@ -60,7 +60,7 @@ public final class RakudoCodeRef implements Representation // C# has public seal
         /// Exception handlers this block has, if any.
         /// </summary>
         public Handler[] Handlers;
-        
+
         /// <summary>
         /// If this is a dispatcher, this is the list of dispatchees that
         /// it will operate over.
@@ -81,7 +81,7 @@ public final class RakudoCodeRef implements Representation // C# has public seal
         /// The outer context to use for the next invocation, if any.
         /// </summary>
         public Context OuterForNextInvocation;
-        
+
         /// <summary>
         /// Creates a new instance with the given S-Table.
         /// </summary>

@@ -199,7 +199,7 @@ public class Init  // C# has public static
                 { // an anonymous class where C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        int numPositionals = CaptureHelper.NumPositionals(capture); 
+                        int numPositionals = CaptureHelper.NumPositionals(capture);
                         for (int i = 0; i < numPositionals; i++)
                         {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
@@ -217,7 +217,7 @@ public class Init  // C# has public static
                 { // an anonymous class where C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        int numPositionals = CaptureHelper.NumPositionals(capture); 
+                        int numPositionals = CaptureHelper.NumPositionals(capture);
                         for (int i = 0; i < numPositionals; i++) {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
                             RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);

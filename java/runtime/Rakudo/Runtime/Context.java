@@ -63,7 +63,7 @@ public class Context
         // Static sub object should have this as the current
         // context.
         staticCodeObject.CurrentContext = this;
-        
+
         this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
 
         // Lex pad should be an "instantiation" of the static one.

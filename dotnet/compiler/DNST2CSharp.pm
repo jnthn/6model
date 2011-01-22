@@ -55,7 +55,7 @@ our multi sub cs_for(DNST::Method $meth) {
 
     # Method header.
     my $code := '    private static ' ~
-        $meth.return_type ~ ' ' ~ 
+        $meth.return_type ~ ' ' ~
         $meth.name ~ '(' ~
         pir::join(', ', $meth.params) ~
         ") \{\n";

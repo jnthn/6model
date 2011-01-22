@@ -28,14 +28,14 @@
     if $S0 != '--no-core-libs' goto not_ncl
     $P1 = 1
   not_ncl:
-    
+
     .local pmc g, a, opt, pastcomp, dnstcomp
     g = get_hll_global ['JnthnNQP'], 'Grammar'
     a = get_hll_global ['JnthnNQP'], 'Actions'
 #    opt = get_hll_global 'NQPOptimizer'
     pastcomp = get_hll_global 'PAST2DNSTCompiler'
     dnstcomp = get_hll_global 'DNST2CSharpCompiler'
-    
+
     .local string filename, file
     .local pmc fh
     filename = args[1]
@@ -43,7 +43,7 @@
     fh.'encoding'('utf8')
     file = fh.'readall'()
     fh.'close'()
-    
+
     .local pmc match, ast, dnst, compiled
     match = g.'parse'(file, 'actions'=>a)
     ast = match.'ast'()

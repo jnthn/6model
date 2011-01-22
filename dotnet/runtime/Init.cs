@@ -62,7 +62,7 @@ namespace Rakudo
 
             return Thread;
         }
-        
+
         /// <summary>
         /// Registers all of the built-in representations.
         /// </summary>
@@ -134,7 +134,7 @@ namespace Rakudo
             // Find the setting type and its LoadSetting method.
             var Class = SettingAssembly.GetType("NQPSetting");
             var Method = Class.GetMethod("LoadSetting", BindingFlags.NonPublic | BindingFlags.Static);
-            
+
             // Run it to get the context we want.
             var SettingContext = (Context)Method.Invoke(null, new object[] { });
 
@@ -172,7 +172,7 @@ namespace Rakudo
                         return CaptureHelper.Nil();
                     }));
             SettingContext.LexPad.SetByName("capture", REPRRegistry.get_REPR_by_name("P6capture").type_object_for(null, null));
-            
+
             return SettingContext;
         }
     }

@@ -100,7 +100,7 @@ namespace Rakudo.Runtime
 
                     // Link it.
                     CurContext.Outer = OuterContext;
-                    
+
                     // Step back one level.
                     CurContext = OuterContext;
                     OuterBlock = OuterBlock.OuterBlock;

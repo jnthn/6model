@@ -20,7 +20,7 @@ public class ThreadContext
     /// The current context we're in.
     /// </summary>
     public Context CurrentContext;
-    
+
     /// <summary>
     /// The type object of the bool type we box to.
     /// </summary>

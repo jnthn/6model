@@ -156,7 +156,7 @@ namespace Rakudo.Metamodel.KnowHOW
                     else
                         throw new InvalidOperationException("No such method " + Name);
                 };
-            
+
             // Set this as the KnowHOW's HOW.
             KnowHOW.STable.HOW = KnowHOWHOW;
 

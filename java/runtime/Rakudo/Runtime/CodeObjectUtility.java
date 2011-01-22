@@ -44,7 +44,7 @@ public final class CodeObjectUtility
     {
         // Create code wrapper object.
         RakudoCodeRef.Instance result = (RakudoCodeRef.Instance)LLCodeTypeObject.getSTable().REPR.instance_of(null,LLCodeTypeObject);
-        
+
         // Put body, outer and signature in place.
         result.Body = code;
         result.OuterBlock = outer;

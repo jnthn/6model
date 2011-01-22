@@ -349,7 +349,7 @@ namespace Rakudo.Runtime
         // more precisely http://msdn.microsoft.com/en-us/library/20bw873z.aspx#SupportedUnicodeGeneralCategories
         // to add more categories/patterns.
         enum CCLASS
-        {   
+        {
             Numeric
         }
 

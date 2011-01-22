@@ -116,7 +116,7 @@ namespace Rakudo.Metamodel.Representations
                 I.Storage = new Dictionary<RakudoObject, Dictionary<string, RakudoObject>>();
             if (!I.Storage.ContainsKey(ClassHandle))
                 I.Storage.Add(ClassHandle, new Dictionary<string, RakudoObject>());
-            
+
             // Now stick in the name slot for the class storage, creating if it
             // needed.
             var ClassStore = I.Storage[ClassHandle];

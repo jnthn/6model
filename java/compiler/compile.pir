@@ -20,13 +20,13 @@
     if $S0 != '--setting' goto not_setting
     $P0 = 1
   not_setting:
-    
+
     .local pmc g, a, pastcomp, jstcomp
     g = get_hll_global ['JnthnNQP'], 'Grammar'
     a = get_hll_global ['JnthnNQP'], 'Actions'
     pastcomp = get_hll_global 'PAST2JSTCompiler'
     jstcomp = get_hll_global 'JST2JavaCompiler'
-    
+
     .local string filename, file
     .local pmc fh
     filename = args[1]
@@ -34,7 +34,7 @@
     fh.'encoding'('utf8')
     file = fh.'readall'()
     fh.'close'()
-    
+
     .local pmc match, ast, jst, compiled
     match = g.'parse'(file, 'actions'=>a)
     ast = match.'ast'()

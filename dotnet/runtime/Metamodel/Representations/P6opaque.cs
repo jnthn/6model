@@ -138,7 +138,7 @@ namespace Rakudo.Metamodel.Representations
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="Object"></param>
         /// <param name="ClassHandle"></param>

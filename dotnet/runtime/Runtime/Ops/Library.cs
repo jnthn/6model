@@ -26,7 +26,7 @@ namespace Rakudo.Runtime
             // Load the assembly and grab the first type in it.
             var Assembly = AppDomain.CurrentDomain.Load(Ops.unbox_str(TC, Path));
             var Class = Assembly.GetTypes()[0];
-            
+
             // Call the Load method, passing along the current thread context
             // and the setting to use with it. What's returned is what the main
             // body of the compilation unit evaluates to.

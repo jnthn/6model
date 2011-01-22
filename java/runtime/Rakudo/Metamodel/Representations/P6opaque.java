@@ -142,7 +142,7 @@ public final class P6opaque implements Representation // C# has sealed
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="object"></par    /// <param name="ClassHandle"></param>
     /// <param name="Name"></param>

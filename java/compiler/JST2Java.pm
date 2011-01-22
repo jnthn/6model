@@ -63,7 +63,7 @@ our multi sub java_for(JST::Method $meth) {
 
     # Method header.
     my $code := '    public static ' ~ # the C# version has private
-        $meth.return_type ~ ' ' ~ 
+        $meth.return_type ~ ' ' ~
         $meth.name ~ '(' ~
         pir::join(', ', $meth.params) ~
         ") \{ // JST::Method\n";

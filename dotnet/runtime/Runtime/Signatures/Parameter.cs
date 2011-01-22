@@ -74,7 +74,7 @@ namespace Rakudo.Runtime
         /// Flag for optional parameters.
         /// </summary>
         public const int OPTIONAL_FLAG = 1;
-        
+
         /// <summary>
         /// Flag for slurpy positional parameters.
         /// </summary>

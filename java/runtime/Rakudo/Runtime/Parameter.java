@@ -65,7 +65,7 @@ public class Parameter
     /// Flag for optional parameters.
     /// </summary>
     public static final int OPTIONAL_FLAG = 1;
-    
+
     /// <summary>
     /// Flag for slurpy positional parameters.
     /// </summary>

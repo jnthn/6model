@@ -44,7 +44,7 @@ namespace Rakudo.Runtime
         {
             // Create code wrapper object.
             var Result = (RakudoCodeRef.Instance)LLCodeTypeObject.STable.REPR.instance_of(null, LLCodeTypeObject);
-            
+
             // Put body, outer and handlers in place.
             Result.Body = Code;
             Result.OuterBlock = Outer;

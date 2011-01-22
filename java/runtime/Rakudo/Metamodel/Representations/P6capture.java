@@ -20,7 +20,7 @@ public final class P6capture implements Representation // C# has sealed
     {
         public RakudoObject[] Positionals;
         public HashMap<String, RakudoObject> Nameds;
-        public int[] flattenSpec;
+        public int[] FlattenSpec;
         public Instance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);

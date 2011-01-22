@@ -11,7 +11,7 @@ import Rakudo.Metamodel.Representations.P6capture;
 /// Provides helper methods for getting stuff into and out of captures,
 /// both native ones and user-level ones.
 /// </summary>
-public class CaptureHelper   // the C# version has a static class
+public class CaptureHelper   // C# has static class
 {
     /// <summary>
     /// Don't flatten.
@@ -31,7 +31,7 @@ public class CaptureHelper   // the C# version has a static class
     /// <summary>
     /// Cache of the native capture type object.
     /// </summary>
-    public static RakudoObject CaptureTypeObject;  // the C# version has internal
+    public static RakudoObject CaptureTypeObject;  // C# has internal
 
     /// <summary>
     /// Empty capture former.
@@ -65,6 +65,23 @@ public class CaptureHelper   // the C# version has a static class
         P6capture.Instance capture = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
         capture.Positionals = posArgs;
         capture.Nameds = namedArgs;
+        return capture;
+    }
+
+    /// <summary>
+    /// Forms a capture from the provided positional and named arguments
+    /// and the given flattening spec.
+    /// </summary>
+    /// <param name="PosArgs"></param>
+    /// <param name="NamedArgs"></param>
+    /// <param name="FlattenSpec"></param>
+    /// <returns></returns>
+    public static RakudoObject FormWith(RakudoObject[] posArgs, HashMap<String, RakudoObject> namedArgs, int[] flattenSpec)
+    {
+        P6capture.Instance capture = (P6capture.Instance)CaptureTypeObject.getSTable().REPR.instance_of(null, CaptureTypeObject);
+        capture.Positionals = posArgs;
+        capture.Nameds = namedArgs;
+        capture.FlattenSpec = flattenSpec;
         return capture;
     }
 

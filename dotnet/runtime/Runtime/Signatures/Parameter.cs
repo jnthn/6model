@@ -90,9 +90,13 @@ namespace Rakudo.Runtime
         /// </summary>
         public const int NAMED_FLAG = 8;
 
+        /// <summary>
+        /// Tests whether the flag is optional.
+        /// </summary>
+        /// <returns></returns>
         public bool IsOptional()
         {
-            return (Flags ^ OPTIONAL_FLAG) > 0;
+            return (Flags & OPTIONAL_FLAG) > 0;
         }
     }
 }

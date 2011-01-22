@@ -63,8 +63,8 @@ public class Init  // C# has public static
         threadContext.DefaultNumBoxType  = settingContext.LexPad.GetByName("NQPNum");
         threadContext.DefaultStrBoxType  = settingContext.LexPad.GetByName("NQPStr");
         threadContext.DefaultListType    = settingContext.LexPad.GetByName("NQPList");
-// TODO threadContext.DefaultArrayType   = settingContext.LexPad.GetByName("NQPArray");
-// TODO threadContext.DefaultHashType    = settingContext.LexPad.GetByName("NQPHash");
+        threadContext.DefaultArrayType   = settingContext.LexPad.GetByName("NQPArray");
+        threadContext.DefaultHashType    = settingContext.LexPad.GetByName("NQPHash");
 
         return threadContext;
     }
@@ -101,7 +101,7 @@ public class Init  // C# has public static
         // System.err.println( "calling new Context from Init" );
         Context settingContext = new Context();
         settingContext.LexPad = new Lexpad(new String[]
-            { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list" });
+            { "KnowHOW", "KnowHOWAttribute", "capture", "NQPInt", "NQPNum", "NQPStr", "NQPList", "NQPCode", "list", "NQPArray", "NQPHash" });
         settingContext.LexPad.Storage = new RakudoObject[]
             {
                 knowHOW,
@@ -112,19 +112,19 @@ public class Init  // C# has public static
                 REPRRegistry.get_REPR_by_name("P6str").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("P6list").type_object_for(null,null),
                 REPRRegistry.get_REPR_by_name("RakudoCodeRef").type_object_for(null,knowHOW.getSTable().REPR.instance_of(null,knowHOW)),
-                CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body()
-                    { // C# has a lambda instead of the anonymous class
+                CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() // C# has a lambda instead of the anonymous class
+                    {
                         public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture) {
                             RakudoObject nqpList = Ops.get_lex(tc, "NQPList");
-                            P6list.Instance list = (P6list.Instance)(nqpList.getSTable().REPR.instance_of(tc, nqpList));
+                            P6list.Instance list = (P6list.Instance)nqpList.getSTable().REPR.instance_of(tc, nqpList);
                             P6capture.Instance nativeCapture = (P6capture.Instance)capture;
                             for (RakudoObject obj : nativeCapture.Positionals)
                                 list.Storage.add(obj);
                             return list;
                         }
-                    }) // TODO ,
-                // TODO null,
-                // TODO null
+                    }),
+                null,
+                null
             };
         return settingContext;
     }
@@ -138,6 +138,7 @@ public class Init  // C# has public static
     public static Context LoadSetting(String settingName, RakudoObject knowHOW, RakudoObject knowHOWAttribute)
     {
         // Load the assembly.
+        // This is quite unlike the C# version
         // System.err.println("Init.LoadSetting begin loading " + settingName );
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         Class<?> classNQPSetting = null; // grrr, a wildcard type :-(
@@ -153,12 +154,7 @@ public class Init  // C# has public static
             System.err.println("loadClass(\"" + settingName + "\") exception: " + ex.getMessage());
             System.exit(1);
         }
-
-        // TODO: remove
-        if ( classNQPSetting == null ) {
-            System.err.println("classNQPSetting is null");
-            System.exit(1);
-        }
+        assert classNQPSetting != null : "classNQPSetting is null";
 
         // Find the setting type and its LoadSetting method.
         java.lang.reflect.Method methodLoadSetting = null;
@@ -175,14 +171,7 @@ public class Init  // C# has public static
             System.exit(1);
         }
 
-        // TODO: remove
-        if ( methodLoadSetting == null ) {
-            System.err.println("methodLoadSetting is null");
-            System.exit(1);
-        }
-        else {
-            // System.err.println("methodLoadSetting is ok: " + methodLoadSetting );
-        }
+        assert methodLoadSetting != null : "methodLoadSetting is null";
 
         // Run it to get the context we want.
         Context settingContext = null;
@@ -203,7 +192,6 @@ public class Init  // C# has public static
         // XXX Should be able to toss all of these but KnowHOW.
         settingContext.LexPad.Extend(new String[]
             { "KnowHOW", "KnowHOWAttribute", "print", "say", "capture" });
-
         settingContext.LexPad.SetByName("KnowHOW", knowHOW);
         settingContext.LexPad.SetByName("KnowHOWAttribute", knowHOWAttribute);
         settingContext.LexPad.SetByName("print",
@@ -211,7 +199,9 @@ public class Init  // C# has public static
                 { // an anonymous class where C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        for (int i = 0; i < CaptureHelper.NumPositionals(capture); i++) {
+                        int numPositionals = CaptureHelper.NumPositionals(capture); 
+                        for (int i = 0; i < numPositionals; i++)
+                        {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
                             RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
                             RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth,
@@ -227,7 +217,8 @@ public class Init  // C# has public static
                 { // an anonymous class where C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        for (int i = 0; i < CaptureHelper.NumPositionals(capture); i++) {
+                        int numPositionals = CaptureHelper.NumPositionals(capture); 
+                        for (int i = 0; i < numPositionals; i++) {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
                             RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
                             RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth,

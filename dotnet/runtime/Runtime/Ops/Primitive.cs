@@ -32,9 +32,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject add_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int add_int(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) + Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+            return x + y;
         }
 
         /// <summary>
@@ -44,9 +44,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject sub_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int sub_int(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) - Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+            return x - y;
         }
 
         /// <summary>
@@ -56,9 +56,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject mul_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int mul_int(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) * Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+            return x * y;
         }
 
         /// <summary>
@@ -68,9 +68,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject div_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int div_int(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) / Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+            return x / y;
         }
 
         /// <summary>
@@ -80,9 +80,9 @@ namespace Rakudo.Runtime
         /// <param name="y"></param>
         /// <param name="ResultType"></param>
         /// <returns></returns>
-        public static RakudoObject mod_int(ThreadContext TC, RakudoObject x, RakudoObject y)
+        public static int mod_int(ThreadContext TC, int x, int y)
         {
-            return Ops.box_int(TC, Ops.unbox_int(TC, x) % Ops.unbox_int(TC, y), TC.DefaultIntBoxType);
+            return x % y;
         }
 
         /// <summary>

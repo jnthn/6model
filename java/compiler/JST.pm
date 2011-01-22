@@ -16,6 +16,11 @@
 # contain Using or Class nodes. The Class nodes may only contain Method
 # nodes.
 
+sub get_unique_id($prefix) {
+    $*CUR_ID := $*CUR_ID + 1;
+    return $prefix ~ '_' ~ $*CUR_ID;
+}
+
 class JST::Node {
     has @!children;
     method set_children(@children) {
@@ -199,6 +204,9 @@ class JST::MethodCall is JST::Node {
     method new(:$name!, :$on, :$void, :$type, *@children) {
         my $obj := self.CREATE;
         if $on { $obj.on($on); }
+        if !$void && !$type {
+            pir::die('Must supply a type for a JST::MethodCall if it is not void');
+        }
         $obj.name($name);
         $obj.void($void);
         $obj.type($type);
@@ -262,9 +270,46 @@ class JST::Throw is JST::Node {
 }
 
 class JST::If is JST::Node {
-    method new(*@children) {
+    has $!type;
+    has $!bool;
+    has $!result;
+
+    method bool($set?) {
+        if $set { $!bool := $set }
+        $!bool
+    }
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method result($set?) {
+        if $set { $!result := $set }
+        $!result
+    }
+
+    method new(:$bool, :$type, :$result, *@children) {
         my $obj := self.CREATE;
         $obj.set_children(@children);
+        $obj.bool($bool);
+        $obj.type(pir::defined($type) ?? $type !! 'RakudoObject');
+        $obj.result(pir::defined($result) ?? $result !! 1);
+        $obj;
+    }
+}
+
+class JST::Return is JST::Node {
+    has $!target;
+
+    method target($set?) {
+        if pir::defined($set) { $!target := $set }
+        $!target
+    }
+    
+    method new($target) {
+        my $obj := self.CREATE;
+        $obj.target($target);
         $obj;
     }
 }
@@ -299,29 +344,6 @@ class JST::Goto is JST::Node {
     }
 }
 
-class JST::Temp is JST::Node {
-    has $!name;
-    has $!type;
-
-    method name($set?) {
-        if $set { $!name := $set }
-        $!name
-    }
-
-    method type($set?) {
-        if $set { $!type := $set }
-        $!type
-    }
-
-    method new(:$name!, :$type!, *@children) {
-        my $obj := self.CREATE;
-        $obj.name($name);
-        $obj.type($type);
-        $obj.set_children(@children);
-        $obj;
-    }
-}
-
 class JST::Bind is JST::Node {
     method new(*@children) {
         my $obj := self.CREATE;
@@ -333,6 +355,7 @@ class JST::Bind is JST::Node {
 class JST::Literal is JST::Node {
     has $!value;
     has $!escape;
+    has $!type;
 
     method value($set?) {
         if pir::defined($set) { $!value := $set }
@@ -344,10 +367,144 @@ class JST::Literal is JST::Node {
         $!escape
     }
 
-    method new(:$value!, :$escape) {
+    method type($set?) {
+        if pir::defined($set) { $!type := $set }
+        $!type
+    }
+
+    method new(:$value!, :$escape, :$type) {
         my $obj := self.CREATE;
         $obj.value($value);
         $obj.escape($escape);
+        $obj.type($type);
+        $obj;
+    }
+}
+
+class JST::Null is JST::Node {
+    method new() {
+        self.CREATE
+    }
+}
+
+class JST::BinaryOp is JST::Node {
+    method new(*@children) {
+        my $obj := self.CREATE;
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+
+class JST::Add is JST::BinaryOp { }
+class JST::Subtract is JST::BinaryOp { }
+class JST::GT is JST::BinaryOp { }
+class JST::LT is JST::BinaryOp { }
+class JST::GE is JST::BinaryOp { }
+class JST::LE is JST::BinaryOp { }
+class JST::EQ is JST::BinaryOp { }
+class JST::NE is JST::BinaryOp { }
+class JST::NOT is JST::BinaryOp { } # not really BinaryOp, but whatever
+# no such thing as short-circuiting XOR, of course.
+class JST::OR is JST::BinaryOp { }
+class JST::AND is JST::BinaryOp { }
+class JSTr::XOR is JST::BinaryOp { }
+class JST::BOR is JST::BinaryOp { }
+class JST::BAND is JST::BinaryOp { }
+class JST::BXOR is JST::BinaryOp { }
+
+# build/emit only one of these per method (if any)
+class JST::JumpTable is JST::Node {
+    has %!names;
+    has $!label;
+    has $!register;
+
+    method names(%set?) {
+        if pir::defined(%set) { %!names := %set }
+        %!names
+    }
+    
+    # (prologue) label just before the jumptable
+    method label($set?) {
+        if pir::defined($set) { $!label := $set }
+        $!label
+    }
+    
+    # JST::Local - int register in which to store the target
+    #   branch's index in the jumptable
+    method register($set?) {
+        if pir::defined($set) { $!register := $set }
+        $!register
+    }
+    
+    # returns JST::Stmts node with code that ends up branching
+    #   (indirectly through a jumptable with string gotos computed
+    #   at compile-time) to the destination label with that $name
+    method jump($name) {
+        JST::Stmts.new(
+            JST::Bind.new(JST::Literal.new($!register.name, :escape(0)), $name),
+            JST::Goto.new(:label($!label.name))
+        )
+    }
+    
+    # accepts the name of a label; registers a label with this
+    #   jumptable; returns the label.
+    method mark($name) {
+        my $lbl := JST::Label.new(:name($name));
+        %!names{$name} := ~+@!children;
+        #pir::say("marked $name as " ~ %!names{$name});
+        @!children.push($lbl);
+        $lbl
+    }
+    
+    method get_index($name) {
+        my $i := 0;
+        for @!children {
+            return $i if $_.name eq $name;
+            $i := $i + 1
+        }
+        -1
+    }
+    
+    method new(*@children) {
+        my $obj := self.CREATE;
+        $obj.set_children(@children);
+        $obj.label(JST::Label.new(:name(get_unique_id('jump_table'))));
+        $obj.register(JST::Local.new(
+            :name(get_unique_id('jump_table_int_register')),
+            :isdecl(1),
+            :type('int'),
+            JST::Literal.new( :value('0'), :escape(0))
+        ));
+        $obj
+    }
+}
+
+class JST::Local is JST::Node {
+    has $!name;
+    has $!type;
+    has $!isdecl;
+
+    method name($set?) {
+        if pir::defined($set) { $!name := $set }
+        $!name
+    }
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method isdecl($set?) {
+        if $set { $!isdecl := $set }
+        $!isdecl
+    }
+
+    method new(:$name!, :$type, :$isdecl, *@children) {
+        my $obj := self.CREATE;
+        $obj.name($name);
+        $obj.type($type);
+        $obj.isdecl($isdecl);
+        $obj.set_children(@children);
         $obj;
     }
 }
@@ -390,3 +547,27 @@ class JST::DictionaryLiteral is JST::Node {
         $obj;
     }
 }
+
+class JST::Temp is JST::Node {
+    has $!name;
+    has $!type;
+
+    method name($set?) {
+        if $set { $!name := $set }
+        $!name
+    }
+
+    method type($set?) {
+        if $set { $!type := $set }
+        $!type
+    }
+
+    method new(:$name!, :$type!, *@children) {
+        my $obj := self.CREATE;
+        $obj.name($name);
+        $obj.type($type);
+        $obj.set_children(@children);
+        $obj;
+    }
+}
+

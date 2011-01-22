@@ -7,23 +7,20 @@ import Rakudo.Serialization.SerializationContext;
 /// The commonalities of every object.
 /// </summary>
 public abstract class RakudoObject
-// public abstract class RakudoObject // the C# version
 {
     /// <summary>
     /// Every object must have a way to refer to the shared table,
     /// which contains the commonalities this object has.
     /// </summary>
-    private SharedTable sTable;
+    private SharedTable sTable; // C# has public SharedTable STable;
     public SharedTable getSTable() { return sTable; }
     public void setSTable( SharedTable st ) { sTable = st; }
-    // SharedTable STable { get; set; } // the C# version
 
     /// <summary>
     /// The serialization context this object belongs to.
     /// </summary>
-    private SerializationContext SC;
+    private SerializationContext SC; // C# has public SerializationContext;
     public SerializationContext getSC() { return SC; }
     public void setSC( SerializationContext sc ) { SC = sc; }
-    // SerializationContext SC { get; set; } // the C# version
 }
 

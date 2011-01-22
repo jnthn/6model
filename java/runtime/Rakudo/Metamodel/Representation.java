@@ -3,10 +3,13 @@ package Rakudo.Metamodel;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Runtime.ThreadContext;
 
+
+
+
 /// <summary>
 /// All representations should implement this API.
 /// </summary>
-public interface Representation
+public interface Representation // C# has public abstract class
 {
     /// <summary>
     /// Creates a new type object of this representation, and
@@ -75,17 +78,52 @@ public interface Representation
     /// <returns></returns>
     int hint_for(ThreadContext tc, RakudoObject classHandle, String name);
 
+    /// <summary>
+    /// Used with boxing. Sets an integer value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     void set_int(ThreadContext tc, RakudoObject classHandle, int Value);
 
+    /// <summary>
+    /// Used with boxing. Gets an integer value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     int get_int(ThreadContext tc, RakudoObject classHandle);
 
+    /// <summary>
+    /// Used with boxing. Sets a floating point value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     void set_num(ThreadContext tc, RakudoObject classHandle, double Value);
 
+    /// <summary>
+    /// Used with boxing. Gets a floating point value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     double get_num(ThreadContext tc, RakudoObject classHandle);
 
+    /// <summary>
+    /// Used with boxing. Sets a string value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     void set_str(ThreadContext tc, RakudoObject classHandle, String Value);
 
+    /// <summary>
+    /// Used with boxing. Gets a string value, for representations that
+    /// can hold one.
+    /// </summary>
+    /// <param name="Object"></param>
+    /// <param name="Value"></param>
     String get_str(ThreadContext tc, RakudoObject classHandle);
-
 }
 

@@ -539,7 +539,7 @@ my knowhow NQPClassHOW {
     method add_multi_method($obj, $name, $code_obj) {
         # We can't incorporate these right away as we don't know all
         # parents yet, maybe, which influences whether we even can
-        # have multis, need to generate a proto or worreva. So just
+        # have multis, need to generate a proto or whatever. So just
         # queue them up in a todo list and we handle it at class
         # composition time.
         my %todo;

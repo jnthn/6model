@@ -17,7 +17,7 @@ namespace Rakudo.Runtime.MultiDispatch
     /// to the maximum arity of things we cache, and also a limit to the
     /// number of things cached per arity. We do random eviction on the
     /// latter; things that get called a lot will quickly find their way
-    /// back into the cache, so probabalistically it should be reasonable.
+    /// back into the cache, so probabilistically it should be reasonable.
     /// 
     /// Additionally, this is implemented in a way that tries to keep things
     /// contiguous in memory. We could do better in C I suspect, but this

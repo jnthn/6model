@@ -200,20 +200,21 @@ our multi sub java_for(JST::If $if) {
         $code := $code ~ "        }\n";
     }
 
-    $*LAST_TEMP := $if_result;
+    $*LAST_TEMP := $if_result if $if.result;
     return $code;
 }
-
-# Label
+# Return
+our multi sub java_for(DNST::Return $ret) {
+    return java_for($ret.target) ~ "        return " ~ $*LAST_TEMP ~ ";\n";
+}
+# Label # Not available in Java, but retained for eventual JVM bytecode emitter
 our multi sub java_for(JST::Label $lab) {
     return "      " ~ $lab.name ~ ": ; // JST::Label\n";
 }
-
-# Goto
+# Goto # Not available in Java, but retained for eventual JVM bytecode emitter
 our multi sub java_for(JST::Goto $gt) {
     return "// DO NOT WANT  goto " ~ $gt.label ~ "; // JST::Goto\n";
 }
-
 # Bind
 our multi sub java_for(JST::Bind $bind) {
     unless +@($bind) == 2 { pir::die('JST::Bind nodes must have 2 children') }
@@ -225,32 +226,18 @@ our multi sub java_for(JST::Bind $bind) {
     $*LAST_TEMP := $lhs;
     return $code;
 }
-
 # Literal
 our multi sub java_for(JST::Literal $lit) {
-    if $lit.escape {  # the C# version is much simpler because @"" strings can contain control characters
-        my $str_in := $lit.value;
-        my $str_out := '';
-        while pir::length($str_in) {
-            my $char := pir::substr($str_in, 0, 1);
-            $str_in := pir::substr($str_in, 1);
-            if $char eq "\n" { $char := "\\n"; }
-            if $char eq "\t" { $char := "\\t"; }
-            $str_out := $str_out ~ $char;
-        }
-        $*LAST_TEMP := '"' ~ $str_out ~ '"'
-    } else {
-        $*LAST_TEMP := $lit.value;
-    }
+    $*LAST_TEMP := $lit.escape ??
+        literal_escape($lit.value) !!
+        $lit.value;
     return '';
 }
-
 # Null
 our multi sub java_for(JST::Null $null) {
     $*LAST_TEMP := 'null';
     return '';
 }
-
 # Local
 our multi sub java_for(JST::Local $loc) {
     my $code := '';
@@ -269,7 +256,6 @@ our multi sub java_for(JST::Local $loc) {
     $*LAST_TEMP := $loc.name;
     return $code;
 }
-
 # JumpTable
 our multi sub java_for(JST::JumpTable $jt) {
     my $reg := $jt.register;
@@ -295,72 +281,58 @@ sub lhs_rhs_op(@ops, $op) {
     # @ops[2] is the type
     return "$code        " ~ @ops[2] ~ " $*LAST_TEMP = $lhs $op $rhs;\n";
 }
-
 # Add
 our multi sub java_for(JST::Add $ops) {
     lhs_rhs_op(@($ops), '+')
 }
-
 # Subtract
 our multi sub java_for(JST::Subtract $ops) {
     lhs_rhs_op(@($ops), '-')
 }
-
 # GT
 our multi sub java_for(JST::GT $ops) {
     lhs_rhs_op(@($ops), '>')
 }
-
 # LT
 our multi sub java_for(JST::LT $ops) {
     lhs_rhs_op(@($ops), '<')
 }
-
 # GE
 our multi sub java_for(JST::GE $ops) {
     lhs_rhs_op(@($ops), '>=')
 }
-
 # LE
 our multi sub java_for(JST::LE $ops) {
     lhs_rhs_op(@($ops), '<=')
 }
-
 # EQ
 our multi sub java_for(JST::EQ $ops) {
     lhs_rhs_op(@($ops), '==')
 }
-
 # NE
 our multi sub java_for(JST::NE $ops) {
     lhs_rhs_op(@($ops), '!=')
 }
-
 # OR
 our multi sub java_for(JST::OR $ops) {
     lhs_rhs_op(@($ops), '||')
 }
-
 # AND
 our multi sub java_for(JST::AND $ops) {
     lhs_rhs_op(@($ops), '&&')
 }
-
 # BOR
 our multi sub java_for(JST::BOR $ops) {
     lhs_rhs_op(@($ops), '|')
 }
-
 # BAND
 our multi sub java_for(JST::BAND $ops) {
     lhs_rhs_op(@($ops), '&')
 }
-
 # BXOR
 our multi sub java_for(JST::BXOR $ops) {
     lhs_rhs_op(@($ops), '^')
 }
-
 # NOT
 our multi sub java_for(JST::NOT $ops) {
     my $code := java_for((@($ops))[0]);
@@ -368,7 +340,6 @@ our multi sub java_for(JST::NOT $ops) {
     $*LAST_TEMP := get_unique_id('expr_result_negated');
     return "$code        boolean $*LAST_TEMP = !$lhs;\n";
 }
-
 # XOR
 our multi sub java_for(JST::XOR $ops) {
     my $code := java_for((@($ops))[0]);
@@ -378,19 +349,16 @@ our multi sub java_for(JST::XOR $ops) {
     $*LAST_TEMP := get_unique_id('expr_result');
     return "$code        boolean $*LAST_TEMP = $lhs ? ! $rhs : $rhs;\n";
 }
-
 # Throw
 our multi sub java_for(JST::Throw $throw) {
     $*LAST_TEMP := 'null';
     return "        throw new UnsupportedOperationException(); // JST::Throw\n";
 }
-
 # String
 our multi sub java_for(String $s) {
     $*LAST_TEMP := $s;
     return '';
 }
-
 # ArrayLiteral
 our multi sub java_for(JST::ArrayLiteral $al) {
     # Code-gen all the things to go in the array.
@@ -455,4 +423,23 @@ sub gen_new_type($new, @arg_names) {
     }
     $code := $code ~ "; // JST::New\n";
     return $code;
+}
+
+# Convert a literal string to Java source code with escape characters
+sub literal_escape($str_in) {
+    # the C# version is much simpler because @"" strings can contain
+    # control characters </excuses> ;)
+    my $str_out := '';
+    # TODO: extend this code to handle more control characters
+    # TODO: optimize this algorithm. nibbling characters off the front
+    #       end of the string cannot be the best way, because this
+    #       causes many heap allocations.
+    while pir::length($str_in) {
+        my $char := pir::substr($str_in, 0, 1);
+        $str_in := pir::substr($str_in, 1);
+        if $char eq "\n" { $char := "\\n"; }
+        if $char eq "\t" { $char := "\\t"; }
+        $str_out := $str_out ~ $char;
+    }
+    return '"' ~ $str_out ~ '"';
 }

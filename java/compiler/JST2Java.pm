@@ -370,11 +370,9 @@ our multi sub java_for(JST::ArrayLiteral $al) {
     }
 
     # Code-gen the array.
-    $*LAST_TEMP := get_unique_global_name('arr','arrayliteral');
-    return $code ~ "        " ~ $al.type ~ "[] $*LAST_TEMP = new " ~ $al.type ~ '[] {' ~
-        pir::join(',', @item_names) ~ "}; // JST::ArrayLiteral\n";
+    $*LAST_TEMP := 'new ' ~ $al.type ~ '[] {' ~ pir::join(',', @item_names) ~ '}';
+    return $code;
 }
-
 # DictionaryLiteral
 our multi sub java_for(JST::DictionaryLiteral $dl) {
     # Code-gen all the pieces that will go into the dictionary. The
@@ -384,7 +382,7 @@ our multi sub java_for(JST::DictionaryLiteral $dl) {
     for @($dl) -> $k, $v {
         $code := $code ~ java_for($k);
         my $key := $*LAST_TEMP;
-            $code := $code ~ java_for($v);
+        $code := $code ~ java_for($v);
         my $value := $*LAST_TEMP;
         @items.push('(' ~ $key ~ ', ' ~ $value ~ ')');
     }
@@ -395,6 +393,10 @@ our multi sub java_for(JST::DictionaryLiteral $dl) {
         $dl.key_type ~ ', ' ~ $dl.value_type ~ ">(); // JST::DictionaryLiteral\n" ~
         "        $*LAST_TEMP.put" ~
         pir::join(";\n        $*LAST_TEMP.put", @items) ~ ";\n";
+# TODO:
+#   $*LAST_TEMP := "new HashMap<" ~ $dl.key_type ~ ', ' ~ $dl.value_type ~ '>() { ' ~
+#       pir::join(',', @items) ~ ' }';
+#   return $code;
 }
 
 our multi sub java_for($any) {

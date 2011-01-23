@@ -780,9 +780,147 @@ our multi sub jst_for(PAST::Op $op) {
         );
     }
 
-    else {
-        pir::die("Don't know how to compile pasttype " ~ $op.pasttype);
+    elsif $op.pasttype eq 'repeat_while' || $op.pasttype eq 'repeat_until' {
+        # Need labels for start and end.
+        my $test_label := get_unique_id('while_lab');
+        my $block_label := get_unique_id('block_lab');
+        my $cond_result := JST::Local.new( :name(get_unique_id('cond')) );
+        
+        # Compile the condition.
+        my $cop := $op.pasttype eq 'repeat_until'
+          ?? PAST::Op.new(
+                :pasttype('call'), :name('&prefix:<!>'),
+                (@($op))[0]
+            )
+          !! PAST::Op.new(
+                :pasttype('callmethod'), :name('Bool'),
+                (@($op))[0]
+            );
+        my $cond := JST::Local.new(
+            :name($cond_result.name), :isdecl(1), :type('RakudoObject'),
+            jst_for($cop)
+        );
+
+        # Compile the body.
+        my $body := jst_for((@($op))[1]);
+
+        # Build up result.
+        return JST::Stmts.new(
+            JST::Label.new( :name($block_label) ),
+            $body,
+            $cond,
+            JST::If.new(
+                unbox('int', $cond_result),
+                JST::Stmts.new(
+                    $cond_result,
+                    JST::Goto.new( :label($block_label) )
+                )
+            )
+        );
     }
+
+    elsif $op.pasttype eq 'list' {
+        my $tmp_name := get_unique_id('list_');
+        my $result := JST::Stmts.new(
+            JST::Local.new(
+                :name($tmp_name), :isdecl(1), :type('RakudoObject'),
+                jst_for(PAST::Op.new(
+                    :pasttype('callmethod'), :name('new'),
+                    PAST::Var.new( :name('NQPArray'), :scope('lexical') )
+                ))
+            )
+        );
+        my $i := 0;
+        for @($op) {
+            $result.push(JST::MethodCall.new(
+                :on('Ops'), :name('lllist_bind_at_pos'), :void(1), :type('RakudoObject'),
+                TC(),
+                $tmp_name,
+                jst_for(PAST::Val.new( :value($i) )),
+                jst_for($_)
+            ));
+            $i := $i + 1;
+        }
+        $result.push($tmp_name);
+        return $result;
+    }
+
+    elsif $op.pasttype eq 'return' {
+        return emit_op('throw_lexical', (@($op))[0], PAST::Val.new( :value(57) ));
+    }
+
+    elsif $op.pasttype eq 'def_or' {
+        # Evaluate and store the first item.
+        my $first_name := get_unique_id('def_or_first_');
+        my $first := JST::Local.new(
+            :name($first_name), :isdecl(1), :type('RakudoObject'),
+            jst_for((@($op))[0])
+        );
+
+        # Compile it as an if node that checks definedness.
+        my $first_var := JST::Local.new( :name($first_name) );
+        return JST::Stmts.new(
+            $first,
+            jst_for(PAST::Op.new( :pasttype('if'),
+                PAST::Op.new( :pasttype('callmethod'), :name('defined'), $first_var ),
+                $first_var,
+                (@($op))[1]
+            ))
+        );
+    }
+
+    else {
+        pir::die("PAST2JSTCompiler.pm does not know how to compile pasttype " ~ $op.pasttype);
+    }
+}
+
+# How is capture formed?
+sub form_capture(@args, $inv?) {
+    # Create the various parts we might put into the capture.
+    my $capture := JST::MethodCall.new(
+        :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
+    );
+    my $pos_part := JST::ArrayLiteral.new( :type('RakudoObject') );
+    my $named_part := JST::DictionaryLiteral.new(
+        :key_type('string'), :value_type('RakudoObject') );
+    my $flatten_flags := JST::ArrayLiteral.new( :type('int') );
+    my $has_flats := 0;
+
+    # If it's a method call, we'll have an invocant to emit.
+    if $inv ~~ JST::Node {
+        $pos_part.push($inv.name);
+    }
+
+    # Go over the args.
+    for @args {
+        if $_ ~~ PAST::Node && $_.named {
+            if $_.flat {
+                $pos_part.push(jst_for($_));
+                $flatten_flags.push('CaptureHelper.FLATTEN_NAMED');
+                $has_flats := 1;
+            }
+            else {
+                $named_part.push(JST::Literal.new( :value($_.named), :escape(1) ));
+                $named_part.push(jst_for($_));
+            }
+        }
+        elsif $_ ~~ PAST::Node && $_.flat {
+            $pos_part.push(jst_for($_));
+            $flatten_flags.push('CaptureHelper.FLATTEN_POS');
+            $has_flats := 1;
+        }
+        else {
+            $pos_part.push(jst_for($_));
+            $flatten_flags.push('CaptureHelper.FLATTEN_NONE');
+        }
+    }
+
+    # Push the various parts as needed.
+    $capture.push($pos_part);
+    if +@($named_part) || $has_flats { $capture.push($named_part); }
+    if $has_flats { $capture.push($flatten_flags); }
+
+    $capture;
 }
 
 # Emits a value.
@@ -863,6 +1001,14 @@ our multi sub jst_for(PAST::Var $var) {
             return emit_lexical_lookup($var.name);
         }
     }
+    elsif $scope eq 'outer' {
+        if $var.isdecl {
+            pir::die("Cannot use isdecl when scope is 'outer'.");
+        }
+        else {
+            return emit_outer_lexical_lookup($var.name);
+        }
+    }
     elsif $scope eq 'contextual' {
         if $var.isdecl {
             return declare_lexical($var);
@@ -925,8 +1071,44 @@ our multi sub jst_for(PAST::Var $var) {
             JST::Literal.new( :value($var.name), :escape(1) )
         );
     }
+    elsif $scope eq 'keyed_int' {
+        # XXX viviself, vivibase.
+        if $*BIND_CONTEXT {
+            # Get thing to do lookup in without bind context applied - we simply
+            # want to look it up.
+            my $*BIND_CONTEXT := 0;
+            return jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_pos'),
+                @($var)[0], @($var)[1], $*BIND_VALUE
+            ));
+        }
+        else {
+            return jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_pos'),
+                @($var)[0], @($var)[1]
+            ));
+        }
+    }
+    elsif $scope eq 'keyed' {
+        # XXX viviself, vivibase.
+        if $*BIND_CONTEXT {
+            # Get thing to do lookup in without bind context applied - we simply
+            # want to look it up.
+            my $*BIND_CONTEXT := 0;
+            return jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_key'),
+                @($var)[0], @($var)[1], $*BIND_VALUE
+            ));
+        }
+        else {
+            return jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_key'),
+                @($var)[0], @($var)[1]
+            ));
+        }
+    }
     else {
-        pir::die("Don't know how to compile variable scope " ~ $var.scope);
+        pir::die("PAST2JSTCompiler.pm does not know how to compile variable scope " ~ $var.scope);
     }
 }
 
@@ -952,11 +1134,22 @@ sub declare_lexical($var) {
 
 # Catch-all for error detection.
 our multi sub jst_for($any) {
-    pir::die("Don't know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
+    if $any ~~ JST::Node {
+        # JST of something already in JST is itself.
+        return $any;
+    }
+    elsif pir::isa($any, 'String') || pir::isa($any, 'Integer') || pir::isa($any, 'Float') {
+        # Literals - wrap up in a value node and compile that.
+        return jst_for(PAST::Val.new( :value($any) ));
+    }
+    else {
+        pir::die("PAST2JSTCompiler.pm does not know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
+    }
 }
 
 # Emits a lookup of a lexical.
 sub emit_lexical_lookup($name) {
+# TODO:
 #   my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
 #       JST::Literal.new( :value($name), :escape(1) )
 #   );
@@ -972,8 +1165,27 @@ sub emit_lexical_lookup($name) {
     );
 }
 
+# Emits a lookup of a lexical in a scope outside the present one.
+sub emit_outer_lexical_lookup($name) {
+    if $*BIND_CONTEXT {
+        pir::die("Cannot bind to something using scope 'outer'.");
+    }
+    my $lookup := emit_op('get_lex_skip_current',
+        JST::Literal.new( :value($name), :escape(1) )
+    );
+    $lookup
+}
+
 # Emits a lookup of a dynamic var.
 sub emit_dynamic_lookup($name) {
+# TODO:
+#   my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
+#       JST::Literal.new( :value($name), :escape(1) )
+#   );
+#   if $*BIND_CONTEXT {
+#       $lookup.push($*BIND_VALUE);
+#   }
+#   $lookup
     return JST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_dynamic' !! 'get_dynamic'),
         :type('RakudoObject'),

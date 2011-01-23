@@ -3,6 +3,9 @@ package Rakudo.Runtime;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Runtime.DefinednessConstraint;
 
+
+
+
 /// <summary>
 /// Represents a parameter in a signature.
 /// </summary>
@@ -15,6 +18,8 @@ public class Parameter
     /// <param name="VariableName"></param>
     /// <param name="Name"></param>
     /// <param name="Flags"></param>
+//  public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
+//      String name, int flags, DefinednessConstraint definedness, RakudoObject defaultValue)
     public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
         String name, int flags)
     {
@@ -22,7 +27,9 @@ public class Parameter
         this.VariableName = variableName;
         this.VariableLexpadPosition = variableLexpadPosition;
         this.Name = name;
+// TODO this.DefaultValue = defaultValue;
         this.Flags = flags;
+// TODO this.Definedness = definedness;
         this.Definedness = DefinednessConstraint.None;
     }
 
@@ -50,6 +57,11 @@ public class Parameter
     /// Name, for named parameters.
     /// </summary>
     public String Name;
+
+    /// <summary>
+    /// Default RakudoObject for optional parameters.
+    /// </summary>
+    public RakudoObject DefaultValue;
 
     /// <summary>
     /// Parameter flags.
@@ -80,5 +92,10 @@ public class Parameter
     /// Flag for named parameters.
     /// </summary>
     public static final int NAMED_FLAG = 8;
+
+    public boolean IsOptional()
+    {
+        return (Flags & OPTIONAL_FLAG) > 0;
+    }
 }
 

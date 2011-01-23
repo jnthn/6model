@@ -262,15 +262,6 @@ our multi sub java_for(JST::Goto $gt) {
     return "// DO NOT WANT  goto " ~ $gt.label ~ "; // JST::Goto\n";
 }
 
-our multi sub java_for(JST::Temp $tmp) {
-    unless +@($tmp) == 1 { pir::die('A JST::Temp must have exactly one child') }
-    my $code := java_for((@($tmp))[0]);
-    my $name := $tmp.name;
-    $code := $code ~ "        " ~ $tmp.type ~ " $name = $*LAST_TEMP; // JST::Temp\n";
-    $*LAST_TEMP := $name;
-    return $code;
-}
-
 our multi sub java_for(JST::Bind $bind) {
     unless +@($bind) == 2 { pir::die('JST::Bind nodes must have 2 children') }
     my $code := java_for((@($bind))[0]);
@@ -298,6 +289,122 @@ our multi sub java_for(JST::Literal $lit) {
         $*LAST_TEMP := $lit.value;
     }
     return '';
+}
+
+our multi sub java_for(JST::Null $null) {
+    $*LAST_TEMP := 'null';
+    return '';
+}
+
+our multi sub java_for(JST::Local $loc) {
+    my $code := '';
+    if $loc.isdecl {
+        unless +@($loc) == 1 {
+            pir::die('A JST::Local with isdecl set must have exactly one child')
+        }
+        unless $loc.type {
+            pir::die('JST::Local with isdecl requires type');
+        }
+        $code := java_for((@($loc))[0]);
+        $code := $code ~ '        ' ~ $loc.type ~ ' ' ~ $loc.name ~ " = $*LAST_TEMP;\n";
+    } elsif +@($loc) != 0 {
+        pir::die('A JST::Local without isdecl set must have no children')
+    }
+    $*LAST_TEMP := $loc.name;
+    return $code;
+}
+
+our multi sub java_for(JST::JumpTable $jt) {
+    my $reg := $jt.register;
+    my $skip_label := JST::Label.new(:name('skip_jumptable_for_' ~ $reg.name));
+    my $code := java_for(JST::Goto.new(:label($skip_label.name)));
+    $code := $code ~ java_for($jt.label);
+    $code := $code ~ '        switch( ' ~ $reg.name ~ " ) \{\n";
+    my $i := 0;
+    for @($jt) {
+        $code := $code ~ "          case $i : goto " ~ $_.name ~ ";\n";
+        $i := $i + 1;
+    }
+    $code := $code ~ "        }\n" ~ java_for($skip_label);
+    return $code;
+}
+
+sub lhs_rhs_op(@ops, $op) {
+    my $code := java_for(@ops[0]);
+    my $lhs := $*LAST_TEMP;
+    $code := $code ~ java_for(@ops[1]);
+    my $rhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result');
+    # @ops[2] is the type
+    return "$code        " ~ @ops[2] ~ " $*LAST_TEMP = $lhs $op $rhs;\n";
+}
+
+our multi sub java_for(JST::Add $ops) {
+    lhs_rhs_op(@($ops), '+')
+}
+
+our multi sub java_for(JST::Subtract $ops) {
+    lhs_rhs_op(@($ops), '-')
+}
+
+our multi sub java_for(JST::GT $ops) {
+    lhs_rhs_op(@($ops), '>')
+}
+
+our multi sub java_for(JST::LT $ops) {
+    lhs_rhs_op(@($ops), '<')
+}
+
+our multi sub java_for(JST::GE $ops) {
+    lhs_rhs_op(@($ops), '>=')
+}
+
+our multi sub java_for(JST::LE $ops) {
+    lhs_rhs_op(@($ops), '<=')
+}
+
+our multi sub java_for(JST::EQ $ops) {
+    lhs_rhs_op(@($ops), '==')
+}
+
+our multi sub java_for(JST::NE $ops) {
+    lhs_rhs_op(@($ops), '!=')
+}
+
+our multi sub java_for(JST::OR $ops) {
+    lhs_rhs_op(@($ops), '||')
+}
+
+our multi sub java_for(JST::AND $ops) {
+    lhs_rhs_op(@($ops), '&&')
+}
+
+our multi sub java_for(JST::BOR $ops) {
+    lhs_rhs_op(@($ops), '|')
+}
+
+our multi sub java_for(JST::BAND $ops) {
+    lhs_rhs_op(@($ops), '&')
+}
+
+our multi sub java_for(JST::BXOR $ops) {
+    lhs_rhs_op(@($ops), '^')
+}
+
+our multi sub java_for(JST::NOT $ops) {
+    my $code := java_for((@($ops))[0]);
+    my $lhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result_negated');
+    return "$code        boolean $*LAST_TEMP = !$lhs;\n";
+}
+
+our multi sub java_for(JST::XOR $ops) {
+    my $code := java_for((@($ops))[0]);
+    my $lhs := $*LAST_TEMP;
+    $code := $code ~ java_for((@($ops))[1]);
+    my $rhs := $*LAST_TEMP;
+    $*LAST_TEMP := get_unique_id('expr_result');
+    return "$code        boolean $*LAST_TEMP = $lhs ? ! $rhs : $rhs;\n";
 }
 
 our multi sub java_for(JST::Throw $throw) {
@@ -333,7 +440,7 @@ our multi sub java_for(JST::DictionaryLiteral $dl) {
     for @($dl) -> $k, $v {
         $code := $code ~ java_for($k);
         my $key := $*LAST_TEMP;
-        $code := $code ~ java_for($v);
+            $code := $code ~ java_for($v);
         my $value := $*LAST_TEMP;
         @items.push('(' ~ $key ~ ', ' ~ $value ~ ')');
     }
@@ -344,6 +451,15 @@ our multi sub java_for(JST::DictionaryLiteral $dl) {
         $dl.key_type ~ ', ' ~ $dl.value_type ~ ">(); // JST::DictionaryLiteral\n" ~
         "        $*LAST_TEMP.put" ~
         pir::join(";\n        $*LAST_TEMP.put", @items) ~ ";\n";
+}
+
+our multi sub java_for(JST::Temp $tmp) {
+    unless +@($tmp) == 1 { pir::die('A JST::Temp must have exactly one child') }
+    my $code := java_for((@($tmp))[0]);
+    my $name := $tmp.name;
+    $code := $code ~ "        " ~ $tmp.type ~ " $name = $*LAST_TEMP; // JST::Temp\n";
+    $*LAST_TEMP := $name;
+    return $code;
 }
 
 our multi sub java_for($any) {

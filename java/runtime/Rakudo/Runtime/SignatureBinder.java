@@ -1,8 +1,12 @@
 package Rakudo.Runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.P6capture;
+import Rakudo.Metamodel.Representations.P6list;
+import Rakudo.Metamodel.Representations.P6mapping;
 import Rakudo.Runtime.Context;
 
 
@@ -10,7 +14,7 @@ import Rakudo.Runtime.Context;
 /// <summary>
 /// Simple signature binder implementation.
 /// </summary>
-public class SignatureBinder // static class in the C# version
+public class SignatureBinder // C# has public static class
 {
     /// <summary>
     /// Singleton empty positionals array.
@@ -28,15 +32,14 @@ public class SignatureBinder // static class in the C# version
     /// 
     /// XXX No type-checking is available just yet. :-(
     /// 
-    /// XXX No proper handling of optionals and defaults yet.
-    /// 
     /// XXX No support for nameds mapping to positionals yet either.
     /// 
     /// (In other words, this kinda sucks...)
     /// </summary>
     /// <param name="C"></param>
     /// <param name="Capture"></param>
-    public static void Bind(Context C, RakudoObject capture)
+// TODO    public static void Bind(ThreadContext tc, Context c, RakudoObject capture)
+    public static void Bind(Context tc, RakudoObject capture)
     {
         // Make sure the object is really a low level capture (don't handle
         // otherwise yet) and grab the pieces.
@@ -45,9 +48,14 @@ public class SignatureBinder // static class in the C# version
             throw new UnsupportedOperationException("Can only deal with native captures at the moment");
         RakudoObject[] positionals = nativeCapture.Positionals != null ? nativeCapture.Positionals : EmptyPos;
         HashMap<String,RakudoObject> nameds = nativeCapture.Nameds != null ? nativeCapture.Nameds : EmptyNamed;
+        HashMap<String, Boolean> seenNames = null; // C# has <string, bool> (a value type)
+
+        // See if we have to do any flattening.
+// TODO if (NativeCapture.FlattenSpec != null)
+// TODO     Flatten(nativeCapture.FlattenSpec, positionals, nameds); // C# has ref Positionals, ref Nameds
 
         // If we have no signature, that's same as an empty signature.
-        Signature sig = C.StaticCodeObject.Sig;
+        Signature sig = tc.StaticCodeObject.Sig;
         if (sig == null)
             return;
 
@@ -67,13 +75,13 @@ public class SignatureBinder // static class in the C# version
                 if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    C.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
+                    tc.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
                 }
                 else
                 {
                     throw new UnsupportedOperationException("Not enough positional parameters; got " +
                         Integer.toString(curPositional) + " but needed " +
-                        Integer.toString(NumRequiredPositionals(C.StaticCodeObject.Sig)));
+                        Integer.toString(NumRequiredPositionals(tc.StaticCodeObject.Sig)));
                 }
 
                 // Increment positional counter.
@@ -86,24 +94,39 @@ public class SignatureBinder // static class in the C# version
                 if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    C.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
+                    tc.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
                     curPositional++;
                 }
                 else
                 {
-                    // XXX Default value, vivification.
+                    // Default value, vivification.
+                    // ((RakudoCodeRef.Instance)Param.DefaultValue).CurrentContext = TC.CurrentContext;
+// TODO             C.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.STable.Invoke(TC, param.DefaultValue, capture);
                 }
             }
 
             // Named slurpy?
             else if ((param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
             {
+// TODO         RakudoObject slurpyHolder = tc.DefaultHashType.getSTable().REPR.instance_of(tc, tc.DefaultHashType);
+//               c.LexPad.Storage[Param.VariableLexpadPosition] = slurpyHolder;
+//              foreach (String name in Nameds.Keys)
+//                  if (seenNames == null || !seenNames.ContainsKey(name))
+//                      Ops.llmapping_bind_at_key(tc, slurpyHolder,
+//                          Ops.box_str(tc, name, tc.DefaultStrBoxType),
+//                          nameds[name]);
                 throw new UnsupportedOperationException("Named slurpy parameters are not yet implemented.");
             }
 
-            // Named positional?
+            // Positional slurpy?
             else if ((param.Flags & Parameter.POS_SLURPY_FLAG) != 0)
             {
+// TODO         RakudoObject slurpyHolder = tc.DefaultArrayType.getSTable().REPR.instance_of(tc, tc.DefaultArrayType);
+//              c.LexPad.Storage[Param.VariableLexpadPosition] = slurpyHolder;
+//              int j;
+//              for (j = CurPositional; j < positionals.Length; j++)
+//                  Ops.lllist_push(tc, slurpyHolder, Positionals[j]);
+//              curPositional = j;
                 throw new UnsupportedOperationException("Positional slurpy parameters are not yet implemented.");
             }
 
@@ -115,7 +138,10 @@ public class SignatureBinder // static class in the C# version
                 {
                     // We have an argument, just bind it.
                     RakudoObject value = nameds.get(param.Name);
-                    C.LexPad.Storage[param.VariableLexpadPosition] = value;
+                    tc.LexPad.Storage[param.VariableLexpadPosition] = value;
+                    if (seenNames == null)
+                        seenNames = new HashMap<String, Boolean>();
+                    seenNames.put(param.Name, true);
                 }
                 else
                 {
@@ -126,7 +152,7 @@ public class SignatureBinder // static class in the C# version
                     }
                     else
                     {
-                        // XXX Default value, vivification.
+// TODO                 c.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.getSTable().Invoke(tc, param.DefaultValue, capture);
                     }
                 }
             }
@@ -142,7 +168,7 @@ public class SignatureBinder // static class in the C# version
         int possiesInCapture = positionals.length;
         if (curPositional != possiesInCapture)
             throw new UnsupportedOperationException("Too many positional arguments passed; expected " +
-                Integer.toString(NumRequiredPositionals(C.StaticCodeObject.Sig)) +
+                Integer.toString(NumRequiredPositionals(tc.StaticCodeObject.Sig)) +
                 " but got " + Integer.toString(possiesInCapture));
 
         // XXX TODO; Ensure we don't have leftover nameds.
@@ -162,5 +188,64 @@ public class SignatureBinder // static class in the C# version
             else
                 num++;
         return num;
+    }
+
+    /// <summary>
+    /// Flattens arguments into the positionals list or the nameds. This
+    /// is pretty straightforward, could be optimized in various ways,
+    /// such as special case where we only have one arg which is the whole
+    /// parameter set.
+    /// </summary>
+    /// <param name="FlattenSpec"></param>
+    /// <param name="Positionals"></param>
+    /// <param name="Naneds"></param>
+// TODO  private static void Flatten(int[] FlattenSpec, ref RakudoObject[] Positionals, ref Dictionary<string, RakudoObject> Naneds)
+    private static void Flatten(int[] FlattenSpec, RakudoObject[] Positionals, HashMap<String, RakudoObject> Naneds)
+    {
+        // We'll build new positional and nameds.
+        ArrayList<RakudoObject> NewPositionals = new ArrayList<RakudoObject>();
+        HashMap<String, RakudoObject> NewNameds = new HashMap<String, RakudoObject>(Naneds);
+
+        // Go through positional arguments and look for things to flatten.
+        for (int i = 0; i < Positionals.length; i++)
+        {
+            if (FlattenSpec[i] == CaptureHelper.FLATTEN_NONE)
+            {
+                NewPositionals.add(Positionals[i]);
+            }
+            else if (FlattenSpec[i] == CaptureHelper.FLATTEN_POS)
+            {
+                // XXX For now rely on it being a P6list but in the future we
+                // should handle other cases.
+                P6list.Instance Flattenee = (P6list.Instance)Positionals[i];
+                if (Flattenee != null)
+                {
+                    NewPositionals.addAll(Flattenee.Storage);
+                }
+                else
+                {
+                    throw new UnsupportedOperationException("Currently can only flatten a P6list");
+                }
+            }
+            else if (FlattenSpec[i] == CaptureHelper.FLATTEN_NAMED)
+            {
+                // XXX For now rely on it being a P6mapping but in the future we
+                // should handle other cases.
+                P6mapping.Instance Flattenee = (P6mapping.Instance)Positionals[i];
+                if (Flattenee != null)
+                {
+                    for (Map.Entry entryPair : Flattenee.Storage.entrySet()) // HashMap<String,RakudoObject> 
+                        NewNameds.put((String)entryPair.getKey(), (RakudoObject)entryPair.getValue());
+                }
+                else
+                {
+                    throw new UnsupportedOperationException("Currently can only flatten a P6mapping");
+                }
+            }
+        }
+
+        // Put updated positionals and nameds in place.
+        Positionals = (RakudoObject[])NewPositionals.toArray();
+        Naneds = NewNameds;
     }
 }

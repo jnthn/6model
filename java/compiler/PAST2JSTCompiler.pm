@@ -3,6 +3,23 @@
 # more and more of PAST.
 class PAST2JSTCompiler;
 
+# Set up a hash of operator signatures. Only needed for those that do not
+# return and take just RakudoObject instances. First type is return type,
+# following ones are argument types.
+our %nqp_op_sigs;
+INIT {
+    %nqp_op_sigs                  := pir::new__pS('Hash');
+    %nqp_op_sigs<equal_nums>      := ('int', 'num', 'num');
+    %nqp_op_sigs<equal_ints>      := ('int', 'int', 'int');
+    %nqp_op_sigs<equal_strs>      := ('int', 'str', 'str');
+    %nqp_op_sigs<logical_not_int> := ('int', 'int');
+    %nqp_op_sigs<add_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<sub_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<mul_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<div_int>         := ('int', 'int', 'int');
+    %nqp_op_sigs<mod_int>         := ('int', 'int', 'int');
+}
+
 # Entry point for the compiler.
 method compile(PAST::Node $node) {
     # This tracks the unique IDs we generate in this compilation unit.
@@ -28,14 +45,20 @@ method compile(PAST::Node $node) {
     # Also need to track the PAST blocks we're in.
     my @*PAST_BLOCKS;
 
+    # Current namespace path.
+    my @*CURRENT_NS;
+
+    # The current type context, e.g. what result type the thing further
+    # up in the tree is expecting.
+    my $*TYPE_CONTEXT := 'obj';
+
     # Compile the node; ensure it is an immediate block.
     $node.blocktype('immediate');
     my $main_block_call := jst_for($node);
 
     # Build a class node and add the inner code blocks.
     my $class := JST::Class.new(
-        # XXX At some point we'll want to generate a unique name.
-        :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! 'RakudoOutput')
+        :name($*COMPILING_NQP_SETTING ?? 'NQPSetting' !! unique_name_for_module())
     );
     for @*INNER_BLOCKS {
         $class.push($_);
@@ -70,23 +93,18 @@ method compile(PAST::Node $node) {
     }
 
     # Finally, startup handling code.
-    # XXX This will need to change some day for modules.
     if $*COMPILING_NQP_SETTING {
         $class.push(JST::Method.new(
             :name('LoadSetting'),
             :return_type('Context'),
-            JST::Temp.new( :name('TC'), :type('ThreadContext'),
+            JST::Local.new( :name('TC'), :isdecl(1), :type('ThreadContext'),
                 JST::MethodCall.new(
                    :on('Rakudo.Init'), :name('Initialize'),
                    :type('ThreadContext'),
-                   'null'
+                   JST::Null.new()
                 )
             ),
-            JST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
+            JST::Call.new( :name('blocks_init'), :void(1), TC() ),
 
             # We fudge in a fake NQPStr, for the :repr('P6Str'). Bit hacky,
             # but best I can think of for now. :-)
@@ -99,23 +117,31 @@ method compile(PAST::Node $node) {
             # We do the loadinit calls before building the constants, as we
             # may build some constants with types we're yet to define.
             $loadinit_calls,
-            JST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            JST::Call.new( :name('constants_init'), :void(1), TC() ),
             $main_block_call,
             "TC.CurrentContext"
         ));
     }
     else {
+        # Commonalities for no matter how we start running (be it from the
+        # command line or loaded as a library).
         my @params;
-        @params.push('String[] args');
+        @params.push('String[] args'); # TODO  @params.push('ThreadContext TC');
+# TODO  $class.push(JST::Method.new(
+#           :name('Init'),
+#           :params(@params),
+#           :return_type('void'),
+#           JST::Call.new( :name('blocks_init'), :void(1), TC() ),
+#           JST::Call.new( :name('constants_init'), :void(1), TC() ),
+#           $loadinit_calls
+#       ));
+
+        # Code for when it's the entry point (e.g. a main method).
         $class.push(JST::Method.new(
             :name('main'), # Main in the C# version
             :return_type('void'),
             :params(@params),
-            JST::Temp.new( :name('TC'), :type('ThreadContext'),
+            JST::Local.new( :name('TC'), :isdecl(1), :type('ThreadContext'),
                 JST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
                     JST::Literal.new( :value('NQPSetting'), :escape(1) )
@@ -134,6 +160,15 @@ method compile(PAST::Node $node) {
             ),
             $main_block_call
         ));
+
+        # Code for when it's being loaded as a library.
+# TODO  $class.push(JST::Method.new(
+#           :name('Load'),
+#           :params('ThreadContext TC', 'Context Setting'),
+#           :return_type('RakudoObject'),
+#           JST::Call.new( :name('Init'), :void(1), TC() ), # TODO previously TC() was 'TC'
+#           $main_block_call
+#       ));
     }
 
     # Package up in a compilation unit with the required "import"s.
@@ -158,6 +193,14 @@ method compile(PAST::Node $node) {
     );
 }
 
+# Creates a not-really-that-unique-yet name for the module (good enough if
+# we compile one per second, which given we're cross-compiling, is enough
+# for now.)
+sub unique_name_for_module() {
+# TODO    'NQPOutput_' ~ pir::set__IN(pir::time__N())
+    'RakudoOutput'
+}
+
 # This makes the block static info initialization sub. One day, this
 # can likely go away and we freeze a bunch of this info. But for now,
 # this will do.
@@ -171,7 +214,7 @@ sub make_blocks_init_method($name) {
         
         # Create array for storing these.
         JST::Bind.new(
-            'StaticBlockInfo',
+            loc('StaticBlockInfo', 'RakudoCodeRef.Instance[]'),
             'new RakudoCodeRef.Instance[' ~ $*SBI_POS ~ ']'
         ),
 
@@ -181,7 +224,7 @@ sub make_blocks_init_method($name) {
             JST::MethodCall.new(
                 :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                 :type('RakudoCodeRef.Instance'),
-                'null', 'null',
+                JST::Null.new(), JST::Null.new(),
                 JST::ArrayLiteral.new( :type('String') )
             )
         ),
@@ -206,25 +249,25 @@ sub make_constants_init_method($name) {
         :return_type('void'),
 
         # Fake up a context with the outer being the main block.
-        JST::Temp.new(
-            :name('C'), :type('Context'),
+        JST::Local.new(
+            :name('C'), :isdecl(1), :type('Context'),
             JST::New.new(
                 :type('Context'),
                 JST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    JST::Null.new(),
                     'StaticBlockInfo[1]',
                     JST::ArrayLiteral.new( :type('String') )
                 ),
                 'TC.CurrentContext',
-                'null'
+                JST::Null.new()
             )
         ),
         
         # Create array for storing these.
         JST::Bind.new(
-            'ConstantsTable',
+            loc('ConstantsTable', 'RakudoObject[]'),
             'new RakudoObject[' ~ +@*CONSTANTS ~ ']'
         )
     );
@@ -252,10 +295,21 @@ sub get_unique_id($prefix) {
 our multi sub jst_for(PAST::Block $block) {
     # Unshift this PAST::Block onto the block list.
     @*PAST_BLOCKS.unshift($block);
-    
+
     # We'll collect all the parameter nodes and lexical declarations.
     my @*PARAMS;
     my @*LEXICALS;
+    my @*HANDLERS;
+    
+    # Update namespace.
+    my $prev_ns := @*CURRENT_NS;
+    if pir::isa($block.namespace(), 'ResizablePMCArray') {
+        @*CURRENT_NS := $block.namespace();
+    }
+    elsif ~$block.namespace() ne '' {
+        @*CURRENT_NS := pir::new('ResizablePMCArray');
+        @*CURRENT_NS.push(~$block.namespace());
+    }
     
     # Fresh bind context.
     my $*BIND_CONTEXT := 0;
@@ -315,7 +369,9 @@ our multi sub jst_for(PAST::Block $block) {
     }
 
     # Add signature generation/setup. We need to do this in the
-    # correct lexical scope.
+    # correct lexical scope. Also this is handy place to set up
+    # the handlers; keep a placeholder for that.
+    my $handlers_setup_placeholder := JST::Stmts.new();
     my $sig_setup_block := get_unique_id('block');
     my @params;
     @params.push('ThreadContext TC');
@@ -323,43 +379,62 @@ our multi sub jst_for(PAST::Block $block) {
         :return_type('void'),
         :name($sig_setup_block),
         :params(@params),
-        JST::Temp.new(
-            :type('Context'), :name('C'),
+        JST::Local.new(
+            :type('Context'), :name('C'), :isdecl(1),
             JST::New.new(
                 :type('Context'),
                 JST::MethodCall.new(
                     :on('CodeObjectUtility'), :name('BuildStaticBlockInfo'),
                     :type('RakudoCodeRef.Instance'),
-                    'null',
+                    JST::Null.new(),
                     "StaticBlockInfo[$our_sbi]",
                     JST::ArrayLiteral.new( :type('String') )
                 ),
                 'TC.CurrentContext',
-                'null'
+                JST::Null.new()
             )
         ),
-        JST::Bind.new( 'TC.CurrentContext', 'C' ),
+        JST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ),
         JST::Bind.new(
             "StaticBlockInfo[$our_sbi].Sig",
             compile_signature(@*PARAMS)
         ),
+        $handlers_setup_placeholder,
         JST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
-    @*SIGINITS.push(JST::Call.new( :name($sig_setup_block), :void(1), 'TC' ));
+    @*SIGINITS.push(JST::Call.new( :name($sig_setup_block), :void(1), TC() ));
 
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(JST::MethodCall.new(
-        :on('SignatureBinder'), :name('Bind'), :void(1), 'C', 'Capture'
+        :on('SignatureBinder'), :name('Bind'), :void(1),
+# TODO  TC(),
+        loc('C', 'Context'), loc('Capture')
     ));
 
     # Wrap in block prelude/postlude.
-    $result.push(JST::Temp.new(
-        :name('C'), :type('Context'),
-        JST::New.new( :type('Context'), "StaticBlockInfo[$our_sbi]", "TC.CurrentContext", "Capture" )
+    $result.push(JST::Local.new(
+        :name('C'), :isdecl(1), :type('Context'),
+        JST::New.new( :type('Context'), "Block", "TC.CurrentContext", loc("Capture") )
     ));
-    $result.push(JST::Bind.new( 'TC.CurrentContext', 'C' ));
+    $result.push(JST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ));
     $result.push(JST::TryFinally.new(
-        $stmts,
+#       JST::TryCatch.new(
+#           :exception_type('Exception'),
+# TODO      :exception_type('LeaveStackUnwinderException'),
+#           :exception_var('exc'),
+#           $stmts,
+#           JST::Stmts.new(
+#               JST::If.new(
+#                   JST::Literal.new(
+#                       :value("(exc.TargetBlock != Block ? 1 : 0)")
+#                   ),
+#                   JST::Throw.new()
+#               ),
+#               "exc.getMessage()"
+# TODO          "exc.PayLoad"
+#           )
+#       ),
+         $stmts,
         JST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
     
@@ -372,8 +447,7 @@ our multi sub jst_for(PAST::Block $block) {
 
     # Finish generating code setup block call.
     $our_sbi_setup.push(JST::New.new(
-        :type('RakudoCodeRef.IFunc_Body'),
-        # :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
+        :type('RakudoCodeRef.IFunc_Body'), # C# has :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
         $result.name
     ));
     $our_sbi_setup.push("StaticBlockInfo[$outer_sbi]");
@@ -383,8 +457,25 @@ our multi sub jst_for(PAST::Block $block) {
     }
     $our_sbi_setup.push($lex_setup);
 
+    # Add handlers.
+    if +@*HANDLERS {
+        my $handler_node := JST::ArrayLiteral.new( :type('Rakudo.Runtime.Exceptions.Handler') );
+        for @*HANDLERS {
+            $handler_node.push(JST::New.new(
+                :type('Rakudo.Runtime.Exceptions.Handler'),
+                JST::Literal.new( :value($_<type>) ),
+                $_<code>
+            ));
+        }
+        $handlers_setup_placeholder.push(JST::Bind.new(
+            "StaticBlockInfo[$our_sbi].Handlers",
+            $handler_node
+        ));
+    }
+
     # Clear up this PAST::Block from the blocks list.
     @*PAST_BLOCKS.shift;
+    @*CURRENT_NS := $prev_ns;
 
     # For immediate evaluate to a call; for declaration, evaluate to the
     # low level code object.
@@ -392,7 +483,7 @@ our multi sub jst_for(PAST::Block $block) {
         return JST::MethodCall.new(
             :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
-            'TC',
+            TC(),
             "StaticBlockInfo[$our_sbi]",
             JST::MethodCall.new(
                 :on('CaptureHelper'),
@@ -402,12 +493,15 @@ our multi sub jst_for(PAST::Block $block) {
         );
     }
     else {
+# TODO  return emit_op(
+#           ($block.closure ?? 'new_closure' !! 'capture_outer'),
+#           JST::Local.new( :name("StaticBlockInfo[$our_sbi]") )
+#       );
         return "StaticBlockInfo[$our_sbi]";
     }
 }
 
 # Compiles a bunch of parameter nodes down to a signature.
-# XXX Doesn't handle default values just yet.
 sub compile_signature(@params) {
     # Go through each of the parameters and compile them.
     my $params := JST::ArrayLiteral.new( :type('Parameter') );
@@ -419,7 +513,7 @@ sub compile_signature(@params) {
             $param.push(jst_for($_.multitype));
         }
         else {
-            $param.push('null');
+            $param.push(JST::Null.new());
         }
 
         # Variable name to bind into.
@@ -431,7 +525,7 @@ sub compile_signature(@params) {
         # Named param or not?
         $param.push((!$_.slurpy && $_.named) ??
             JST::Literal.new( :value(pir::substr($_.name, 1)), :escape(1) ) !!
-            'null');
+            JST::Null.new());
 
         # Flags.
         $param.push(
@@ -441,6 +535,16 @@ sub compile_signature(@params) {
             $_.slurpy               ?? 'Parameter.POS_SLURPY_FLAG'                      !!
             $_.named                ?? 'Parameter.NAMED_FLAG'                           !!
             'Parameter.POS_FLAG');
+
+        # Definedness constraint.
+# TODO  $param.push($_<definedness> eq 'D' ?? 'DefinednessConstraint.DefinedOnly' !!
+#                   $_<definedness> eq 'U' ?? 'DefinednessConstraint.UndefinedOnly' !!
+#                   'DefinednessConstraint.None');
+        
+        # viviself.
+# TODO  $param.push($_.viviself ~~ PAST::Node
+#           ?? jst_for(PAST::Block.new(:closure(1), $_.viviself))
+#           !! JST::Null.new());
 
         $params.push($param);
     }
@@ -467,24 +571,32 @@ our multi sub jst_for(PAST::Op $op) {
         if +@args == 0 { pir::die("callmethod node must have at least an invocant"); }
         
         # Invocant.
-        my $inv := JST::Temp.new(
-            :name(get_unique_id('inv')), :type('RakudoObject'),
+        my $inv := JST::Local.new(
+            :name(get_unique_id('inv')), :isdecl(1), :type('RakudoObject'),
             jst_for(@args.shift)
         );
 
+        # Method name, for indirectly named dotty calls
+        my $name := $op.name ~~ PAST::Node
+          ?? unbox('str', PAST::Op.new(
+                 :pasttype('callmethod'), :name('Str'),
+                 jst_for($op.name)
+             ))
+          !! JST::Literal.new( :value($op.name), :escape(1) );
+        
         # Method lookup.
-        my $callee := JST::Temp.new(
-            :name(get_unique_id('callee')), :type('RakudoObject'),
+        my $callee := JST::Local.new(
+            :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'),
             JST::MethodCall.new(
                 :on($inv.name), :name('getSTable().FindMethod.FindMethod'), :type('RakudoObject'),
-                'TC',
+                TC(),
                 $inv.name,
-                JST::Literal.new( :value($op.name), :escape(1) ),
+                $name,
                 'Hints.NO_HINT'
             )
         );
-        
-        # How is capture formed?
+
+        # How is capture formed? # TODO: DROP
         my $capture := JST::MethodCall.new(
             :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
         );
@@ -533,9 +645,9 @@ our multi sub jst_for(PAST::Op $op) {
             }
             $callee := jst_for(@args.shift);
         }
-        $callee := JST::Temp.new( :name(get_unique_id('callee')), :type('RakudoObject'), $callee );
+        $callee := JST::Local.new( :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'), $callee );
 
-        # How is capture formed?
+        # How is capture formed? # TODO: DROP
         my $capture := JST::MethodCall.new(
             :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
         );
@@ -558,14 +670,14 @@ our multi sub jst_for(PAST::Op $op) {
         return JST::MethodCall.new(
             :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
             $callee,
-            'TC',
+            TC(),
             $callee.name,
             $capture
         );
     }
 
     elsif $op.pasttype eq 'bind' {
-        # Construct JST for LHS in bind context.
+        # Construct JST for LHS in bind context. # TODO: DROP
         my $lhs;
         {
             my $*BIND_CONTEXT := 1;
@@ -576,6 +688,13 @@ our multi sub jst_for(PAST::Op $op) {
         $lhs.push(jst_for((@($op))[1]));
 
         return $lhs;
+# TODO  my $*BIND_CONTEXT := 1;
+#       my $*BIND_VALUE;
+#       {
+#           my $*BIND_CONTEXT := 0;
+#           $*BIND_VALUE := jst_for((@($op))[1]);
+#       }
+#       return jst_for((@($op))[0]);
     }
 
     elsif $op.pasttype eq 'nqpop' {
@@ -836,6 +955,13 @@ our multi sub jst_for($any) {
 
 # Emits a lookup of a lexical.
 sub emit_lexical_lookup($name) {
+#   my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
+#       JST::Literal.new( :value($name), :escape(1) )
+#   );
+#   if $*BIND_CONTEXT {
+#       $lookup.push($*BIND_VALUE);
+#   }
+#   $lookup
     return JST::MethodCall.new(
         :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_lex' !! 'get_lex'),
         :type('RakudoObject'),
@@ -852,4 +978,261 @@ sub emit_dynamic_lookup($name) {
         'TC',
         JST::Literal.new( :value($name), :escape(1) )
     );
+}
+
+# Emits the printing of something 
+# XXX Debugging and Java only, silly.
+sub emit_say($arg) {
+    JST::Stmts.new(JST::MethodCall.new(
+        :on('System.out'), :name('WriteLine'),
+        :void(1),
+        jst_for($arg)
+    ), jst_for(PAST::Val.new( :value("") )))
+}
+
+sub temp_int($arg?, :$name) {
+    JST::Local.new(
+        :name(get_unique_id('int_' ~ ($name || ''))), :isdecl(1), :type('int'),
+        pir::defined($arg) ?? jst_for($arg) !! lit(0)
+    )
+}
+
+sub temp_str($arg?, :$name) {
+    JST::Local.new(
+        :name(get_unique_id('string_' ~ ($name || ''))), :isdecl(1), :type('string'),
+        pir::defined($arg) ?? jst_for($arg) !! lits("")
+    )
+}
+
+# Emits a boxing operation to an int/num/str.
+sub box($type, $arg) {
+    JST::MethodCall.new(
+        :on('Ops'), :name("box_$type"), :type('RakudoObject'),
+        TC(), jst_for($arg)
+    )
+}
+
+# Emits the unboxing of a str/num/int.
+sub unbox($type, $arg) {
+    JST::MethodCall.new(
+        :on('Ops'), :name("unbox_$type"),
+        :type(vm_type_for($type)),
+        TC(), jst_for($arg)
+    )
+}
+
+# Maps a hand-wavey type (one of the three we box/unbox with) to a CLR type.
+sub vm_type_for($type) {
+    $type eq 'num' ?? 'double' !!
+    $type eq 'str' ?? 'string' !!
+    $type eq 'int' ?? 'int'    !!
+    $type eq 'obj' ?? 'RakudoObject' !!
+                      pir::die("Don't know VM type for $type")
+}
+
+sub plus($l, $r, $type?) {
+    JST::Add.new(jst_for($l), jst_for($r), pir::defined($type) ?? $type !! 'int')
+}
+
+sub minus($l, $r, $type?) {
+    JST::Subtract.new(jst_for($l), jst_for($r), pir::defined($type) ?? $type !! 'int')
+}
+
+sub bitwise_or($l, $r, $type?) {
+    JST::BOR.new(jst_for($l), jst_for($r), pir::defined($type) ?? $type !! 'int')
+}
+
+sub bitwise_and($l, $r, $type?) {
+    JST::BAND.new(jst_for($l), jst_for($r), pir::defined($type) ?? $type !! 'int')
+}
+
+sub bitwise_xor($l, $r, $type?) {
+    JST::BXOR.new(jst_for($l), jst_for($r), pir::defined($type) ?? $type !! 'int')
+}
+
+sub gt($l, $r) {
+    JST::GT.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub lt($l, $r) {
+    JST::LT.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub ge($l, $r) {
+    JST::GE.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub le($l, $r) {
+    JST::LE.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub eq($l, $r) {
+    JST::EQ.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub ne($l, $r) {
+    JST::NE.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub not($operand) {
+    JST::NOT.new(jst_for($operand), 'bool')
+}
+
+# short-circuiting logical AND
+sub log_and($l, $r) {
+    my $temp;
+    JST::Stmts.new(
+    ($temp := JST::Local.new(
+        :name(get_unique_id('log_and')), :isdecl(1), :type('bool'), lit('false')
+    )),
+    if_then(JST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), jst_for($l)
+    ), if_then(JST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), jst_for($r)
+    ), JST::Bind.new(
+    ### XXX The next line works only with the C# backend (so far)
+    ###   b/c the Bind causes the Temp to be redeclared without the lit(___.name)
+    lit($temp.name)
+    , lit('true')))));
+}
+
+# short-circuiting logical OR
+sub log_or($l, $r) {
+    my $temp;
+    JST::Stmts.new(
+    ($temp := JST::Local.new(
+        :name(get_unique_id('log_or')), :isdecl(1), :type('bool'), lit('false')
+    )),
+    if_then(JST::Local.new(
+        :name(get_unique_id('left_bool')), :isdecl(1), :type('bool'), jst_for($l)
+    ),
+    JST::Bind.new(lit($temp.name), lit('true')),
+    if_then(JST::Local.new(
+        :name(get_unique_id('right_bool')), :isdecl(1), :type('bool'), jst_for($r)
+    ),
+    JST::Bind.new(lit($temp.name), lit('true')),
+    )));
+}
+
+sub log_xor($l, $r) {
+    JST::XOR.new(jst_for($l), jst_for($r), 'bool')
+}
+
+sub if_then($cond, $pred, $oth?, :$bool?) {
+    pir::defined($oth)
+        ?? JST::If.new($cond, $pred, $oth, :bool(pir::defined($bool) ?? $bool !! 1), :result(0))
+        !! JST::If.new($cond, $pred, :bool(pir::defined($bool) ?? $bool !! 1), :result(0))
+}
+
+sub lits($str) {
+    JST::Literal.new( :value($str), :escape(1))
+}
+
+sub lit($str) {
+    $str ~~ JST::Literal
+        ?? $str
+        !! JST::Literal.new( :value($str), :escape(0))
+}
+
+sub val($val) {
+    $val ~~ JST::Node
+        ?? $val
+        !! jst_for(PAST::Val.new( :value($val) ))
+}
+
+sub emit_op($name, *@args) {
+    # See if we have any info on this op's siggy.
+    my $sig := %nqp_op_sigs{$name};
+    my $type := 'obj';
+    if pir::defined($sig) {
+        $type := $sig[0];
+    }
+    
+    # Compile the args.
+    my @jst_args;
+    my $i := 1;
+    for @args {
+        # Set the type context that is desired.
+        my $*TYPE_CONTEXT := pir::defined($sig) ?? $sig[$i] !! 'obj';
+        my $arg_jst := jst_for($_);
+        
+        # We may need to auto-unbox it if we don't have the desired type
+        # of thing.
+        if $*TYPE_CONTEXT ne 'obj' {
+            unless ($arg_jst ~~ JST::MethodCall || $arg_jst ~~ JST::Call || $arg_jst ~~ JST::Literal)
+              && $arg_jst.type eq vm_type_for($*TYPE_CONTEXT) {
+                $arg_jst := unbox($*TYPE_CONTEXT, $arg_jst);
+            }
+        }
+
+        @jst_args.push($arg_jst);
+    }
+
+    # Build op call.
+    #pir::say("name is $name; type is $type; jst_arg count is " ~ +@jst_args);
+    my $call := JST::MethodCall.new(
+        :on('Ops'), :name($name),
+        :type(vm_type_for($type)),
+        TC(), |@jst_args
+    );
+
+    # We may need to auto-box it.
+    $type ne $*TYPE_CONTEXT && $*TYPE_CONTEXT eq 'obj' ??
+        box($type, $call) !!
+        $call
+}
+
+sub emit_call($on, $name, $type, *@args) {
+    my @jst_args;
+    for @args {
+        @jst_args.push(jst_for($_))
+    }
+    JST::MethodCall.new(
+        :on($on), :name($name),
+        :type($type),
+        |@jst_args
+    )
+}
+
+sub returns_array($expr, *@result_slots) {
+    my $tmp;
+    my $stmts := JST::Stmts.new(
+        $tmp := JST::Local.new(
+            :type('RakudoObject'),
+            :name(get_unique_id('array_result')),
+            :isdecl(1),
+            $expr
+        )
+    );
+    my $i := 0;
+    while $i < +@result_slots {
+        $stmts.push(JST::Bind.new(
+            @result_slots[$i],
+            @result_slots[$i + 1] eq 'int'
+            ?? unbox('int', emit_op('lllist_get_at_pos',
+                JST::Local.new(:name($tmp.name)),
+                lit(~($i / 2))))
+            !! 
+            @result_slots[$i + 1] eq 'string'
+            ?? unbox('str', emit_op('lllist_get_at_pos',
+                JST::Local.new(:name($tmp.name)),
+                lit(~($i / 2))))
+            !! emit_op('lllist_get_at_pos',
+                JST::Local.new(:name($tmp.name)),
+                lit(~($i / 2)))
+        ));
+        $i := $i + 2;
+    };
+    $stmts
+}
+
+# Returns a JST::Local for looking up the variable name with the
+# given type. Default type is RakudoObject.
+sub loc($name, $type = 'RakudoObject') {
+    JST::Local.new( :name($name), :type($type) )
+}
+
+# Returns a JST::Local referencing the current thread context.
+sub TC() {
+    loc('TC', 'ThreadContext')
 }

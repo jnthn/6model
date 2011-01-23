@@ -7,7 +7,6 @@ import Rakudo.Runtime.Exceptions.Handler;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Runtime.Lexpad;
 import Rakudo.Runtime.MultiDispatch.DispatchCache;
-import Rakudo.Runtime.Parameter;
 import Rakudo.Runtime.Signature;
 import Rakudo.Metamodel.SharedTable;
 import Rakudo.Metamodel.Hints;

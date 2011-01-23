@@ -10,14 +10,14 @@ import Rakudo.Metamodel.RakudoObject;
 /// Represents a lexpad - either the static version or the dynamic
 /// one.
 /// </summary>
-public class Lexpad  // struct in the C# version
+public class Lexpad  // C# has struct
 {
     /// <summary>
     /// This is the slot mapping, allocating names to slots. All the
     /// dynamic variants of a lexpad will share this with the static
     /// lexpad.
     /// </summary>
-    public HashMap<String, Integer> SlotMapping;
+    public HashMap<String, Integer> SlotMapping; // C# has Dictionary<string, int>
 
     /// <summary>
     /// The storage associated with the lexpad.
@@ -33,11 +33,8 @@ public class Lexpad  // struct in the C# version
     {
         SlotMapping = new HashMap<String, Integer>(SlotNames.length);
         int slot = 0;
-        for (String name : SlotNames) {
+        for (String name : SlotNames)
             SlotMapping.put(name, slot++);
-            // System.err.println("adding into LexPad: " + Name);
-        }
-        // System.err.println("LexPad SlotNames length: " + SlotNames.length);
         Storage = new RakudoObject[SlotNames.length];
     }
 

@@ -547,27 +547,3 @@ class JST::DictionaryLiteral is JST::Node {
         $obj;
     }
 }
-
-class JST::Temp is JST::Node {
-    has $!name;
-    has $!type;
-
-    method name($set?) {
-        if $set { $!name := $set }
-        $!name
-    }
-
-    method type($set?) {
-        if $set { $!type := $set }
-        $!type
-    }
-
-    method new(:$name!, :$type!, *@children) {
-        my $obj := self.CREATE;
-        $obj.name($name);
-        $obj.type($type);
-        $obj.set_children(@children);
-        $obj;
-    }
-}
-

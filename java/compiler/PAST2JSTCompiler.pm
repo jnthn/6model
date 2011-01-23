@@ -700,7 +700,9 @@ our multi sub jst_for(PAST::Op $op) {
     elsif $op.pasttype eq 'nqpop' {
         # Just a call on the Ops class. Always pass thread context
         # as the first parameter.
-        my $result := JST::MethodCall.new(
+# TODO  my @args := @($op);
+#       return emit_op($op.name, |@args);
+        my $result := JST::MethodCall.new( # TODO: DROP
             :on('Ops'), :name($op.name), :type('RakudoObject'), 'TC' # TODO: :type()
         );
         for @($op) {
@@ -747,8 +749,8 @@ our multi sub jst_for(PAST::Op $op) {
         my $cond_result := get_unique_id('cond');
 
         # Compile the condition.
-        my $cond := JST::Temp.new(
-            :name($cond_result), :type('RakudoObject'),
+        my $cond := JST::Local.new(
+            :name($cond_result), :isdecl(1), :type('RakudoObject'),
             jst_for(PAST::Op.new(
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
@@ -892,7 +894,7 @@ our multi sub jst_for(PAST::Var $var) {
     }
     elsif $scope eq 'register' {
         if $var.isdecl {
-            my $result := JST::Temp.new( :name($var.name), :type('RakudoObject') );
+            my $result := JST::Local.new( :name($var.name), :isdecl(1), :type('RakudoObject') );
             unless $*BIND_CONTEXT { $result.push('null'); }
             return $result;
         }

@@ -19,8 +19,9 @@ method TOP() {
     my %*HOW-METAATTR;
     %*HOW-METAATTR<knowhow> := 'KnowHOWAttribute';
 
-    my $*SCOPE      := '';
-    my $*MULTINESS  := '';
+    my $*SCOPE       := '';
+    my $*MULTINESS   := '';
+    my $*INVOCANT_OK := 0;
     self.comp_unit;
 }
 
@@ -264,7 +265,7 @@ token variable {
 
 token sigil { <[$@%&]> | '::' }
 
-token twigil { <[*!?]> }
+token twigil { <[*!?.]> }
 
 proto token package_declarator { <...> }
 token package_declarator:sym<module> { <sym> <package_def> }
@@ -318,7 +319,9 @@ token declarator {
     | <routine_declarator>
 }
 
-token variable_declarator { <variable> }
+token variable_declarator { <variable> <declarator_is_rw>?}
+
+token declarator_is_rw { [<.ws> 'is' <.ws> 'rw'] }
 
 proto token routine_declarator { <...> }
 token routine_declarator:sym<sub>    { <sym> <routine_def> }
@@ -336,10 +339,12 @@ rule routine_def {
 }
 
 rule method_def {
+    :my $*INVOCANT_OK := 1;
     <deflongname>?
     <.newpad>
     [ '(' <signature> ')'
         || <.panic: 'Routine declaration requires a signature'> ]
+    { $*INVOCANT_OK := 0; }
     [
     | <onlystar>
     | <blockoid>
@@ -369,7 +374,10 @@ token multi_declarator:sym<null> {
     <declarator>
 }
 
-token signature { [ [<.ws><parameter><.ws>] ** ',' ]? }
+token signature {
+    [ <?{ $*INVOCANT_OK }> <.ws><invocant=.parameter><.ws> ':' ]?
+    [ [<.ws><parameter><.ws>] ** ',' ]?
+}
 
 token parameter {
     [ <typename> [ ':' $<definedness>=<[_DU]> ]? <.ws> ]*                   # <type_constraint>

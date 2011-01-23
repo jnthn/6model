@@ -190,16 +190,23 @@ method statement_control:sym<repeat>($/) {
 }
 
 method statement_control:sym<for>($/) {
-    my $past := $<xblock>.ast;
-    $past.pasttype('for');
-    my $block := $past[1];
+    my $xb := $<xblock>.ast;
+    my $expr  := $xb[0];
+    my $block := $xb[1];
     unless $block.arity {
         $block[0].push( PAST::Var.new( :name('$_'), :scope('parameter') ) );
         $block.symbol('$_', :scope('lexical') );
         $block.arity(1);
     }
-    $block.blocktype('immediate');
-    make $past;
+    $block.blocktype('declaration');
+    make PAST::Op.new(
+        :pasttype('callmethod'), :name('eager'),
+        PAST::Op.new(
+            :pasttype('callmethod'), :name('map'),
+            $expr,
+            $block
+        )
+    );
 }
 
 method statement_control:sym<return>($/) {
@@ -359,10 +366,13 @@ method variable($/) {
                 )
             );
         }
-        elsif $<twigil>[0] eq '!' {
+        elsif $<twigil>[0] eq '!' || $<twigil>[0] eq '.' {
             $past.push(PAST::Var.new( :name('self') ));
             $past.scope('attribute');
             $past.viviself( vivitype( $<sigil> ) );
+            if ($<twigil>[0] eq '.') {
+                $past.name(pir::substr($past.name, 0, 1) ~ '!' ~ pir::substr($past.name, 2));
+            }
         }
     }
     make $past;
@@ -375,7 +385,10 @@ method package_declarator:sym<class>($/)   { make package($/); }
 method package_declarator:sym<role>($/)    { make package($/); }
 
 sub package($/) {
-    my $name := ~$<package_def><name>;
+    # Sort out name.
+    my $long_name := ~$<package_def><name>;
+    my @ns := pir::clone__PP($<package_def><name><identifier>);
+    my $name := @ns.pop;
     
     # Prefix the class initialization with initial setup. Also install it
     # in the symbol table right away, and also into $?CLASS.
@@ -385,11 +398,11 @@ sub package($/) {
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new_type'),
                 PAST::Var.new( :name(%*HOW{~$<sym>}), :scope('lexical') ),
-                PAST::Val.new( :value($name), :named('name') )
+                PAST::Val.new( :value($long_name), :named('name') )
             )
         ),
         PAST::Op.new( :pasttype('bind'),
-            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package') ),
+            PAST::Var.new( :name($name), :scope($*SCOPE eq 'my' ?? 'lexical' !! 'package'), :namespace(@ns) ),
             PAST::Var.new( :name('type_obj'), :scope('register') )
         ),
         PAST::Op.new( :pasttype('bind'),
@@ -404,8 +417,10 @@ sub package($/) {
     }
 
     # Parent class, if any. (XXX need to handle package vs lexical scope
-    # properly, nested packages, etc).
+    # properly).
     if $<package_def><parent> {
+        my @parent_ns := pir::clone__PP($<package_def><parent>[0]<identifier>);
+        my $parent_name := @parent_ns.pop;
         $*PACKAGE-SETUP.push(PAST::Op.new(
             :pasttype('callmethod'), :name('add_parent'),
             PAST::Op.new(
@@ -413,7 +428,7 @@ sub package($/) {
                 PAST::Var.new( :name('type_obj'), :scope('register') )
             ),
             PAST::Var.new( :name('type_obj'), :scope('register') ),
-            PAST::Var.new( :name(~$<package_def><parent>[0]), :scope('package') )
+            PAST::Var.new( :name($parent_name), :namespace(@parent_ns), :scope('package') )
         ));
     }
 
@@ -486,6 +501,9 @@ method variable_declarator($/) {
         $/.CURSOR.panic("Redeclaration of symbol ", $name);
     }
     if $*SCOPE eq 'has' {
+        if $<variable><twigil>[0] eq '.' {
+            $name := pir::substr($name, 0, 1) ~ '!' ~ pir::substr($name, 2);
+        }
         # Create and add a meta-attribute.
         my $meta-attr-type := %*HOW-METAATTR{$*PKGDECL} || $*DEFAULT-METAATTR;
         $*PACKAGE-SETUP.push(PAST::Op.new(
@@ -498,7 +516,11 @@ method variable_declarator($/) {
             PAST::Op.new(
                 :pasttype('callmethod'), :name('new'),
                 PAST::Var.new( :name($meta-attr-type), :scope('lexical') ),
-                PAST::Val.new( :value($name), :named('name') )
+                PAST::Val.new( :value($name), :named('name') ),
+                PAST::Val.new( :value($<variable><twigil>[0] eq '.'
+                    ?? 1 !! 0), :named('has_accessor') ),
+                PAST::Val.new( :value($<declarator_is_rw>
+                    ?? 1 !! 0), :named('has_mutator') )
             )
         ));
         $past := PAST::Stmts.new();
@@ -533,9 +555,10 @@ method routine_def($/) {
     if $<deflongname> {
         my $name := ~$<sigil>[0] ~ $<deflongname>[0].ast;
         $past.name($name);
-        if $*SCOPE eq '' || $*SCOPE eq 'my' {
+        if $*SCOPE eq '' || $*SCOPE eq 'my' || $*SCOPE eq 'our' {
             if $*MULTINESS eq 'multi' {
                 # Does the current block have a candidate holder in place?
+                if $*SCOPE eq 'our' { pir::die('our-scoped multis not yet implemented') }
                 my $cholder;
                 my %sym := @BLOCK[0].symbol($name);
                 if %sym<cholder> {
@@ -585,6 +608,7 @@ method routine_def($/) {
                 # Create a candidate list holder for the dispatchees
                 # this proto will work over, and install them along
                 # with the proto.
+                if $*SCOPE eq 'our' { pir::die('our-scoped protos not yet implemented') }
                 my $cholder := PAST::Op.new( :pasttype('list') );
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
@@ -599,6 +623,20 @@ method routine_def($/) {
                 @BLOCK[0][0].push(PAST::Var.new( :name($name), :isdecl(1),
                                       :viviself($past), :scope('lexical') ) );
                 @BLOCK[0].symbol($name, :scope('lexical') );
+                if $*SCOPE eq 'our' {
+                    # Need to install it at loadinit time but also re-bind
+                    # it per invocation.
+                    @BLOCK[0][0].push(PAST::Op.new(
+                        :pasttype('bind'),
+                        PAST::Var.new( :name($name), :scope('package') ),
+                        PAST::Var.new( :name($name), :scope('lexical') )
+                    ));
+                    @BLOCK[0].loadinit.push(PAST::Op.new(
+                        :pasttype('bind'),
+                        PAST::Var.new( :name($name), :scope('package') ),
+                        PAST::Val.new( :value($past) )
+                    ));
+                }
             }
             $past := PAST::Var.new( :name($name) );
         }
@@ -624,7 +662,12 @@ method method_def($/) {
     }
 
     # Always need an invocant.
-    $past[0].unshift( PAST::Var.new( :name('self'), :scope('parameter') ) );
+    unless $past<signature_has_invocant> {
+        $past[0].unshift(PAST::Var.new(
+            :name('self'), :scope('parameter'),
+            :multitype(PAST::Var.new( :name('$?CLASS') ))
+        ));
+    }
     $past.symbol('self', :scope('lexical') );
     
     # Provided it's named, install it in the methods table.
@@ -668,6 +711,15 @@ sub only_star_block() {
 
 method signature($/) {
     my $BLOCKINIT := @BLOCK[0][0];
+    if $<invocant> {
+        my $inv := $<invocant>[0].ast;
+        $BLOCKINIT.push($inv);
+        $BLOCKINIT.push(PAST::Var.new(
+            :name('self'), :scope('lexical'), :isdecl(1),
+            :viviself(PAST::Var.new( :scope('lexical'), :name($inv.name) ))
+        ));
+        @BLOCK[0]<signature_has_invocant> := 1
+    }
     for $<parameter> { $BLOCKINIT.push($_.ast); }
 }
 
@@ -745,6 +797,8 @@ sub is_lexical($name) {
     %setting_names<NQPList>          := 1;
     %setting_names<NQPArray>         := 1;
     %setting_names<NQPHash>          := 1;
+    %setting_names<NQPStash>         := 1;
+    %setting_names<NQPCapture>       := 1;
     %setting_names<Any>              := 1;
     if %setting_names{$name} {
         return 1;
@@ -821,8 +875,7 @@ method regex_declarator($/, $key?) {
         return 0;
     }
     else {
-        my $regex := 
-            Regex::P6Regex::Actions::buildsub($<p6regex>.ast, @BLOCK.shift);
+        my $regex := buildsub($<p6regex>.ast, @BLOCK.shift);
         $regex.name($name);
         $past := 
             PAST::Op.new(
@@ -921,7 +974,7 @@ method arglist($/) {
         if $past[$i].name eq '&prefix:<|>' {
             $past[$i] := $past[$i][0];
             $past[$i].flat(1);
-            if $past[$i].isa(PAST::Val)
+            if $past[$i].isa(PAST::Var)
                 && pir::substr($past[$i].name, 0, 1) eq '%' {
                     $past[$i].named(1);
             }
@@ -1056,8 +1109,7 @@ method quote:sym</ />($/, $key?) {
         @BLOCK[0].symbol('$/', :scope('lexical'));
         return 0;
     }
-    my $regex := 
-        Regex::P6Regex::Actions::buildsub($<p6regex>.ast, @BLOCK.shift);
+    my $regex := buildsub($<p6regex>.ast, @BLOCK.shift);
     my $past := 
         PAST::Op.new(
             :pasttype<callmethod>, :name<new>,
@@ -1069,6 +1121,91 @@ method quote:sym</ />($/, $key?) {
     make $past;
 }
 
+sub buildsub($rpast, $block = PAST::Block.new() ) {
+    my %capnames := capnames($rpast, 0);
+    %capnames{''} := 0;
+    $rpast := PAST::Regex.new(
+        PAST::Regex.new( :pasttype('scan') ),
+        $rpast,
+        PAST::Regex.new( :pasttype('pass'),
+                         # XXX :backtrack(@MODIFIERS[0]<r> ?? 'r' !! 'g') ),
+                         :backtrack('g') ),
+        :pasttype('concat'),
+        :capnames(%capnames)
+    );
+    unless $block.symbol('$¢') { $block.symbol('$¢', :scope<lexical>); }
+    unless $block.symbol('$/') { $block.symbol('$/', :scope<lexical>); }
+    $block.push($rpast);
+    $block.blocktype('declaration');
+    $block.unshift(PAST::Var.new( :name('self'), :scope('parameter') ));
+    $block;
+}
+
+sub capnames($ast, $count) {
+    my %capnames;
+    my $pasttype := $ast.pasttype;
+    if $pasttype eq 'alt' {
+        my $max := $count;
+        for $ast.list {
+            my %x := capnames($_, $count);
+            for %x {
+                %capnames{$_} := +%capnames{$_} < 2 && %x{$_} == 1
+                                 ?? 1
+                                 !! 2;
+            }
+            if %x{''} > $max { $max := %x{''}; }
+        }
+        $count := $max;
+    }
+    elsif $pasttype eq 'concat' {
+        for $ast.list {
+            my %x := capnames($_, $count);
+            for %x {
+                %capnames{$_} := +%capnames{$_} + %x{$_};
+            }
+            $count := %x{''};
+        }
+    }
+    elsif $pasttype eq 'subrule' && $ast.subtype eq 'capture' {
+        my $name := $ast.name;
+        if $name eq '' { $name := $count; $ast.name($name); }
+        my @names := Q:PIR {
+            $P0 = find_lex '$name'
+            $S0 = $P0
+            %r = split '=', $S0
+        };
+        for @names {
+            if $_ eq '0' || $_ > 0 { $count := $_ + 1; }
+            %capnames{$_} := 1;
+        }
+    }
+    elsif $pasttype eq 'subcapture' {
+        my $name := $ast.name;
+        my @names := Q:PIR {
+            $P0 = find_lex '$name'
+            $S0 = $P0
+            %r = split '=', $S0
+        };
+        for @names {
+            if $_ eq '0' || $_ > 0 { $count := $_ + 1; }
+            %capnames{$_} := 1;
+        }
+        my %x := capnames($ast[0], $count);
+        for %x {
+            %capnames{$_} := +%capnames{$_} + %x{$_};
+        }
+        $count := %x{''};
+    }
+    elsif $pasttype eq 'quant' {
+        my %astcap := capnames($ast[0], $count);
+        for %astcap {
+            %capnames{$_} := 2;
+        }
+        $count := %astcap{''};
+    }
+    %capnames{''} := $count;
+    %capnames;
+}
 method quote_escape:sym<$>($/) { make $<variable>.ast; }
 method quote_escape:sym<{ }>($/) {
     make PAST::Op.new(

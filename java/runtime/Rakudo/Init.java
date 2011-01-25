@@ -176,7 +176,7 @@ public class Init  // C# has public static
         // Run it to get the context we want.
         Context settingContext = null;
         try {
-            settingContext = (Context)methodLoadSetting.invoke( null );
+            settingContext = (Context)methodLoadSetting.invoke( null, new Object[] { });
         }
         catch (IllegalAccessException ex) {
             System.err.println("Illegal access: " + ex.getMessage());
@@ -196,15 +196,14 @@ public class Init  // C# has public static
         settingContext.LexPad.SetByName("KnowHOWAttribute", knowHOWAttribute);
         settingContext.LexPad.SetByName("print",
             CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body()
-                { // an anonymous class where C# has a => (lambda)
+                { // C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        int numPositionals = CaptureHelper.NumPositionals(capture); 
-                        for (int i = 0; i < numPositionals; i++)
+                        for (int i = 0; i < CaptureHelper.NumPositionals(capture); i++)
                         {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
-                            RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
-                            RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth,
+                            RakudoObject strMeth = self.getSTable().FindMethod(tc, value, "Str", 0);
+                            RakudoObject strVal = strMeth.getSTable().Invoke(tc, strMeth,
                                 CaptureHelper.FormWith( new RakudoObject[] { value } ));
                             System.out.print(Ops.unbox_str(null, strVal));
                         }
@@ -214,14 +213,13 @@ public class Init  // C# has public static
         ));
         settingContext.LexPad.SetByName("say",
             CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body()
-                { // an anonymous class where C# has a => (lambda)
+                { // C# has a => (lambda)
                     public RakudoObject Invoke(ThreadContext tc, RakudoObject self, RakudoObject capture)
                     {
-                        int numPositionals = CaptureHelper.NumPositionals(capture); 
-                        for (int i = 0; i < numPositionals; i++) {
+                        for (int i = 0; i < CaptureHelper.NumPositionals(capture); i++) {
                             RakudoObject value = CaptureHelper.GetPositional(capture, i);
-                            RakudoObject strMeth = self.getSTable().FindMethod.FindMethod(tc, value, "Str", 0);
-                            RakudoObject strVal = strMeth.getSTable().Invoke.Invoke(tc, strMeth,
+                            RakudoObject strMeth = self.getSTable().FindMethod(tc, value, "Str", 0);
+                            RakudoObject strVal = strMeth.getSTable().Invoke(tc, strMeth,
                                 CaptureHelper.FormWith( new RakudoObject[] { value } ));
                             System.out.print(Ops.unbox_str(null, strVal));
                         }

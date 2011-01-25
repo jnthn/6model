@@ -29,7 +29,7 @@ public final class CodeObjectUtility
     {
         Representation repr = REPRRegistry.get_REPR_by_name("KnowHOWREPR");
         RakudoObject wrapper = repr.type_object_for(null,null);
-        wrapper.getSTable().Invoke = code; // TODO wrapper.getSTable().SpecialInvoke = code;
+        wrapper.getSTable().SpecialInvoke = code;
         return wrapper;
     }
 

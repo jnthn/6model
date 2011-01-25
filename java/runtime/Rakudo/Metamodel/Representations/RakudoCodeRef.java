@@ -106,7 +106,7 @@ public final class RakudoCodeRef implements Representation // C# has public seal
 
         // Also twiddle the Shared Table's Invoke to invoke the contained
         // function.
-        sharedTable.Invoke = new IFunc_Body() { // C# has a lambda
+        sharedTable.SpecialInvoke = new IFunc_Body() { // C# has a lambda
             public RakudoObject Invoke(ThreadContext tci, RakudoObject methObj, RakudoObject capture)
             {
                 return ((RakudoCodeRef.Instance)methObj).Body.Invoke(tci, methObj, capture);

@@ -481,7 +481,7 @@ our multi sub jst_for(PAST::Block $block) {
     # low level code object.
     if $block.blocktype eq 'immediate' {
         return JST::MethodCall.new(
-            :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
+            :name('getSTable().Invoke'), :type('RakudoObject'),
             "StaticBlockInfo[$our_sbi]",
             TC(),
             "StaticBlockInfo[$our_sbi]",
@@ -588,7 +588,7 @@ our multi sub jst_for(PAST::Op $op) {
         my $callee := JST::Local.new(
             :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'),
             JST::MethodCall.new(
-                :on($inv.name), :name('getSTable().FindMethod.FindMethod'), :type('RakudoObject'),
+                :on($inv.name), :name('getSTable().FindMethod'), :type('RakudoObject'),
                 TC(),
                 $inv.name,
                 $name,
@@ -622,7 +622,7 @@ our multi sub jst_for(PAST::Op $op) {
         return JST::Stmts.new(
             $inv,
             JST::MethodCall.new(
-                :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
+                :name('getSTable().Invoke'), :type('RakudoObject'),
                 $callee,
                 'TC',
                 $callee.name,
@@ -668,7 +668,7 @@ our multi sub jst_for(PAST::Op $op) {
 
         # Emit call.
         return JST::MethodCall.new(
-            :name('getSTable().Invoke.Invoke'), :type('RakudoObject'),
+            :name('getSTable().Invoke'), :type('RakudoObject'),
             $callee,
             TC(),
             $callee.name,

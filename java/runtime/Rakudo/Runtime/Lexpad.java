@@ -60,7 +60,7 @@ public class Lexpad  // C# has struct
     }
 
     /// <summary>
-    /// Extends the lexpad with an extra slot.  TODO: optimize if possible
+    /// Extends the lexpad with an extra slot.
     /// </summary>
     /// <param name="Name"></param>
     public void Extend(String[] Names)
@@ -74,10 +74,10 @@ public class Lexpad  // C# has struct
             SlotMapping.put(name, NewSlot++);
 
         // Reallocate enlarged storage.
-        RakudoObject[] NewStorage = new RakudoObject[Storage.length + Names.length];
+        RakudoObject[] newStorage = new RakudoObject[Storage.length + Names.length];
         for (int i = 0; i < Storage.length; i++)
-            NewStorage[i] = Storage[i];
-        Storage = NewStorage;
+            newStorage[i] = Storage[i];
+        Storage = newStorage;
     }
 }
 

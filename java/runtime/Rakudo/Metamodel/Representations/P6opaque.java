@@ -263,23 +263,23 @@ public final class P6opaque implements Representation // C# has sealed
         {
             // Get attributes and iterate over them.
             RakudoObject HOW = currentClass.getSTable().HOW;
-            RakudoObject attributesMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
+            RakudoObject attributesMeth = HOW.getSTable().FindMethod(tc, HOW, "attributes", Hints.NO_HINT);
             HashMap<String, RakudoObject> localBoxInt1 = new HashMap<String, RakudoObject>();
             localBoxInt1.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
-            RakudoObject attributes = attributesMeth.getSTable().Invoke.Invoke(tc, attributesMeth, CaptureHelper.FormWith(
+            RakudoObject attributes = attributesMeth.getSTable().Invoke(tc, attributesMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, currentClass },
                 localBoxInt1)); // new HashMap<String, RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
-            RakudoObject attributesElemsMeth = attributes.getSTable().FindMethod.FindMethod(tc, attributes, "elems", Hints.NO_HINT);
-            int attributesElems = Ops.unbox_int(tc, attributesElemsMeth.getSTable().Invoke.Invoke(tc, attributesElemsMeth,
+            RakudoObject attributesElemsMeth = attributes.getSTable().FindMethod(tc, attributes, "elems", Hints.NO_HINT);
+            int attributesElems = Ops.unbox_int(tc, attributesElemsMeth.getSTable().Invoke(tc, attributesElemsMeth,
                 CaptureHelper.FormWith(new RakudoObject[] { attributes })));
-            RakudoObject attrAtPosMeth = attributes.getSTable().FindMethod.FindMethod(tc, attributes, "at_pos", Hints.NO_HINT);
+            RakudoObject attrAtPosMeth = attributes.getSTable().FindMethod(tc, attributes, "at_pos", Hints.NO_HINT);
             for (int i = 0; i < attributesElems; i++)
             {
                 // Get the attribute, then get its name.
-                RakudoObject attr = attrAtPosMeth.getSTable().Invoke.Invoke(tc, attrAtPosMeth, CaptureHelper.FormWith(
+                RakudoObject attr = attrAtPosMeth.getSTable().Invoke(tc, attrAtPosMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { attributes, Ops.box_int(tc, i, tc.DefaultIntBoxType) }));
-                RakudoObject nameMeth = attr.getSTable().FindMethod.FindMethod(tc, attr, "name", Hints.NO_HINT);
-                String name = Ops.unbox_str(tc, attr.getSTable().Invoke.Invoke(tc, nameMeth, CaptureHelper.FormWith(
+                RakudoObject nameMeth = attr.getSTable().FindMethod(tc, attr, "name", Hints.NO_HINT);
+                String name = Ops.unbox_str(tc, attr.getSTable().Invoke(tc, nameMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { attr })));
 
                 // Allocate a slot.
@@ -290,15 +290,15 @@ public final class P6opaque implements Representation // C# has sealed
             }
 
             // Find the next parent(s).
-            RakudoObject parentsMeth = HOW.getSTable().FindMethod.FindMethod(tc, HOW, "parents", Hints.NO_HINT);
+            RakudoObject parentsMeth = HOW.getSTable().FindMethod(tc, HOW, "parents", Hints.NO_HINT);
             HashMap<String,RakudoObject> localBoxInt2 = new HashMap<String,RakudoObject>();
             localBoxInt2.put("local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType));
-            RakudoObject parents = parentsMeth.getSTable().Invoke.Invoke(tc, parentsMeth, CaptureHelper.FormWith(
+            RakudoObject parents = parentsMeth.getSTable().Invoke(tc, parentsMeth, CaptureHelper.FormWith(
                 new RakudoObject[] { HOW, currentClass },
                 localBoxInt2)); // new HashMap<String,RakudoObject>() { { "local", Ops.box_int(tc, 1, tc.DefaultBoolBoxType) } }));
             // Check how many parents we have.
-            RakudoObject parentElemsMeth = parents.getSTable().FindMethod.FindMethod(tc, parents, "elems", Hints.NO_HINT);
-            int parentElems = Ops.unbox_int(tc, parentElemsMeth.getSTable().Invoke.Invoke(tc, parentElemsMeth,
+            RakudoObject parentElemsMeth = parents.getSTable().FindMethod(tc, parents, "elems", Hints.NO_HINT);
+            int parentElems = Ops.unbox_int(tc, parentElemsMeth.getSTable().Invoke(tc, parentElemsMeth,
                 CaptureHelper.FormWith(new RakudoObject[] { parents })));
             if (parentElems == 0)
             {
@@ -315,8 +315,8 @@ public final class P6opaque implements Representation // C# has sealed
             else
             {
                 // Just one. Get next parent.
-                RakudoObject atPosMeth = parents.getSTable().FindMethod.FindMethod(tc, parents, "at_pos", Hints.NO_HINT);
-                currentClass = atPosMeth.getSTable().Invoke.Invoke(tc, atPosMeth, CaptureHelper.FormWith(
+                RakudoObject atPosMeth = parents.getSTable().FindMethod(tc, parents, "at_pos", Hints.NO_HINT);
+                currentClass = atPosMeth.getSTable().Invoke(tc, atPosMeth, CaptureHelper.FormWith(
                     new RakudoObject[] { parents, Ops.box_int(tc, 0, tc.DefaultIntBoxType) }));
             }
         }

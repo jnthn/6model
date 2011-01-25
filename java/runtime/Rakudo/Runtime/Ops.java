@@ -228,7 +228,7 @@ public class Ops  // public static in the C# version
     /// <returns></returns>
     public static RakudoObject find_method(ThreadContext tc, RakudoObject object, String name)
     {
-        return object.getSTable().FindMethod.FindMethod(tc, object, name, Hints.NO_HINT);
+        return object.getSTable().FindMethod(tc, object, name, Hints.NO_HINT);
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ public class Ops  // public static in the C# version
     /// <returns></returns>
     public static RakudoObject find_method_with_hint(ThreadContext tc, RakudoObject object, String name, int hint)
     {
-        return object.getSTable().FindMethod.FindMethod(tc, object, name, hint);
+        return object.getSTable().FindMethod(tc, object, name, hint);
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public class Ops  // public static in the C# version
     /// <returns></returns>
     public static RakudoObject invoke(ThreadContext tc, RakudoObject invokee, RakudoObject capture)
     {
-        return invokee.getSTable().Invoke.Invoke(tc, invokee, capture);
+        return invokee.getSTable().Invoke(tc, invokee, capture);
     }
 
     /// <summary>
@@ -616,7 +616,7 @@ public class Ops  // public static in the C# version
             {
                 RakudoObject candidate = MultiDispatcher.FindBestCandidate(
                     codeObj, curOuter.Capture);
-                return candidate.getSTable().Invoke.Invoke(tc, candidate, curOuter.Capture);
+                return candidate.getSTable().Invoke(tc, candidate, curOuter.Capture);
             }
             curOuter = curOuter.Outer;
         }

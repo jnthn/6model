@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import Rakudo.Metamodel.IFindMethod;
+import Rakudo.Metamodel.ISpecialFindMethod;
 import Rakudo.Metamodel.KnowHOW.KnowHOWREPR;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
@@ -177,9 +177,9 @@ public class KnowHOWBootstrapper  // C# has public static
 
         // And put a fake FindMethod in there that just looks in the
         // dictionary.
-        KnowHOWHOW.getSTable().FindMethod = new IFindMethod()
-        { // an anonymous class
-            public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
+        KnowHOWHOW.getSTable().SpecialFindMethod = new ISpecialFindMethod() // C# has a => (lambda)
+        {
+            public RakudoObject SpecialFindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
             {
                 HashMap<String, RakudoObject> mTable = ((KnowHOWREPR.KnowHOWInstance)obj).Methods;
                 if (mTable.containsKey(name))

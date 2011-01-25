@@ -1,6 +1,5 @@
 package Rakudo.Metamodel;
 import java.util.HashMap;
-import Rakudo.Metamodel.IFindMethod;
 import Rakudo.Metamodel.ISpecialFindMethod;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
@@ -9,7 +8,6 @@ import Rakudo.Runtime.CaptureHelper;
 import Rakudo.Runtime.Ops;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
-
 /// <summary>
 /// This represents the commonalities shared by many instances of
 /// a given "type". Type in this context refers to a given combination
@@ -43,7 +41,7 @@ public final class SharedTable  // C# has public sealed
     /// Cache of methods by name. Published by meta-objects that choose
     /// to do so.
     /// </summary>
-    private HashMap<String, RakudoObject> MethodCache; // C# hash internal
+    private HashMap<String, RakudoObject> MethodCache; // C# has internal
 
     /// <summary>
     /// Sometimes, we may want to install a hook for overriding method
@@ -56,60 +54,97 @@ public final class SharedTable  // C# has public sealed
     /// <summary>
     /// This finds a method with the given name or using a hint.
     /// </summary>
-    public IFindMethod FindMethod = new IFindMethod() { // this anonymous class is a lambda in the C# version
-        public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
+    public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
+    {
+        RakudoObject cachedMethod;
+
+        // Does this s-table have a special overridden finder?
+        if (SpecialFindMethod != null)
+            return SpecialFindMethod.SpecialFindMethod(tc, obj, name, hint);
+
+        // See if we can find it by hint.
+        if (hint != Hints.NO_HINT && obj.getSTable().VTable != null && hint < obj.getSTable().VTable.length)
         {
-            RakudoObject CachedMethod;
-
-            // Does this s-table have a special overridden finder?
-            if (SpecialFindMethod != null)
-                return SpecialFindMethod.SpecialFindMethod(tc, obj, name, hint);
-
-            // See if we can find it by hint.
-            if (hint != Hints.NO_HINT && obj.getSTable().VTable != null && hint < obj.getSTable().VTable.length)
-            {
-                // Yes, just grab it from the v-table.
-                return obj.getSTable().VTable[hint];
-            }
-            // Otherwise, try method cache.
-            else if (MethodCache != null && MethodCache.containsKey(name)) {
-                CachedMethod = MethodCache.get(name);
-                return CachedMethod;
-            }
-
-            // Otherwise, go ask the meta-object.
-            else
-            {
-                // Find the find_method method.
-                RakudoObject HOW = obj.getSTable().HOW;
-                RakudoObject meth = obj.getSTable().CachedFindMethod;
-                if (meth == null)
-                    obj.getSTable().CachedFindMethod = meth = HOW.getSTable().FindMethod.FindMethod(
-                        tc, HOW, "find_method", Hints.NO_HINT);
-
-                // Call it.
-                RakudoObject capt = CaptureHelper.FormWith(new RakudoObject[] { HOW, obj, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
-                return meth.getSTable().Invoke.Invoke(tc, meth, capt);
-            }
+            // Yes, just grab it from the v-table.
+            return obj.getSTable().VTable[hint];
         }
-    };
 
-    /// <summary>
-    /// The default invoke looks up a postcircumfix:<( )> and runs that.
-    /// XXX Cache the hint where we can.
-    /// </summary>
-    public RakudoCodeRef.IFunc_Body Invoke = new RakudoCodeRef.IFunc_Body() { // this anonymous class is a lambda in the C# version
-        public RakudoObject Invoke( ThreadContext tc, RakudoObject meth, RakudoObject capt )
+        // Otherwise, try method cache.
+        else if (MethodCache != null && MethodCache.containsKey(name))
+            { cachedMethod = MethodCache.get(name); return cachedMethod; }
+
+        // Otherwise, go ask the meta-object.
+        else
         {
-            SharedTable sTable = meth.getSTable();
-            RakudoObject invokable = (sTable.CachedInvoke != null) ? sTable.CachedInvoke : (sTable.CachedInvoke = meth.getSTable().FindMethod.FindMethod(tc, meth, "postcircumfix:<( )>", Hints.NO_HINT));
-            return invokable.getSTable().Invoke.Invoke(tc, meth, capt);
+            // Find the find_method method.
+            RakudoObject HOW = obj.getSTable().HOW;
+            RakudoObject method = obj.getSTable().CachedFindMethod;
+            if (method == null)
+                obj.getSTable().CachedFindMethod = method = HOW.getSTable().FindMethod(
+                    tc, HOW, "find_method", Hints.NO_HINT);
+
+            // Call it.
+            RakudoObject capture = CaptureHelper.FormWith(new RakudoObject[] { HOW, obj, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
+            return method.getSTable().Invoke(tc, method, capture);
         }
-    };
+    }
+
     /// <summary>
     /// We keep a cache of the postcircumfix:<( )> method.
     /// </summary>
-    private RakudoObject CachedInvoke; // internal in the C# version
+    private RakudoObject CachedInvoke; // C# has internal
+
+    /// <summary>
+    /// Hook for overriding invocation.
+    /// </summary>
+    public RakudoCodeRef.IFunc_Body SpecialInvoke; // C# has Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>
+
+        /// <summary>
+        /// Invokes. By default, looks up a postcircumfix:<( )> and runs that.
+        /// </summary>
+        /// <param name="TC"></param>
+        /// <param name="Obj"></param>
+        /// <param name="Cap"></param>
+        /// <returns></returns>
+    public RakudoObject Invoke(ThreadContext threadContext, RakudoObject method, RakudoObject capture)
+    {
+        if (SpecialInvoke != null)
+            return SpecialInvoke.Invoke(threadContext, method, capture);
+        SharedTable sharedTable = method.getSTable();
+        RakudoObject invokable = sharedTable.CachedInvoke; if (invokable == null) { invokable = sharedTable.CachedInvoke = method.getSTable().FindMethod(threadContext, method, "postcircumfix:<( )>", Hints.NO_HINT); }
+        return invokable.getSTable().Invoke(threadContext, method, capture);
+    }
+
+    /// <summary>
+    /// For types where we know all the possible types it could match up
+    /// front, this type check cache can be published.
+    /// </summary>
+    public RakudoObject[] TypeCheckCache;
+
+    /// <summary>
+    /// Used to do a type check. If one was published, looks in the type
+    /// check cache. If there is none, calls .HOW.type_check.
+    /// </summary>
+    /// <param name="TC"></param>
+    /// <param name="CheckAgainst"></param>
+    /// <param name="Checkee"></param>
+    /// <returns></returns>
+    public RakudoObject TypeCheck(ThreadContext threadContext, RakudoObject object, RakudoObject checkee)
+    {
+        if (TypeCheckCache != null)
+        {
+            for (int i = 0; i < TypeCheckCache.length; i++)
+                if (TypeCheckCache[i] == checkee)
+                    return Ops.box_int(threadContext, 1, threadContext.DefaultBoolBoxType);
+            return Ops.box_int(threadContext, 0, threadContext.DefaultBoolBoxType);
+        }
+        else
+        {
+            RakudoObject checker = HOW.getSTable().FindMethod(threadContext, HOW, "type_check", Hints.NO_HINT);
+            RakudoObject capture = CaptureHelper.FormWith(new RakudoObject[] { HOW, object, checkee });
+            return checker.getSTable().Invoke(threadContext, checker, capture);
+        }
+    }
 
     /// <summary>
     /// The serialization context of this STable, if any.

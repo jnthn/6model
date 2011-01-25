@@ -183,6 +183,7 @@ method compile(PAST::Node $node) {
         JST::Using.new( :namespace('Rakudo.Metamodel.REPRRegistry') ),
         JST::Using.new( :namespace('Rakudo.Runtime.CaptureHelper') ),
         JST::Using.new( :namespace('Rakudo.Runtime.CodeObjectUtility') ),
+        JST::Using.new( :namespace('Rakudo.Runtime.DefinednessConstraint') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Context') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Ops') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Parameter') ),
@@ -537,14 +538,14 @@ sub compile_signature(@params) {
             'Parameter.POS_FLAG');
 
         # Definedness constraint.
-# TODO  $param.push($_<definedness> eq 'D' ?? 'DefinednessConstraint.DefinedOnly' !!
-#                   $_<definedness> eq 'U' ?? 'DefinednessConstraint.UndefinedOnly' !!
-#                   'DefinednessConstraint.None');
-        
+        $param.push($_<definedness> eq 'D' ?? 'DefinednessConstraint.DefinedOnly' !!
+                    $_<definedness> eq 'U' ?? 'DefinednessConstraint.UndefinedOnly' !!
+                    'DefinednessConstraint.None');
+
         # viviself.
-# TODO  $param.push($_.viviself ~~ PAST::Node
-#           ?? jst_for(PAST::Block.new(:closure(1), $_.viviself))
-#           !! JST::Null.new());
+        $param.push($_.viviself ~~ PAST::Node
+            ?? jst_for(PAST::Block.new(:closure(1), $_.viviself))
+            !! JST::Null.new());
 
         $params.push($param);
     }

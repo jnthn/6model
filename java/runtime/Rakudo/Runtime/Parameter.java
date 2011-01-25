@@ -18,19 +18,16 @@ public class Parameter
     /// <param name="VariableName"></param>
     /// <param name="Name"></param>
     /// <param name="Flags"></param>
-//  public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
-//      String name, int flags, DefinednessConstraint definedness, RakudoObject defaultValue)
     public Parameter(RakudoObject type, String variableName, int variableLexpadPosition,
-        String name, int flags)
+        String name, int flags, DefinednessConstraint definedness, RakudoObject defaultValue)
     {
         this.Type = type;
         this.VariableName = variableName;
         this.VariableLexpadPosition = variableLexpadPosition;
         this.Name = name;
-// TODO this.DefaultValue = defaultValue;
+        this.DefaultValue = defaultValue;
         this.Flags = flags;
-// TODO this.Definedness = definedness;
-        this.Definedness = DefinednessConstraint.None;
+        this.Definedness = definedness;
     }
 
     /// <summary>
@@ -71,7 +68,7 @@ public class Parameter
     /// <summary>
     /// (Un-)flag for positional parameters.
     /// </summary>
-    public static final int POS_FLAG = 0;
+    public static final int POS_FLAG = 0; // C# has public const int
 
     /// <summary>
     /// Flag for optional parameters.
@@ -93,6 +90,10 @@ public class Parameter
     /// </summary>
     public static final int NAMED_FLAG = 8;
 
+    /// <summary>
+    /// Tests whether the flag is optional.
+    /// </summary>
+    /// <returns></returns>
     public boolean IsOptional()
     {
         return (Flags & OPTIONAL_FLAG) > 0;

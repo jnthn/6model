@@ -2,6 +2,7 @@ package Rakudo.Runtime.Exceptions;
 
 import Rakudo.Metamodel.RakudoObject;
 
+
 /// <summary>
 /// Represents an exception handler.
 /// </summary>

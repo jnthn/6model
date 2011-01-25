@@ -1,5 +1,8 @@
-// Ops.java is equivalent to the combination of Ops partial class
-// definitions in the following files: Boxing.cs, 
+// Ops.java is equivalent to the combination of partial classes in the
+// dotnet/runtime/Runtime/Ops directory, in the following files:
+//   Boxing.cs     ControlFlow.cs   Library.cs   P6list.cs    Variables.cs
+//   Coercion.cs   Dispatch.cs      Metamodel.cs P6mapping.cs
+//   Comparison.cs Introspection.cs P6capture.cs Primitive.cs
 package Rakudo.Runtime;
 
 import java.util.ArrayList;
@@ -7,8 +10,11 @@ import java.util.HashMap;
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
+import Rakudo.Metamodel.Representations.P6int;
 import Rakudo.Metamodel.Representations.P6list;
 import Rakudo.Metamodel.Representations.P6mapping;
+import Rakudo.Metamodel.Representations.P6num;
+import Rakudo.Metamodel.Representations.P6str;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
 import Rakudo.Metamodel.REPRRegistry;
 import Rakudo.Metamodel.SharedTable;
@@ -22,6 +28,114 @@ import Rakudo.Runtime.MultiDispatch.MultiDispatcher;
 /// </summary>
 public class Ops  // public static in the C# version
 {
+    // Methods are grouped in here by the corresponing C# filename
+
+    // Boxing.cs
+    /// <summary>
+    /// Boxes a native int into its matching value type.  See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_int(ThreadContext tc, int value, RakudoObject to)
+    {
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_int(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Boxes a native int into its matching value type.  See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_int(ThreadContext tc, int value)
+    {
+        RakudoObject result = tc.DefaultIntBoxType.getSTable().REPR.instance_of(tc, tc.DefaultIntBoxType);
+        tc.DefaultIntBoxType.getSTable().REPR.set_int(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Boxes a native num into its matching value type. See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_num(ThreadContext tc, double value, RakudoObject to)
+    {
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_num(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Boxes a native num into its matching value type. See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_num(ThreadContext tc, int value)
+    {
+        RakudoObject result = tc.DefaultNumBoxType.getSTable().REPR.instance_of(tc, tc.DefaultNumBoxType);
+        tc.DefaultNumBoxType.getSTable().REPR.set_num(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Boxes a native string into its matching value type. See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_str(ThreadContext tc, String value, RakudoObject to)
+    {
+        Representation REPR = to.getSTable().REPR;
+        RakudoObject result = REPR.instance_of(tc, to);
+        REPR.set_str(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Boxes a native string into its matching value type. See Boxing.cs
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <returns></returns>
+    public static RakudoObject box_str(ThreadContext tc, String value)
+    {
+        RakudoObject result = tc.DefaultStrBoxType.getSTable().REPR.instance_of(tc, tc.DefaultStrBoxType);
+        tc.DefaultStrBoxType.getSTable().REPR.set_str(tc, result, value);
+        return result;
+    }
+
+    /// <summary>
+    /// Unboxes a boxed int. See Boxing.cs
+    /// </summary>
+    /// <param name="Boxed"></param>
+    /// <returns></returns>
+    public static int unbox_int(ThreadContext tc, RakudoObject boxed)
+    {
+        return boxed.getSTable().REPR.get_int(tc, boxed);
+    }
+
+    /// <summary>
+    /// Unboxes a boxed num. See Boxing.cs
+    /// </summary>
+    /// <param name="Boxed"></param>
+    /// <returns></returns>
+    public static double unbox_num(ThreadContext tc, RakudoObject boxed)
+    {
+        return boxed.getSTable().REPR.get_num(tc, boxed);
+    }
+
+    /// <summary>
+    /// Unboxes a boxed string. See Boxing.cs
+    /// </summary>
+    /// <param name="Boxed"></param>
+    /// <returns></returns>
+    public static String unbox_str(ThreadContext tc, RakudoObject boxed)
+    {
+        return boxed.getSTable().REPR.get_str(tc, boxed);
+    }
+
     /// <summary>
     /// Creates a type object associated with the given HOW and of the
     /// given representation. See Representation.cs
@@ -160,75 +274,7 @@ public class Ops  // public static in the C# version
         return object.getSTable().WHAT;
     }
 
-    /// <summary>
-    /// Boxes a native int into its matching value type.  See Boxing.cs
-    /// </summary>
-    /// <param name="Value"></param>
-    /// <returns></returns>
-    public static RakudoObject box_int(ThreadContext tc, int value, RakudoObject to)
-    {
-        Representation REPR = to.getSTable().REPR;
-        RakudoObject result = REPR.instance_of(tc, to);
-        REPR.set_int(tc, result, value);
-        return result;
-    }
-
-    /// <summary>
-    /// Boxes a native num into its matching value type. See Boxing.cs
-    /// </summary>
-    /// <param name="Value"></param>
-    /// <returns></returns>
-    public static RakudoObject box_num(ThreadContext tc, double value, RakudoObject to)
-    {
-        Representation REPR = to.getSTable().REPR;
-        RakudoObject result = REPR.instance_of(tc, to);
-        REPR.set_num(tc, result, value);
-        return result;
-    }
-
-    /// <summary>
-    /// Boxes a native string into its matching value type. See Boxing.cs
-    /// </summary>
-    /// <param name="Value"></param>
-    /// <returns></returns>
-    public static RakudoObject box_str(ThreadContext tc, String value, RakudoObject to)
-    {
-        Representation REPR = to.getSTable().REPR;
-        RakudoObject result = REPR.instance_of(tc, to);
-        REPR.set_str(tc, result, value);
-        return result;
-    }
-
-    /// <summary>
-    /// Unboxes a boxed int. See Boxing.cs
-    /// </summary>
-    /// <param name="Boxed"></param>
-    /// <returns></returns>
-    public static int unbox_int(ThreadContext tc, RakudoObject boxed)
-    {
-        return boxed.getSTable().REPR.get_int(tc, boxed);
-    }
-
-    /// <summary>
-    /// Unboxes a boxed num. See Boxing.cs
-    /// </summary>
-    /// <param name="Boxed"></param>
-    /// <returns></returns>
-    public static double unbox_num(ThreadContext tc, RakudoObject boxed)
-    {
-        return boxed.getSTable().REPR.get_num(tc, boxed);
-    }
-
-    /// <summary>
-    /// Unboxes a boxed string. See Boxing.cs
-    /// </summary>
-    /// <param name="Boxed"></param>
-    /// <returns></returns>
-    public static String unbox_str(ThreadContext tc, RakudoObject boxed)
-    {
-        return boxed.getSTable().REPR.get_str(tc, boxed);
-    }
-
+    // Coercion.cs
     /// <summary>
     /// Coerces an integer into a string. See Coercion.cs
     /// </summary>
@@ -304,109 +350,6 @@ public class Ops  // public static in the C# version
         return Ops.box_num(tc, value, targetType);
     }
 
-
-    /// <summary>
-    /// Gets a lexical variable of the given name. See Variables.cs
-    /// </summary>
-    /// <param name="i"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static RakudoObject get_lex(ThreadContext tc, String name)
-    {
-        Context curContext = tc.CurrentContext;
-        while (curContext != null) {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
-                int index = curContext.LexPad.SlotMapping.get(name);
-                return curContext.LexPad.Storage[index];
-            }
-            curContext = curContext.Outer;
-        }
-        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
-    }
-
-    /// <summary>
-    /// Gets a lexical variable of the given name, but skips the current
-    /// scope. See Variables.cs
-    /// </summary>
-    /// <param name="tc"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static RakudoObject get_lex_skip_current(ThreadContext tc, String name)
-    {
-        Context curContext = tc.CurrentContext.Outer;
-        while (curContext != null)
-        {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
-                int index = curContext.LexPad.SlotMapping.get(name);
-                return curContext.LexPad.Storage[index];
-            }
-            curContext = curContext.Outer;
-        }
-        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
-    }
-
-    /// <summary>
-    /// Binds the given value to a lexical variable of the given name. See Variables.cs
-    /// </summary>
-    /// <param name="i"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static RakudoObject bind_lex(ThreadContext tc, String name, RakudoObject value)
-    {
-        Context curContext = tc.CurrentContext;
-        while (curContext != null)
-        {
-            if (curContext.LexPad.SlotMapping.containsKey(name))
-            {
-                int index = curContext.LexPad.SlotMapping.get(name);                        
-                curContext.LexPad.Storage[index] = value;
-                return value;
-            }
-            curContext = curContext.Outer;
-        }
-        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
-    }
-
-    /// <summary>
-    /// Looks up a variable in the dynamic scope. See Variables.cs
-    /// </summary>
-    /// <param name="C"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static RakudoObject get_dynamic(ThreadContext tc, String name)
-    {
-        Context curContext = tc.CurrentContext;
-        while (curContext != null) {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
-                int index = curContext.LexPad.SlotMapping.get(name);
-                return curContext.LexPad.Storage[index];
-            }
-            curContext = curContext.Caller;
-        }
-        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
-    }
-
-    /// <summary>
-    /// Binds the given value to a variable in the dynamic scope. See Variables.cs
-    /// </summary>
-    /// <param name="C"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static RakudoObject bind_dynamic(ThreadContext tc, String name, RakudoObject value)
-    {
-        Context curContext = tc.CurrentContext;
-        while (curContext != null)
-        {
-            if (curContext.LexPad.SlotMapping.containsKey(name))
-            {
-                int index = curContext.LexPad.SlotMapping.get(name);
-                curContext.LexPad.Storage[index] = value;
-                return value;
-            }
-            curContext = curContext.Caller;
-        }
-        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
-    }
 
     /// <summary>
     /// Compares two floating point numbers for equality.  See Comparison.cs
@@ -1183,5 +1126,108 @@ public class Ops  // public static in the C# version
         return (RakudoObject)null;
         //return (RakudoObject)method.Invoke.Invoke(null, new Object[] { tc, tc.Domain.Setting });
     }
+    /// <summary>
+    /// Gets a lexical variable of the given name. See Variables.cs
+    /// </summary>
+    /// <param name="i"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject get_lex(ThreadContext tc, String name)
+    {
+        Context curContext = tc.CurrentContext;
+        while (curContext != null) {
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
+            }
+            curContext = curContext.Outer;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
+    }
+
+    /// <summary>
+    /// Gets a lexical variable of the given name, but skips the current
+    /// scope. See Variables.cs
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject get_lex_skip_current(ThreadContext tc, String name)
+    {
+        Context curContext = tc.CurrentContext.Outer;
+        while (curContext != null)
+        {
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
+            }
+            curContext = curContext.Outer;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
+    }
+
+    /// <summary>
+    /// Binds the given value to a lexical variable of the given name. See Variables.cs
+    /// </summary>
+    /// <param name="i"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject bind_lex(ThreadContext tc, String name, RakudoObject value)
+    {
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
+        {
+            if (curContext.LexPad.SlotMapping.containsKey(name))
+            {
+                int index = curContext.LexPad.SlotMapping.get(name);                        
+                curContext.LexPad.Storage[index] = value;
+                return value;
+            }
+            curContext = curContext.Outer;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the lexical scope");
+    }
+
+    /// <summary>
+    /// Looks up a variable in the dynamic scope. See Variables.cs
+    /// </summary>
+    /// <param name="C"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject get_dynamic(ThreadContext tc, String name)
+    {
+        Context curContext = tc.CurrentContext;
+        while (curContext != null) {
+            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                return curContext.LexPad.Storage[index];
+            }
+            curContext = curContext.Caller;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
+    }
+
+    /// <summary>
+    /// Binds the given value to a variable in the dynamic scope. See Variables.cs
+    /// </summary>
+    /// <param name="C"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static RakudoObject bind_dynamic(ThreadContext tc, String name, RakudoObject value)
+    {
+        Context curContext = tc.CurrentContext;
+        while (curContext != null)
+        {
+            if (curContext.LexPad.SlotMapping.containsKey(name))
+            {
+                int index = curContext.LexPad.SlotMapping.get(name);
+                curContext.LexPad.Storage[index] = value;
+                return value;
+            }
+            curContext = curContext.Caller;
+        }
+        throw new UnsupportedOperationException("No variable " + name + " found in the dynamic scope");
+    }
+
 }
 

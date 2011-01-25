@@ -42,10 +42,8 @@ public class Context
     /// Creates an empty, uninitialized context.
     /// </summary>
     public Context() // it could be private, except that Init() calls it.
-    {
-        // System.err.println( "new empty Context created" );
-        // this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
-    }
+    {   // System.err.println( "new empty Context created" );
+    }   // this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
 
     /// <summary>
     /// Constructor initializes the context.
@@ -62,10 +60,8 @@ public class Context
 
         // Static sub object should have this as the current
         // context.
-        staticCodeObject.CurrentContext = this;
-        
+        staticCodeObject.CurrentContext = this; // TODO: drop next line?
         this.LexPad = new Lexpad( new String[] {} ); // parameter is an empty list of strings
-
         // Lex pad should be an "instantiation" of the static one.
         // Instantiating a lexpad creates a new dynamic instance of it
         // from a static one, copying over the slot storage entries

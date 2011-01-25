@@ -1,5 +1,7 @@
 package Rakudo.Metamodel;
+import java.util.HashMap;
 import Rakudo.Metamodel.IFindMethod;
+import Rakudo.Metamodel.ISpecialFindMethod;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
@@ -13,7 +15,7 @@ import Rakudo.Serialization.SerializationContext;
 /// a given "type". Type in this context refers to a given combination
 /// of meta-object and representation.
 /// </summary>
-public final class SharedTable  // public sealed in the C# version
+public final class SharedTable  // C# has public sealed
 {
     /// <summary>
     /// The representation object that manages object layout.
@@ -33,17 +35,49 @@ public final class SharedTable  // public sealed in the C# version
     public RakudoObject WHAT;
 
     /// <summary>
+    /// We keep a cache of the find_method method.
+    /// </summary>
+    private RakudoObject CachedFindMethod; // C# has internal
+
+    /// <summary>
+    /// Cache of methods by name. Published by meta-objects that choose
+    /// to do so.
+    /// </summary>
+    private HashMap<String, RakudoObject> MethodCache; // C# hash internal
+
+    /// <summary>
+    /// Sometimes, we may want to install a hook for overriding method
+    /// finding. This does that. (We used to just give this a default
+    /// closure, but it makes dispatch a bit more expensive, and this is
+    /// path is red hot...)
+    /// </summary>
+    public ISpecialFindMethod SpecialFindMethod; // C# has public Func<ThreadContext, RakudoObject, string, int, RakudoObject>
+
+    /// <summary>
     /// This finds a method with the given name or using a hint.
     /// </summary>
     public IFindMethod FindMethod = new IFindMethod() { // this anonymous class is a lambda in the C# version
         public RakudoObject FindMethod(ThreadContext tc, RakudoObject obj, String name, int hint)
         {
+            RakudoObject CachedMethod;
+
+            // Does this s-table have a special overridden finder?
+            if (SpecialFindMethod != null)
+                return SpecialFindMethod.SpecialFindMethod(tc, obj, name, hint);
+
             // See if we can find it by hint.
             if (hint != Hints.NO_HINT && obj.getSTable().VTable != null && hint < obj.getSTable().VTable.length)
             {
                 // Yes, just grab it from the v-table.
                 return obj.getSTable().VTable[hint];
             }
+            // Otherwise, try method cache.
+            else if (MethodCache != null && MethodCache.containsKey(name)) {
+                CachedMethod = MethodCache.get(name);
+                return CachedMethod;
+            }
+
+            // Otherwise, go ask the meta-object.
             else
             {
                 // Find the find_method method.
@@ -59,10 +93,6 @@ public final class SharedTable  // public sealed in the C# version
             }
         }
     };
-    /// <summary>
-    /// We keep a cache of the find_method method.
-    /// </summary>
-    private RakudoObject CachedFindMethod; // internal in the C# version
 
     /// <summary>
     /// The default invoke looks up a postcircumfix:<( )> and runs that.

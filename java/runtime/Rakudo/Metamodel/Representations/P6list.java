@@ -64,57 +64,57 @@ public class P6list implements Representation
         return ((Instance)object).Storage != null;
     }
 
-    public  RakudoObject get_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name)
+    public RakudoObject get_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, int hint)
+    public RakudoObject get_attribute_with_hint(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, int hint)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void bind_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
+    public void bind_attribute(ThreadContext TC, RakudoObject object, RakudoObject classHandle, String name, RakudoObject value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void bind_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint, RakudoObject value)
+    public void bind_attribute_with_hint(ThreadContext tc, RakudoObject object, RakudoObject classHandle, String name, int hint, RakudoObject value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  int hint_for(ThreadContext tc, RakudoObject classHandle, String name)
+    public int hint_for(ThreadContext tc, RakudoObject classHandle, String name)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_int(ThreadContext tc, RakudoObject object, int value)
+    public void set_int(ThreadContext tc, RakudoObject object, int value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  int get_int(ThreadContext tc, RakudoObject object)
+    public int get_int(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_num(ThreadContext tc, RakudoObject object, double value)
+    public void set_num(ThreadContext tc, RakudoObject object, double value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  double get_num(ThreadContext tc, RakudoObject object)
+    public double get_num(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  void set_str(ThreadContext tc, RakudoObject object, String value)
+    public void set_str(ThreadContext tc, RakudoObject object, String value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public  String get_str(ThreadContext tc, RakudoObject object)
+    public String get_str(ThreadContext tc, RakudoObject object)
     {
         throw new UnsupportedOperationException();
     }

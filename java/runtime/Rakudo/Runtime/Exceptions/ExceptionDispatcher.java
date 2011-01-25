@@ -1,5 +1,4 @@
 package Rakudo.Runtime.Exceptions;
-
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representations.RakudoCodeRef;
@@ -11,7 +10,7 @@ import Rakudo.Runtime.Ops;
 /// <summary>
 /// Various bits of logic relating to exception dispatch.
 /// </summary>
-public class ExceptionDispatcher  // public static in the C# version
+public class ExceptionDispatcher  // C# has public static
 {
     /// <summary>
     /// Invokes the specified exception handler with the given exception
@@ -67,3 +66,4 @@ public class ExceptionDispatcher  // public static in the C# version
         System.exit(1);
     }
 }
+

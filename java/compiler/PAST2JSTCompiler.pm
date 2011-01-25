@@ -882,7 +882,7 @@ sub form_capture(@args, $inv?) {
     );
     my $pos_part := JST::ArrayLiteral.new( :type('RakudoObject') );
     my $named_part := JST::DictionaryLiteral.new(
-        :key_type('string'), :value_type('RakudoObject') );
+        :key_type('String'), :value_type('RakudoObject') );
     my $flatten_flags := JST::ArrayLiteral.new( :type('int') );
     my $has_flats := 0;
 
@@ -1018,25 +1018,76 @@ our multi sub jst_for(PAST::Var $var) {
         }
     }
     elsif $scope eq 'package' {
-        if $var.isdecl { pir::die("Don't know how to handle is_decl on package"); }
-
         # Get all parts of the name.
         my @parts;
-        if $var.namespace {
+        @parts.push('GLOBAL');
+        if pir::isa($var.namespace, 'ResizablePMCArray') {
             for $var.namespace { @parts.push($_); }
+        }
+        elsif +@*CURRENT_NS {
+            for @*CURRENT_NS {
+                @parts.push($_)
+            }
         }
         @parts.push($var.name);
 
         # First, we need to look up the first part.
-        my $lookup := emit_lexical_lookup(@parts.shift);
+        my $lookup;
+        {
+            my $*BIND_CONTEXT := 0;
+            $lookup := emit_lexical_lookup(@parts.shift);
+        }
+
+        # Also need to treat last part specially.
+        my $target := @parts.pop;
 
         # Now chase down the rest.
         for @parts {
-            # XXX todo: wrap the lookup in postcircumfix:<{ }> call(s).
-            pir::die('Multi-level package lookups NYI');
+            $lookup := jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('get_namespace'),
+                $lookup,
+                PAST::Val.new( :value(~$_) )
+            ));
+        }
+
+        # Binding, if needed.
+        if $*BIND_CONTEXT {
+            my $*BIND_CONTEXT := 0;
+            $lookup := jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('bind_key'),
+                $lookup,
+                PAST::Val.new( :value(~$target) ),
+                $*BIND_VALUE
+            ));
+        }
+        else {
+            $lookup := jst_for(PAST::Op.new(
+                :pasttype('callmethod'), :name('at_key'),
+                $lookup,
+                PAST::Val.new( :value(~$target) )
+            ));
         }
 
         return $lookup;
+#       if $var.isdecl { pir::die("PAST2JSTCompiler.pm does not know how to handle is_decl on package"); }
+
+        # Get all parts of the name.
+ #      my @parts;
+ #      if $var.namespace {
+ #          for $var.namespace { @parts.push($_); }
+ #      }
+ #      @parts.push($var.name);
+
+        # First, we need to look up the first part.
+ #      my $lookup := emit_lexical_lookup(@parts.shift);
+
+        # Now chase down the rest.
+ #      for @parts {
+ #          # XXX todo: wrap the lookup in postcircumfix:<{ }> call(s).
+ #          pir::die('Multi-level package lookups NYI');
+ #      }
+
+#       return $lookup;
     }
     elsif $scope eq 'register' {
         if $var.isdecl {
@@ -1213,7 +1264,7 @@ sub temp_int($arg?, :$name) {
 
 sub temp_str($arg?, :$name) {
     JST::Local.new(
-        :name(get_unique_id('string_' ~ ($name || ''))), :isdecl(1), :type('string'),
+        :name(get_unique_id('string_' ~ ($name || ''))), :isdecl(1), :type('String'),
         pir::defined($arg) ?? jst_for($arg) !! lits("")
     )
 }
@@ -1238,7 +1289,7 @@ sub unbox($type, $arg) {
 # Maps a hand-wavey type (one of the three we box/unbox with) to a CLR type.
 sub vm_type_for($type) {
     $type eq 'num' ?? 'double' !!
-    $type eq 'str' ?? 'string' !!
+    $type eq 'str' ?? 'String' !!
     $type eq 'int' ?? 'int'    !!
     $type eq 'obj' ?? 'RakudoObject' !!
                       pir::die("Don't know VM type for $type")
@@ -1427,7 +1478,7 @@ sub returns_array($expr, *@result_slots) {
                 JST::Local.new(:name($tmp.name)),
                 lit(~($i / 2))))
             !! 
-            @result_slots[$i + 1] eq 'string'
+            @result_slots[$i + 1] eq 'String'
             ?? unbox('str', emit_op('lllist_get_at_pos',
                 JST::Local.new(:name($tmp.name)),
                 lit(~($i / 2))))

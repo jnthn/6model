@@ -439,6 +439,7 @@ sub literal_escape($str_in) {
     while pir::length($str_in) {
         my $char := pir::substr($str_in, 0, 1);
         $str_in := pir::substr($str_in, 1);
+        if $char eq "\"" { $char := "\\\""; }
         if $char eq "\n" { $char := "\\n"; }
         if $char eq "\t" { $char := "\\t"; }
         $str_out := $str_out ~ $char;

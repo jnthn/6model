@@ -1,30 +1,27 @@
 package Rakudo.Metamodel.KnowHOW;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import Rakudo.Metamodel.Hints;
 import Rakudo.Metamodel.RakudoObject;
 import Rakudo.Metamodel.Representation;
 import Rakudo.Metamodel.SharedTable;
 import Rakudo.Runtime.ThreadContext;
 import Rakudo.Serialization.SerializationContext;
-
 /// <summary>
-/// We have a REPR especially for the KnowHOW, which is part of the
-/// "bootstrap".
+/// We have a REPR especially for the KnowHOW, which is part of the "bootstrap".
 /// </summary>
-public class KnowHOWREPR implements Representation
+public final class KnowHOWREPR implements Representation
 {
     /// <summary>
     /// This represents an instance created with this underlying
     /// representation. We use .Net data types for out attribute
     /// and method store.
     /// </summary>
-    public class KnowHOWInstance extends RakudoObject
+    public class KnowHOWInstance extends RakudoObject // C# has internal
     {
         public ArrayList<RakudoObject> Attributes;
         public HashMap<String, RakudoObject> Methods;
+        public RakudoObject Name;
         public KnowHOWInstance(SharedTable sharedTable)
         {
             this.setSTable(sharedTable);
@@ -78,36 +75,6 @@ public class KnowHOWREPR implements Representation
         throw new UnsupportedOperationException();
     }
 
-    public String get_str(ThreadContext tc, RakudoObject object)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void set_str(ThreadContext tc, RakudoObject object, String s)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public double get_num(ThreadContext tc, RakudoObject object)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void set_num(ThreadContext tc, RakudoObject object, double d)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public int get_int(ThreadContext tc, RakudoObject object)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void set_int(ThreadContext tc, RakudoObject object, int i)
-    {
-        throw new UnsupportedOperationException();
-    }
-
     public void bind_attribute(ThreadContext tc, RakudoObject Object, RakudoObject ClassHandle, String Name, RakudoObject Value)
     {
         throw new UnsupportedOperationException();
@@ -128,6 +95,36 @@ public class KnowHOWREPR implements Representation
     public int hint_for(ThreadContext tc, RakudoObject ClassHandle, String Name)
     {
         return Hints.NO_HINT;
+    }
+
+    public void set_int(ThreadContext TC, RakudoObject Object, int Value)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot box a native int");
+    }
+
+    public int get_int(ThreadContext TC, RakudoObject Object)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot unbox to a native int");
+    }
+
+    public void set_num(ThreadContext TC, RakudoObject Object, double Value)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot box a native num");
+    }
+
+    public double get_num(ThreadContext TC, RakudoObject Object)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot unbox to a native num");
+    }
+
+    public void set_str(ThreadContext TC, RakudoObject Object, String Value)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot box a native string");
+    }
+
+    public String get_str(ThreadContext TC, RakudoObject Object)
+    {
+        throw new UnsupportedOperationException("This type of representation cannot unbox to a native string");
     }
 }
 

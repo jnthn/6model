@@ -18,6 +18,9 @@ gen_grammar.pir: Grammar.pm
 gen_past2jst.pir: PAST2JSTCompiler.pm
 	parrot-nqp --target=pir PAST2JSTCompiler.pm > gen_past2jst.pir
 
+gen_nqpoptimizer.pir: ../../dotnet/compiler/NQPOptimizer.pm
+	parrot-nqp --target=pir ../../dotnet/compiler/NQPOptimizer.pm > gen_nqpoptimizer.pir
+
 gen_jst.pir: JST.pm
 	parrot-nqp --target=pir JST.pm > gen_jst.pir
 
@@ -35,6 +38,13 @@ NQPSetting.java: NQPSetting.pm \
 NQPSetting.jar: NQPSetting.java
 	$(JAVAC) -classpath ../runtime/RakudoRuntime.jar NQPSetting.java
 	jar cf NQPSetting.jar -C $(CLASSES) .
+
+P6Objects.java: compile.pir gen_actions.pir gen_grammar.pir gen_nqpoptimizer.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir ../../common/NQP/P6Objects.pm NQPSetting.jar
+	parrot compile.pir ../../common/NQP/P6Objects.pm --no-core-libs > P6Objects.java
+
+P6Objects.jar: P6Objects.java
+	$(JAVAC) P6Objects.java
+	jar cf P6Objects.jar P6Objects.class
 
 test: all
 	prove -r --exec try.sh ..\..\t\nqp

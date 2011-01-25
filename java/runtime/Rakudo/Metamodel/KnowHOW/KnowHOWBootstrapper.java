@@ -23,7 +23,7 @@ import Rakudo.Runtime.ThreadContext;
 /// for implementing the various other bits of the object model.
 /// Works in conjunction with KnowHOWREPR.
 /// </summary>
-public class KnowHOWBootstrapper  // public static in the C# version
+public class KnowHOWBootstrapper  // C# has public static
 {
     /// <summary>
     /// Bootstraps the KnowHOW. This is were things "bottom out" in the
@@ -44,12 +44,16 @@ public class KnowHOWBootstrapper  // public static in the C# version
         // We'll set up a dictionary of our various methods to go into
         // KnowHOW's HOW, since we'll want to work with them a bit.
         HashMap<String, RakudoObject> KnowHOWMeths = new HashMap<String, RakudoObject>();
-        KnowHOWMeths.put("new_type", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // an anonymous class where C# uses a lambda
+        KnowHOWMeths.put("new_type", CodeObjectUtility.WrapNativeMethod( new RakudoCodeRef.IFunc_Body() { // C# has a lambda
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // We first create a new HOW instance.
                 RakudoObject knowHOWTypeObj = CaptureHelper.GetPositional(capture, 0);
-                    RakudoObject HOW = knowHOWTypeObj.getSTable().REPR.instance_of(tc, knowHOWTypeObj.getSTable().WHAT);
+                RakudoObject HOW = knowHOWTypeObj.getSTable().REPR.instance_of(tc, knowHOWTypeObj.getSTable().WHAT);
+
+                // If we have a name arg, stash that value away.
+                RakudoObject typeName = CaptureHelper.GetNamed(capture, "name");
+                ((KnowHOWREPR.KnowHOWInstance)HOW).Name = typeName != null ? typeName : Ops.box_str(tc, "<anon>");
 
                 // Now create a new type object to go with it of the
                 // desired REPR; we default to P6opaque (note that the
@@ -96,9 +100,7 @@ public class KnowHOWBootstrapper  // public static in the C# version
                 // We go to some effort to be really fast in here, 'cus it's a
                 // hot path for dynamic dispatches.
                 RakudoObject[] Positionals = ((P6capture.Instance)capture).Positionals;
-                if (Positionals.length < 3) {
-                    throw new IllegalArgumentException("Positionals has only " + Positionals.length + " elements");
-                }
+                assert Positionals.length >= 3;
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)Positionals[0];
                 if (HOW.Methods.containsKey(Ops.unbox_str(tc, Positionals[2])))
                     return HOW.Methods.get(Ops.unbox_str(tc, Positionals[2]));
@@ -120,9 +122,11 @@ public class KnowHOWBootstrapper  // public static in the C# version
             {
                 // Safe to just return a P6list instance that points at
                 // the same thing we hold internally, since a list is
-                // immutable.
+                // immutable. However, if default list type has no HOW,
+                // we will see if we can find one that does have it.
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
-                RakudoObject result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
+                RakudoObject listType = MostDefinedListType(tc);
+                RakudoObject result = listType.getSTable().REPR.instance_of(tc, listType);
                 ((P6list.Instance)result).Storage = HOW.Attributes;
                 return result;
             }
@@ -132,7 +136,8 @@ public class KnowHOWBootstrapper  // public static in the C# version
             {
                 // Return the methods list.
                 KnowHOWREPR.KnowHOWInstance HOW = (KnowHOWREPR.KnowHOWInstance)CaptureHelper.GetPositional(capture, 0);
-                RakudoObject result = tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
+                RakudoObject listType = MostDefinedListType(tc);
+                RakudoObject result = listType.getSTable().REPR.instance_of(tc, listType);
                 ((P6list.Instance)result).Storage.addAll(HOW.Methods.values());
                 return result;
             }
@@ -141,7 +146,18 @@ public class KnowHOWBootstrapper  // public static in the C# version
             public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
             {
                 // A pure prototype never has any parents, so return an empty list.
-                return tc.DefaultListType.getSTable().REPR.instance_of(tc, tc.DefaultListType);
+                RakudoObject listType = MostDefinedListType(tc);
+                return listType.getSTable().REPR.instance_of(tc, listType);
+            }
+        }));
+
+        KnowHOWMeths.put("type_check", CodeObjectUtility.WrapNativeMethod(new RakudoCodeRef.IFunc_Body() { // an anonymous class
+            public RakudoObject Invoke(ThreadContext tc, RakudoObject ignored, RakudoObject capture)
+            {
+                // Can only match against ourselves.
+                RakudoObject self = CaptureHelper.GetPositional(capture, 1);
+                RakudoObject check = CaptureHelper.GetPositional(capture, 2);
+                return Ops.box_int(tc, self.getSTable().WHAT == check.getSTable().WHAT ? 1 : 0, tc.DefaultBoolBoxType);
             }
         }));
 
@@ -213,6 +229,23 @@ public class KnowHOWBootstrapper  // public static in the C# version
         }));
 
         return knowHOWAttribute;
+    }
+
+    /// <summary>
+    /// Makes sure that we hand back an NQPList that has a HOW once it
+    /// is defined. Important for the bootstrap.
+    /// </summary>
+    /// <param name="tc"></param>
+    /// <returns></returns>
+    private static RakudoObject MostDefinedListType(ThreadContext tc)
+    {
+        // Have a HOW? Then return it right away.
+        if (tc.DefaultListType.getSTable().HOW != null)
+            return tc.DefaultListType;
+
+        // Otherwise, go and look for a list type that has one.
+        tc.DefaultListType = Ops.get_lex(tc, "NQPList");
+        return tc.DefaultListType;
     }
 }
 

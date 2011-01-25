@@ -85,6 +85,7 @@ OTHER_DEPENDENT_TARGETS = \
 	$(CLASSES)Rakudo/Runtime/Ops.class \
 	$(CLASSES)Rakudo/Runtime/ThreadContext.class \
 	$(CLASSES)Rakudo/Metamodel/IFindMethod.class \
+	$(CLASSES)Rakudo/Metamodel/ISpecialFindMethod.class \
 	$(CLASSES)Rakudo/Metamodel/SharedTable.class
 
 INNER_CLASSES = \
@@ -125,14 +126,17 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		$(CLASSES)Rakudo/Runtime/DefinednessConstraint.class \
 		Rakudo/Serialization/SerializationContext.java \
 		Rakudo/Metamodel/Representation.java \
+		Rakudo/Metamodel/Representations/P6capture.java \
+		Rakudo/Metamodel/Representations/P6int.java \
+		Rakudo/Metamodel/Representations/P6list.java \
+		Rakudo/Metamodel/Representations/P6mapping.java \
+		Rakudo/Metamodel/Representations/P6num.java \
+		Rakudo/Metamodel/Representations/P6str.java \
+		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
-		Rakudo/Metamodel/Representations/P6capture.java \
-		Rakudo/Metamodel/Representations/P6list.java \
-		Rakudo/Metamodel/Representations/P6mapping.java \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
 		Rakudo/Runtime/ExecutionDomain.java \
@@ -144,18 +148,22 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Runtime/Ops.java \
 		Rakudo/Runtime/ThreadContext.java \
 		Rakudo/Metamodel/IFindMethod.java \
+		Rakudo/Metamodel/ISpecialFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
 	$(JAVAC) \
 		Rakudo/Metamodel/RakudoObject.java \
 		Rakudo/Metamodel/Representation.java \
+		Rakudo/Metamodel/Representations/P6capture.java \
+		Rakudo/Metamodel/Representations/P6int.java \
+		Rakudo/Metamodel/Representations/P6list.java \
+		Rakudo/Metamodel/Representations/P6mapping.java \
+		Rakudo/Metamodel/Representations/P6num.java \
+		Rakudo/Metamodel/Representations/P6str.java \
+		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Runtime/CaptureHelper.java \
 		Rakudo/Runtime/Lexpad.java \
 		Rakudo/Runtime/Parameter.java \
 		Rakudo/Runtime/Signature.java \
-		Rakudo/Metamodel/Representations/P6capture.java \
-		Rakudo/Metamodel/Representations/P6list.java \
-		Rakudo/Metamodel/Representations/P6mapping.java \
-		Rakudo/Metamodel/Representations/RakudoCodeRef.java \
 		Rakudo/Metamodel/REPRRegistry.java \
 		Rakudo/Runtime/Context.java \
 		Rakudo/Runtime/ExecutionDomain.java \
@@ -167,6 +175,7 @@ $(CLASSES)Rakudo/Metamodel/RakudoObject.class: Rakudo/Metamodel/RakudoObject.jav
 		Rakudo/Runtime/Ops.java \
 		Rakudo/Runtime/ThreadContext.java \
 		Rakudo/Metamodel/IFindMethod.java \
+		Rakudo/Metamodel/ISpecialFindMethod.java \
 		Rakudo/Metamodel/SharedTable.java
 
 $(CLASSES)Rakudo/Metamodel/KnowHOW/KnowHOWREPR.class: Rakudo/Metamodel/KnowHOW/KnowHOWREPR.java \
@@ -283,8 +292,7 @@ TRANSLATED_SOURCE_FILES = \
 	Rakudo/Metamodel/SharedTable.java \
 	Rakudo/Metamodel/Representations/P6capture.java \
 	Rakudo/Metamodel/Representations/P6hash.java \
-	Rakudo/Metamodel/Representations/P6int.java \
-	Rakudo/Metamodel/Representations/P6list.java \
+	Rakudo/Metamodel/Representations/P6int.java \	Rakudo/Metamodel/Representations/P6list.java \
 	Rakudo/Metamodel/Representations/P6mapping.java \
 	Rakudo/Metamodel/Representations/P6num.java \
 	Rakudo/Metamodel/Representations/P6opaque.java \
@@ -390,8 +398,20 @@ Rakudo/Runtime/MultiDispatch/DispatchCache.java: ../../dotnet/runtime/Runtime/Mu
 Rakudo/Runtime/MultiDispatch/MultiDispatcher.java: ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs
 	@echo "todo: Rakudo/Runtime/MultiDispatch/MultiDispatcher.java is older than ../../dotnet/runtime/Runtime/MultiDispatch/MultiDispatcher.cs"
 
-#Rakudo/Runtime/Ops.java: ../../dotnet/runtime/Runtime/Ops.cs
-#	@echo "todo: Rakudo/Runtime/Ops.java is older than ../../dotnet/runtime/Runtime/Ops.cs"
+Rakudo/Runtime/Ops.java: ../../dotnet/runtime/Runtime/Ops/Boxing.cs \
+		../../dotnet/runtime/Runtime/Ops/Coercion.cs \
+		../../dotnet/runtime/Runtime/Ops/Comparison.cs \
+		../../dotnet/runtime/Runtime/Ops/ControlFlow.cs \
+		../../dotnet/runtime/Runtime/Ops/Dispatch.cs \
+		../../dotnet/runtime/Runtime/Ops/Introspection.cs \
+		../../dotnet/runtime/Runtime/Ops/Library.cs \
+		../../dotnet/runtime/Runtime/Ops/Metamodel.cs \
+		../../dotnet/runtime/Runtime/Ops/P6capture.cs \
+		../../dotnet/runtime/Runtime/Ops/P6list.cs \
+		../../dotnet/runtime/Runtime/Ops/P6mapping.cs \
+		../../dotnet/runtime/Runtime/Ops/Primitive.cs \
+		../../dotnet/runtime/Runtime/Ops/Variables.cs
+	@echo "todo: Rakudo/Runtime/Ops.java is older than one of the files in ../../dotnet/runtime/Runtime/Ops/"
 
 Rakudo/Runtime/Parameter.java: ../../dotnet/runtime/Runtime/Signatures/Parameter.cs
 	@echo "todo: Rakudo/Runtime/Parameter.java is older than ../../dotnet/runtime/Runtime/Signatures/Parameter.cs"

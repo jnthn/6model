@@ -21,7 +21,6 @@ public class Signature
 
         // Build and cache number of positionals.
         for (int i = 0; i < parameters.length; i++)
-        {
             if (parameters[i].Flags == Parameter.POS_FLAG)
             {
                 NumRequiredPositionals++;
@@ -31,9 +30,7 @@ public class Signature
                 NumPositionals++;
             else // XXX rewrite as a switch?
                 break;
-        }
     }
-
 
     /// <summary>
     /// The parameters we have.
@@ -44,19 +41,19 @@ public class Signature
     /// The total number of positionals.
     /// </summary>
     /// <returns></returns>
-    public int NumPositionals; // internal in the C# version
+    public int NumPositionals; // C# has internal
 
     /// <summary>
     /// The number of required positionals.
     /// </summary>
     /// <returns></returns>
-    public int NumRequiredPositionals; // internal in the C# version
+    public int NumRequiredPositionals; // C# has internal
 
     /// <summary>
     /// Do we have a slurpy positional parameter?
     /// </summary>
     /// <returns></returns>
-    public boolean HasSlurpyPositional() // internal in the C# version
+    public boolean HasSlurpyPositional() // C# has internal
     {
         for (int i = 0; i < Parameters.length; i++)
             if (Parameters[i].Flags == Parameter.POS_SLURPY_FLAG)

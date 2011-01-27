@@ -418,8 +418,7 @@ our multi sub jst_for(PAST::Block $block) {
     # Before start of statements, we want to bind the signature.
     $stmts.unshift(JST::MethodCall.new(
         :on('SignatureBinder'), :name('Bind'), :void(1),
-# TODO  TC(),
-        loc('C', 'Context'), loc('Capture')
+        TC(), loc('C', 'Context'), loc('Capture')
     ));
 
     # Wrap in block prelude/postlude.

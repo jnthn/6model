@@ -38,8 +38,8 @@ public class SignatureBinder // C# has public static class
     /// </summary>
     /// <param name="C"></param>
     /// <param name="Capture"></param>
-// TODO    public static void Bind(ThreadContext tc, Context c, RakudoObject capture)
-    public static void Bind(Context tc, RakudoObject capture)
+    public static void Bind(ThreadContext tc, Context c, RakudoObject capture)
+// DROP    public static void Bind(Context tc, RakudoObject capture)
     {
         // Make sure the object is really a low level capture (don't handle
         // otherwise yet) and grab the pieces.
@@ -52,10 +52,10 @@ public class SignatureBinder // C# has public static class
 
         // See if we have to do any flattening.
 // TODO if (NativeCapture.FlattenSpec != null)
-// TODO     Flatten(nativeCapture.FlattenSpec, positionals, nameds); // C# has ref Positionals, ref Nameds
+//          Flatten(nativeCapture.FlattenSpec, positionals, nameds); // C# has ref Positionals, ref Nameds :( http://javadude.com/articles/passbyvalue.htm and http://genamics.com/developer/csharp_comparative_part9.htm
 
         // If we have no signature, that's same as an empty signature.
-        Signature sig = tc.StaticCodeObject.Sig;
+        Signature sig = c.StaticCodeObject.Sig;
         if (sig == null)
             return;
 
@@ -75,13 +75,13 @@ public class SignatureBinder // C# has public static class
                 if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    tc.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
+                    c.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
                 }
                 else
                 {
                     throw new UnsupportedOperationException("Not enough positional parameters; got " +
                         Integer.toString(curPositional) + " but needed " +
-                        Integer.toString(NumRequiredPositionals(tc.StaticCodeObject.Sig)));
+                        Integer.toString(NumRequiredPositionals(c.StaticCodeObject.Sig)));
                 }
 
                 // Increment positional counter.
@@ -94,40 +94,38 @@ public class SignatureBinder // C# has public static class
                 if (curPositional < positionals.length)
                 {
                     // We have an argument, just bind it.
-                    tc.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
+                    c.LexPad.Storage[param.VariableLexpadPosition] = positionals[curPositional];
                     curPositional++;
                 }
                 else
                 {
                     // Default value, vivification.
                     // ((RakudoCodeRef.Instance)Param.DefaultValue).CurrentContext = TC.CurrentContext;
-// TODO             C.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.STable.Invoke(TC, param.DefaultValue, capture);
+                    c.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.getSTable().Invoke(tc, param.DefaultValue, capture);
                 }
             }
 
             // Named slurpy?
             else if ((param.Flags & Parameter.NAMED_SLURPY_FLAG) != 0)
             {
-// TODO         RakudoObject slurpyHolder = tc.DefaultHashType.getSTable().REPR.instance_of(tc, tc.DefaultHashType);
-//               c.LexPad.Storage[Param.VariableLexpadPosition] = slurpyHolder;
-//              foreach (String name in Nameds.Keys)
-//                  if (seenNames == null || !seenNames.ContainsKey(name))
-//                      Ops.llmapping_bind_at_key(tc, slurpyHolder,
-//                          Ops.box_str(tc, name, tc.DefaultStrBoxType),
-//                          nameds[name]);
-                throw new UnsupportedOperationException("Named slurpy parameters are not yet implemented.");
+                RakudoObject slurpyHolder = tc.DefaultHashType.getSTable().REPR.instance_of(tc, tc.DefaultHashType);
+                c.LexPad.Storage[param.VariableLexpadPosition] = slurpyHolder;
+                for (String name : nameds.keySet().toArray(new String[0]))
+                    if (seenNames == null || !seenNames.containsKey(name))
+                        Ops.llmapping_bind_at_key(tc, slurpyHolder,
+                            Ops.box_str(tc, name, tc.DefaultStrBoxType),
+                            nameds.get(name));
             }
 
             // Positional slurpy?
             else if ((param.Flags & Parameter.POS_SLURPY_FLAG) != 0)
             {
-// TODO         RakudoObject slurpyHolder = tc.DefaultArrayType.getSTable().REPR.instance_of(tc, tc.DefaultArrayType);
-//              c.LexPad.Storage[Param.VariableLexpadPosition] = slurpyHolder;
-//              int j;
-//              for (j = CurPositional; j < positionals.Length; j++)
-//                  Ops.lllist_push(tc, slurpyHolder, Positionals[j]);
-//              curPositional = j;
-                throw new UnsupportedOperationException("Positional slurpy parameters are not yet implemented.");
+                RakudoObject slurpyHolder = tc.DefaultArrayType.getSTable().REPR.instance_of(tc, tc.DefaultArrayType);
+                c.LexPad.Storage[param.VariableLexpadPosition] = slurpyHolder;
+                int j;
+                for (j = curPositional; j < positionals.length; j++)
+                    Ops.lllist_push(tc, slurpyHolder, positionals[j]);
+                curPositional = j;
             }
 
             // Named?
@@ -138,7 +136,7 @@ public class SignatureBinder // C# has public static class
                 {
                     // We have an argument, just bind it.
                     RakudoObject value = nameds.get(param.Name);
-                    tc.LexPad.Storage[param.VariableLexpadPosition] = value;
+                    c.LexPad.Storage[param.VariableLexpadPosition] = value;
                     if (seenNames == null)
                         seenNames = new HashMap<String, Boolean>();
                     seenNames.put(param.Name, true);
@@ -152,7 +150,7 @@ public class SignatureBinder // C# has public static class
                     }
                     else
                     {
-// TODO                 c.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.getSTable().Invoke(tc, param.DefaultValue, capture);
+                        c.LexPad.Storage[param.VariableLexpadPosition] = param.DefaultValue.getSTable().Invoke(tc, param.DefaultValue, capture);
                     }
                 }
             }
@@ -168,7 +166,7 @@ public class SignatureBinder // C# has public static class
         int possiesInCapture = positionals.length;
         if (curPositional != possiesInCapture)
             throw new UnsupportedOperationException("Too many positional arguments passed; expected " +
-                Integer.toString(NumRequiredPositionals(tc.StaticCodeObject.Sig)) +
+                Integer.toString(NumRequiredPositionals(c.StaticCodeObject.Sig)) +
                 " but got " + Integer.toString(possiesInCapture));
 
         // XXX TODO; Ensure we don't have leftover nameds.

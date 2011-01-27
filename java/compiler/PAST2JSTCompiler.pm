@@ -126,49 +126,38 @@ method compile(PAST::Node $node) {
         # Commonalities for no matter how we start running (be it from the
         # command line or loaded as a library).
         my @params;
-        @params.push('String[] args'); # TODO  @params.push('ThreadContext TC');
-# TODO  $class.push(JST::Method.new(
-#           :name('Init'),
-#           :params(@params),
-#           :return_type('void'),
-#           JST::Call.new( :name('blocks_init'), :void(1), TC() ),
-#           JST::Call.new( :name('constants_init'), :void(1), TC() ),
-#           $loadinit_calls
-#       ));
+        @params.push('ThreadContext TC');
+        $class.push(JST::Method.new(
+            :name('Init'),
+            :params(@params),
+            :return_type('void'),
+            JST::Call.new( :name('blocks_init'), :void(1), TC() ),
+            JST::Call.new( :name('constants_init'), :void(1), TC() ),
+            $loadinit_calls
+        ));
 
         # Code for when it's the entry point (e.g. a main method).
-        $class.push(JST::Method.new(
-            :name('main'), # Main in the C# version
-            :return_type('void'),
-            :params(@params),
+        @params := (); @params.push('String[] args'); $class.push(JST::Method.new(
+            :name('main'), # C# has Main
+            :return_type('void'), :params(@params),
             JST::Local.new( :name('TC'), :isdecl(1), :type('ThreadContext'),
                 JST::MethodCall.new(
                     :on('Rakudo.Init'), :name('Initialize'), :type('ThreadContext'),
                     JST::Literal.new( :value('NQPSetting'), :escape(1) )
                 )
             ),
-            JST::Call.new(
-                :name('blocks_init'),
-                :void(1),
-                'TC'
-            ),
-            $loadinit_calls,
-            JST::Call.new(
-                :name('constants_init'),
-                :void(1),
-                'TC'
-            ),
+            JST::Call.new( :name('Init'), :void(1), TC() ),
             $main_block_call
         ));
 
         # Code for when it's being loaded as a library.
-# TODO  $class.push(JST::Method.new(
-#           :name('Load'),
-#           :params('ThreadContext TC', 'Context Setting'),
-#           :return_type('RakudoObject'),
-#           JST::Call.new( :name('Init'), :void(1), TC() ), # TODO previously TC() was 'TC'
-#           $main_block_call
-#       ));
+        $class.push(JST::Method.new(
+            :name('Load'),
+            :params('ThreadContext TC', 'Context Setting'),
+            :return_type('RakudoObject'),
+            JST::Call.new( :name('Init'), :void(1), TC() ),
+            $main_block_call
+        ));
     }
 
     # Package up in a compilation unit with the required "import"s.
@@ -185,6 +174,7 @@ method compile(PAST::Node $node) {
         JST::Using.new( :namespace('Rakudo.Runtime.CodeObjectUtility') ),
         JST::Using.new( :namespace('Rakudo.Runtime.DefinednessConstraint') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Context') ),
+        JST::Using.new( :namespace('Rakudo.Runtime.Exceptions.LeaveStackUnwinderException') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Ops') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Parameter') ),
         JST::Using.new( :namespace('Rakudo.Runtime.Signature') ),
@@ -231,7 +221,7 @@ sub make_blocks_init_method($name) {
         ),
         JST::Bind.new(
             'StaticBlockInfo[0].CurrentContext',
-            'TC.CurrentContext'
+            'TC.Domain.Setting'
         ),
 
         # The others.
@@ -369,6 +359,26 @@ our multi sub jst_for(PAST::Block $block) {
         }
     }
 
+    # If we have a return handler, add it.
+    if $block.control eq 'return_pir' {
+        my $*OUTER_SBI := $our_sbi;
+        my @*INNER_BLOCKS;
+        my %handler;
+        %handler<type> := 57;
+        %handler<code> := jst_for(PAST::Block.new(PAST::Stmts.new(
+            PAST::Var.new( :name('$!'), :scope('parameter') ),
+            emit_op('leave_block',
+                JST::Literal.new( :value('TC.CurrentContext.Outer.StaticCodeObject') ),
+                jst_for(PAST::Var.new( :name('$!'), :scope('lexical') ))
+            )
+        )));
+        $stmts.unshift(%handler<code>); # To get the right lexical context.
+        for @*INNER_BLOCKS {
+            @inner_blocks.push($_);
+        }
+        @*HANDLERS.push(%handler);
+    }
+
     # Add signature generation/setup. We need to do this in the
     # correct lexical scope. Also this is handy place to set up
     # the handlers; keep a placeholder for that.
@@ -419,23 +429,20 @@ our multi sub jst_for(PAST::Block $block) {
     ));
     $result.push(JST::Bind.new( 'TC.CurrentContext', loc('C', 'Context') ));
     $result.push(JST::TryFinally.new(
-#       JST::TryCatch.new(
-#           :exception_type('Exception'),
-# TODO      :exception_type('LeaveStackUnwinderException'),
-#           :exception_var('exc'),
-#           $stmts,
-#           JST::Stmts.new(
-#               JST::If.new(
-#                   JST::Literal.new(
-#                       :value("(exc.TargetBlock != Block ? 1 : 0)")
-#                   ),
-#                   JST::Throw.new()
-#               ),
-#               "exc.getMessage()"
-# TODO          "exc.PayLoad"
-#           )
-#       ),
-         $stmts,
+        JST::TryCatch.new(
+            :exception_type('LeaveStackUnwinderException'),
+            :exception_var('exc'),
+            $stmts,
+            JST::Stmts.new(
+                JST::If.new(
+                    JST::Literal.new(
+                        :value("(exc.TargetBlock != Block ? 1 : 0)")
+                    ),
+                    JST::Throw.new()
+                ),
+                "exc.PayLoad"
+            )
+        ),
         JST::Bind.new( 'TC.CurrentContext', 'C.Caller' )
     ));
     
@@ -446,7 +453,7 @@ our multi sub jst_for(PAST::Block $block) {
         @*INNER_BLOCKS.push($_);
     }
 
-    # Finish generating code setup block call.
+    # Set up body, static outer and lexicals in the code setup block call.
     $our_sbi_setup.push(JST::New.new(
         :type('RakudoCodeRef.IFunc_Body'), # C# has :type('Func<ThreadContext, RakudoObject, RakudoObject, RakudoObject>'),
         $result.name
@@ -494,11 +501,10 @@ our multi sub jst_for(PAST::Block $block) {
         );
     }
     else {
-# TODO  return emit_op(
-#           ($block.closure ?? 'new_closure' !! 'capture_outer'),
-#           JST::Local.new( :name("StaticBlockInfo[$our_sbi]") )
-#       );
-        return "StaticBlockInfo[$our_sbi]";
+        return emit_op(
+            ($block.closure ?? 'new_closure' !! 'capture_outer'),
+            JST::Local.new( :name("StaticBlockInfo[$our_sbi]") )
+        );
     }
 }
 
@@ -597,28 +603,6 @@ our multi sub jst_for(PAST::Op $op) {
             )
         );
 
-        # How is capture formed? # TODO: DROP
-        my $capture := JST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
-        );
-        my $pos_part := JST::ArrayLiteral.new(
-            :type('RakudoObject'),
-            $inv.name
-        );
-        my $named_part := JST::DictionaryLiteral.new(
-            :key_type('String'), :value_type('RakudoObject') );
-        for @args {
-            if $_.named {
-                $named_part.push(JST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(jst_for($_));
-            }
-            else {
-                $pos_part.push(jst_for($_));
-            }
-        }
-        $capture.push($pos_part);
-        if +@($named_part) { $capture.push($named_part); }
-
         # Emit the call.
         return JST::Stmts.new(
             $inv,
@@ -627,7 +611,7 @@ our multi sub jst_for(PAST::Op $op) {
                 $callee,
                 'TC',
                 $callee.name,
-                $capture
+                form_capture(@args, $inv)
             )
         );
     }
@@ -648,43 +632,23 @@ our multi sub jst_for(PAST::Op $op) {
         }
         $callee := JST::Local.new( :name(get_unique_id('callee')), :isdecl(1), :type('RakudoObject'), $callee );
 
-        # How is capture formed? # TODO: DROP
-        my $capture := JST::MethodCall.new(
-            :on('CaptureHelper'), :name('FormWith'), :type('RakudoObject')
-        );
-        my $pos_part := JST::ArrayLiteral.new( :type('RakudoObject') );
-        my $named_part := JST::DictionaryLiteral.new(
-            :key_type('String'), :value_type('RakudoObject') );
-        for @args {
-            if $_.named {
-                $named_part.push(JST::Literal.new( :value($_.named), :escape(1) ));
-                $named_part.push(jst_for($_));
-            }
-            else {
-                $pos_part.push(jst_for($_));
-            }
-        }
-        $capture.push($pos_part);
-        if +@($named_part) { $capture.push($named_part); }
-
         # Emit call.
         return JST::MethodCall.new(
             :name('getSTable().Invoke'), :type('RakudoObject'),
             $callee,
             TC(),
             $callee.name,
-            $capture
+            form_capture(@args)
         );
     }
 
     elsif $op.pasttype eq 'bind' {
-        # Construct JST for LHS in bind context. # TODO: DROP
-        my $lhs;
+# DROP  # Construct JST for LHS in bind context.
+        my $lhs; 
         {
             my $*BIND_CONTEXT := 1;
             $lhs := jst_for((@($op))[0]);
         }
-
         # Now push onto that the evaluated RHS.
         $lhs.push(jst_for((@($op))[1]));
 

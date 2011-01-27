@@ -352,7 +352,7 @@ our multi sub java_for(JST::XOR $ops) {
 # Throw
 our multi sub java_for(JST::Throw $throw) {
     $*LAST_TEMP := 'null';
-    return "        throw new UnsupportedOperationException(); // JST::Throw\n";
+    return "if (1==1) throw new UnsupportedOperationException(); // JST::Throw\n"; # TODO: check this if (1==1) ???
 }
 # String
 our multi sub java_for(String $s) {

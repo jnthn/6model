@@ -676,49 +676,68 @@ our multi sub jst_for(PAST::Op $op) {
     }
 
     elsif $op.pasttype eq 'if' {
-        my $result := JST::If.new(
-            JST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+        my $cond_evaluated := JST::Local.new( :name(get_unique_id('if_cond')) );
+        return JST::Stmts.new(
+            JST::Local.new(
+                :name($cond_evaluated.name), :isdecl(1), :type('RakudoObject'),
                 jst_for(PAST::Op.new(
                     :pasttype('callmethod'), :name('Bool'),
                     (@($op))[0]
                 ))
             ),
-            jst_for((@($op))[1])
+            JST::If.new(
+                unbox('int', $cond_evaluated),
+                jst_for((@($op))[1]),
+                (+@($op) == 3 ?? jst_for((@($op))[2]) !! $cond_evaluated)
+            )
         );
-        if +@($op) == 3 {
-            $result.push(jst_for((@($op))[2]));
-        }
-        return $result;
     }
 
     elsif $op.pasttype eq 'unless' {
-        my $result := JST::If.new(
-            JST::MethodCall.new(
-                :on('Ops'), :name('unbox_int'), :type('int'), 'TC',
+        my $cond_evaluated := get_unique_id('unless_cond');
+        my $temp;
+        return JST::Stmts.new(
+            ($temp := JST::Local.new(
+                :name(get_unique_id('unless_result')), :isdecl(1), :type('RakudoObject'), val(0)
+            )),
+            JST::Local.new(
+                :name($cond_evaluated), :isdecl(1), :type('RakudoObject'),
                 jst_for(PAST::Op.new(
                     :pasttype('call'), :name('&prefix:<!>'),
-                    (@($op))[0]
+                    JST::Bind.new(lit($temp.name), jst_for((@($op))[0]))
                 ))
             ),
-            jst_for((@($op))[1])
+            JST::If.new(
+                JST::MethodCall.new(
+                    :on('Ops'), :name('unbox_int'), :type('int'),
+                    TC(), $cond_evaluated
+                ),
+                JST::Bind.new(lit($temp.name), jst_for((@($op))[1])),
+                JST::Bind.new(lit($temp.name), jst_for($cond_evaluated)),
+            ),
+            lit($temp.name)
         );
-        return $result;
     }
 
-    elsif $op.pasttype eq 'while' {
+    elsif $op.pasttype eq 'while' || $op.pasttype eq 'until' {
         # Need labels for start and end.
         my $test_label := get_unique_id('while_lab');
         my $end_label := get_unique_id('while_end_lab');
         my $cond_result := get_unique_id('cond');
 
         # Compile the condition.
-        my $cond := JST::Local.new(
-            :name($cond_result), :isdecl(1), :type('RakudoObject'),
-            jst_for(PAST::Op.new(
+        my $cop := $op.pasttype eq 'until'
+          ?? PAST::Op.new(
+                :pasttype('call'), :name('&prefix:<!>'),
+                (@($op))[0]
+            )
+          !! PAST::Op.new(
                 :pasttype('callmethod'), :name('Bool'),
                 (@($op))[0]
-            ))
+            );
+        my $cond := JST::Local.new(
+            :name($cond_result.name), :isdecl(1), :type('RakudoObject'),
+            jst_for($cop)
         );
 
         # Compile the body.
@@ -729,10 +748,7 @@ our multi sub jst_for(PAST::Op $op) {
             JST::Label.new( :name($test_label) ),
             $cond,
             JST::If.new(
-                JST::MethodCall.new(
-                    :on('Ops'), :name('unbox_int'), :type('int'),
-                    'TC', $cond_result
-                ),
+                unbox('int', $cond_result),
                 $body,
                 JST::Stmts.new(
                     $cond_result,
@@ -894,7 +910,7 @@ our multi sub jst_for(PAST::Val $val) {
         unless $val.value<SBI> {
             pir::die("Can't use PAST::Val for a block reference for an as-yet uncompiled block");
         }
-        return $val.value<SBI>;
+        return JST::Literal.new( :value($val.value<SBI>) );
     }
 
     # Look up the type to box to.
@@ -910,26 +926,39 @@ our multi sub jst_for(PAST::Val $val) {
     }
     elsif pir::isa($val.value, 'Float') {
         $primitive := 'num';
-        $type := 'NQPNum';
+        $type := 'NQPNum'; # TODO: DROP
     }
     else {
-        pir::die("Can not detect type of value")
+        pir::die("PAST2JSTCompiler.pm cannot detect type of value")
     }
-    my $type_jst := emit_lexical_lookup($type);
     
-    # Add to constants table.
+    # If we have a non-object type context, can hand back a literal value.
+    if $*TYPE_CONTEXT ne 'obj' {
+        return JST::Literal.new(
+            :value($val.value),
+            :type(vm_type_for($primitive)),
+            :escape($primitive eq 'str')
+        );
+    }
+
+
+    # Otherwise, need to box it. Add to constants table if possible.
+#   my $make_const := box($primitive, DNST::Literal.new(
+# TODO  :value($val.value), :escape($primitive eq 'str') ));
+    my $type_jst := emit_lexical_lookup($type); # TODO: DROP
     my $make_const := JST::MethodCall.new(
         :on('Ops'), :name('box_' ~ $primitive), :type('RakudoObject'),
         'TC',
         JST::Literal.new( :value($val.value), :escape($primitive eq 'str') ),
         $type_jst
     );
-    if $*IN_LOADINIT {
+    if $*IN_LOADINIT  || $*COMPILING_NQP_SETTING {
         return $make_const;
     }
     else {
         my $const_id := +@*CONSTANTS;
         @*CONSTANTS.push($make_const);
+# TODO  return DNST::Literal.new( :value("ConstantsTable[$const_id]") );
         return "ConstantsTable[$const_id]";
     }
 }
@@ -1033,30 +1062,13 @@ our multi sub jst_for(PAST::Var $var) {
         }
 
         return $lookup;
-#       if $var.isdecl { pir::die("PAST2JSTCompiler.pm does not know how to handle is_decl on package"); }
-
-        # Get all parts of the name.
- #      my @parts;
- #      if $var.namespace {
- #          for $var.namespace { @parts.push($_); }
- #      }
- #      @parts.push($var.name);
-
-        # First, we need to look up the first part.
- #      my $lookup := emit_lexical_lookup(@parts.shift);
-
-        # Now chase down the rest.
- #      for @parts {
- #          # XXX todo: wrap the lookup in postcircumfix:<{ }> call(s).
- #          pir::die('Multi-level package lookups NYI');
- #      }
-
-#       return $lookup;
     }
     elsif $scope eq 'register' {
         if $var.isdecl {
             my $result := JST::Local.new( :name($var.name), :isdecl(1), :type('RakudoObject') );
-            unless $*BIND_CONTEXT { $result.push('null'); }
+            unless $*BIND_CONTEXT {
+                $result.push(ST::Null.new());
+            }
             return $result;
         }
         elsif $*BIND_CONTEXT {
@@ -1077,14 +1089,28 @@ our multi sub jst_for(PAST::Var $var) {
         }
 
         # Emit attribute lookup/bind.
-        return JST::MethodCall.new(
-            :on('Ops'), :name($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
-            :type('RakudoObject'),
-            'TC',
+        my $lookup := emit_op(($*BIND_CONTEXT ?? 'bind_attr' !! 'get_attr'),
             $self,
             $class,
             JST::Literal.new( :value($var.name), :escape(1) )
         );
+        if $*BIND_CONTEXT {
+            $lookup.push($*BIND_VALUE);
+        }
+        elsif pir::defined($var.viviself) {
+            # May need to auto-vivify.
+            my $viv_name := get_unique_id('viv_attr_');
+            my $temp := JST::Local.new( :name($viv_name), :isdecl(1), :type('RakudoObject'), $lookup );
+            $lookup := JST::Stmts.new(
+                $temp,
+                JST::If.new( :bool(1),
+                    eq(JST::Local.new( :name($viv_name) ), DNST::Null.new()),
+                    jst_for($var.viviself),
+                    JST::Local.new( :name($viv_name) )
+                )
+            );
+        }
+        return $lookup;
     }
     elsif $scope eq 'keyed_int' {
         # XXX viviself, vivibase.
@@ -1134,13 +1160,13 @@ sub declare_lexical($var) {
 
     # Run viviself if there is one and bind it.
     if pir::defined($var.viviself) {
-        my $*BIND_CONTEXT := 'bind_lex';
-        my $result := emit_lexical_lookup($var.name);
+        my $*BIND_CONTEXT := 1;
+        my $*BIND_VALUE;
         {
-            my $*BIND_CONTEXT := '';
-            $result.push(jst_for($var.viviself));
+            my $*BIND_CONTEXT := 0;
+            $*BIND_VALUE := jst_for($var.viviself);
         }
-        return $result;
+        return emit_lexical_lookup($var.name);
     }
     else {
         return emit_lexical_lookup($var.name);
@@ -1160,6 +1186,11 @@ our multi sub jst_for($any) {
     else {
         pir::die("PAST2JSTCompiler.pm does not know how to compile a " ~ pir::typeof__SP($any) ~ "(" ~ $any ~ ")");
     }
+}
+
+# Non-regex nodes reached inside a regex
+our multi sub jst_regex($r) {
+    jst_for($r)
 }
 
 # Emits a lookup of a lexical.

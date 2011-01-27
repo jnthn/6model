@@ -1,13 +1,15 @@
 # This works if you have parrot, parrot-nqp and javac in your path.
 
-CLASSES = classes/
+CLASSES_DIR = classes/
 
-JAVAC = javac -d $(CLASSES)
+JAVAC = javac -d $(CLASSES_DIR)
 
-all: $(CLASSES) gen_actions.pir gen_grammar.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir NQPSetting.jar
+# TODO add P6Objects.jar
+all: $(CLASSES_DIR) gen_actions.pir gen_grammar.pir gen_jst.pir \
+    	gen_past2jst.pir gen_jst2java.pir NQPSetting.jar
 
-$(CLASSES):
-	perl -MExtUtils::Command -e mkpath $(CLASSES)
+$(CLASSES_DIR):
+	perl -MExtUtils::Command -e mkpath $(CLASSES_DIR)
 
 gen_actions.pir: Actions.pm
 	parrot-nqp --target=pir Actions.pm > gen_actions.pir
@@ -28,18 +30,15 @@ gen_jst2java.pir: JST2Java.pm
 	parrot-nqp --target=pir JST2Java.pm > gen_jst2java.pir
 
 NQPSetting.java: NQPSetting.pm \
-		gen_actions.pir \
-		gen_grammar.pir \
-		gen_jst.pir \
-		gen_past2jst.pir \
-		gen_jst2java.pir
+		compile.pir gen_actions.pir gen_grammar.pir gen_nqpoptimizer.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir
 	parrot compile.pir NQPSetting.pm --setting > NQPSetting.java
 
 NQPSetting.jar: NQPSetting.java
 	$(JAVAC) -classpath ../runtime/RakudoRuntime.jar NQPSetting.java
-	jar cf NQPSetting.jar -C $(CLASSES) .
+	jar cf NQPSetting.jar -C $(CLASSES_DIR) .
 
-P6Objects.java: compile.pir gen_actions.pir gen_grammar.pir gen_nqpoptimizer.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir ../../common/NQP/P6Objects.pm NQPSetting.jar
+P6Objects.java: ../../common/NQP/P6Objects.pm NQPSetting.jar \
+		compile.pir gen_actions.pir gen_grammar.pir gen_nqpoptimizer.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir
 	parrot compile.pir ../../common/NQP/P6Objects.pm --no-core-libs > P6Objects.java
 
 P6Objects.jar: P6Objects.java
@@ -54,7 +53,7 @@ test-unixy: all
 
 clean:
 	perl -MExtUtils::Command -e rm_f gen_*.pir *.class *.jar *.java
-	perl -MExtUtils::Command -e rm_rf $(CLASSES)
+	perl -MExtUtils::Command -e rm_rf $(CLASSES_DIR)
 
 # Java source code files "depend" on files in the dotnet/* directories,
 # in the sense that they were manually translated.

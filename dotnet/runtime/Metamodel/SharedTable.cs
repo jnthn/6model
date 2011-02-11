@@ -166,13 +166,13 @@ namespace Rakudo.Metamodel
         /// is deserialized. Thus never, ever serialize this ID anywhere; it's
         /// for strictly for per-run scoped caches _only_. You have been warned.
         /// </summary>
-        public long TypeCacheID = Interlocked.Add(ref TypeCacheIDSource, 4);
+        public int TypeCacheID = Interlocked.Add(ref TypeCacheIDSource, 4);
 
         /// <summary>
         /// Source of type IDs. The lowest one is 4. This is to make the lower
         /// two bits available for defined/undefined/don't care flags for the
         /// multi dispatch cache, which is the primary user of these IDs.
         /// </summary>
-        private static long TypeCacheIDSource = 4;
+        private static int TypeCacheIDSource = 4;
     }
 }

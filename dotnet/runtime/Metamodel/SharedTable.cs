@@ -157,6 +157,11 @@ namespace Rakudo.Metamodel
         public RakudoObject[] VTable;
 
         /// <summary>
+        /// Ducktable storage.
+        /// </summary>
+        public Dictionary<string, RakudoObject[]> DuckTables;
+
+        /// <summary>
         /// The unique ID for this type. Note that this ID is not ever,
         /// ever, ever, ever to be used as a handle for the type for looking
         /// it up. It is only ever valid to use in a cache situation where a

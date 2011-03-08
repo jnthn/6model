@@ -6,7 +6,7 @@ JAVAC = javac -d $(CLASSES_DIR)
 
 # TODO add P6Objects.jar
 all: $(CLASSES_DIR) gen_actions.pir gen_grammar.pir gen_jst.pir \
-    	gen_past2jst.pir gen_jst2java.pir NQPSetting.jar
+    	gen_past2jst.pir gen_jst2java.pir gen_jst2jasm.pir NQPSetting.jar
 
 $(CLASSES_DIR):
 	perl -MExtUtils::Command -e mkpath $(CLASSES_DIR)
@@ -28,6 +28,9 @@ gen_jst.pir: JST.pm
 
 gen_jst2java.pir: JST2Java.pm
 	parrot-nqp --target=pir JST2Java.pm > gen_jst2java.pir
+
+gen_jst2jasm.pir: JST2JASM.pm
+	parrot-nqp --target=pir JST2JASM.pm > gen_jst2jasm.pir
 
 NQPSetting.java: NQPSetting.pm \
 		compile.pir gen_actions.pir gen_grammar.pir gen_nqpoptimizer.pir gen_jst.pir gen_past2jst.pir gen_jst2java.pir

@@ -8,6 +8,7 @@
 .include 'gen_jst.pir'
 .include 'gen_past2jst.pir'
 .include 'gen_jst2java.pir'
+.include 'gen_jst2jasm.pir'
 .loadlib 'io_ops'
 
 .sub 'main' :main
@@ -25,7 +26,14 @@
     g = get_hll_global ['JnthnNQP'], 'Grammar'
     a = get_hll_global ['JnthnNQP'], 'Actions'
     pastcomp = get_hll_global 'PAST2JSTCompiler'
+
+    $S0 = args[2]
+    if $S0 == '--jasm' goto jasm
     jstcomp = get_hll_global 'JST2JavaCompiler'
+    goto comp_done
+  jasm:
+    jstcomp = get_hll_global 'JST2JASMCompiler'
+  comp_done:
     
     .local string filename, file
     .local pmc fh
@@ -39,6 +47,7 @@
     match = g.'parse'(file, 'actions'=>a)
     ast = match.'ast'()
     jst = pastcomp.'compile'(ast)
+
     compiled = jstcomp.'compile'(jst)
     say compiled
 .end

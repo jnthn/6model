@@ -46,7 +46,7 @@ P6Objects.jar: P6Objects.java
 	jar cf P6Objects.jar P6Objects.class
 
 test: all
-	prove -r --exec try.sh ..\..\t\nqp
+	prove -r --exec try.bat ..\..\t\nqp
 
 test-unixy: all
 	prove -r --exec ./try.sh ../../t/nqp

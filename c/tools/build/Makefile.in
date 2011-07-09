@@ -1,0 +1,37 @@
+# Makefile.in for 6model/c
+# This is the file to edit and commit changes.  Depending on the
+# operating system, use 6model/c/Configure.sh or 6model/c/Configure.bat
+# to compile and run 6model/c/tools/build/Configure.c which reads from
+# 6model/c/tools/build/Makefile.in and generates 6model/c/Makefile.
+
+# Targets that do not produce files (tells make not to waste time
+# checking that such files exist).
+.PHONY: clean test test01 test02
+
+t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c
+	cc -ldl -o t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
+
+t/01-toolchain/01b-icu.exe: t/01-toolchain/01b-icu.c
+	cc -ldl -o t/01-toolchain/01b-icu.exe t/01-toolchain/01b-icu.c
+
+t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c
+	cc -o t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
+
+test01: t/01-toolchain/01a-cc.exe t/01-toolchain/01b-icu.exe
+	prove -e '' --ext '.exe' t/01-toolchain
+
+test02: t/02-components/02a-hashtable.exe
+	prove -e '' --ext '.exe' t/02-components
+
+test: test01 test02
+
+clean:
+	perl -MExtUtils::Command -e rm_rf *.exe *~
+
+realclean: clean
+	perl -MExtUtils::Command -e rm_f Makefile
+
+help:
+	@echo 'In this 6model/c directory you can make the following targets:'
+	@echo 'test01 - tests the toolchain (C compiler, ICU etc)'
+	@echo 'help - you already found this'

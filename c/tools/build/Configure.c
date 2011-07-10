@@ -2,7 +2,7 @@
 /* Compiled and run by 6model/c/Configure.(sh|bat) */
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>  /* getenv */
 #include <string.h>
 
 #define LINEBUFFERSIZE 128
@@ -104,9 +104,23 @@ int
 main(int argc, char * argv[])
 {
     char * makefiletext;
+    enum { GCC, MSVC } c_compiler;
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s path/to/Makefile.in path/to/Makefile\n");
+        exit(1);
+    }
+    printf("%s is converting %s to %s\n", argv[0], argv[1], argv[2]);
+
+    /* Quick and dirty OS check to decide which compiler to use */
+    c_compiler = getenv("HOME") ? GCC : MSVC;
     makefiletext = slurp(argv[1]);
     subst(&makefiletext, "# Makefile.in",    "# Makefile");
     subst(&makefiletext, "This is the file", "This is NOT the file");
+    subst(&makefiletext, "@cc@",  c_compiler == GCC ? "cc"   : "cl"    );
+    subst(&makefiletext, "@exe@", c_compiler == GCC ? ""     : ".exe"  );
+    subst(&makefiletext, "@ldl@", c_compiler == GCC ? "-ldl" : "-DWIN" );
+    subst(&makefiletext, "@o@",   c_compiler == GCC ? "-o"   : "-Fo"   );
+    subst(&makefiletext, "@win@", c_compiler == GCC ? ""     : "-DWIN" );
     squirt(makefiletext, argv[2]);
     free(makefiletext);
     return 0;

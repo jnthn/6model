@@ -6,16 +6,23 @@
 
 # Targets that do not produce files (tells make not to waste time
 # checking that such files exist).
+
 .PHONY: clean test test01 test02
 
+CC   = @cc@
+EXE  = @exe@
+LDL  = @ldl@
+O    = @o@
+WIN  = @win@
+
 t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c
-	cc -ldl -o t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
+	$(CC) $(WIN) $(LDL) $(O)t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
 
 t/01-toolchain/01b-icu.exe: t/01-toolchain/01b-icu.c
-	cc -ldl -o t/01-toolchain/01b-icu.exe t/01-toolchain/01b-icu.c
+	$(CC) $(WIN) $(LDL) $(O)t/01-toolchain/01b-icu.exe t/01-toolchain/01b-icu.c
 
 t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c
-	cc -o t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
+	$(CC) $(WIN) $(O)t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
 
 test01: t/01-toolchain/01a-cc.exe t/01-toolchain/01b-icu.exe
 	prove -e '' --ext '.exe' t/01-toolchain

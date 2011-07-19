@@ -7,38 +7,42 @@
 # Targets that do not produce files (tells make not to waste time
 # checking that such files exist).
 
-.PHONY: clean test test01 test02
+.PHONY: all clean test test01 test02
 
-CC   = @cc@
-EXE  = @exe@
-LDL  = @ldl@
-O    = @o@
-WIN  = @win@
+CC        = @cc@
+EXE       = @exe@
+O         = @out@
+RM_RF     = @rm_rf@
+
+all: test
 
 t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c
-	$(CC) $(WIN) $(LDL) $(O)t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
-
-t/01-toolchain/01b-icu.exe: t/01-toolchain/01b-icu.c
-	$(CC) $(WIN) $(LDL) $(O)t/01-toolchain/01b-icu.exe t/01-toolchain/01b-icu.c
+	$(CC) $(O)t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
+    -$(RM_RF) 01a-cc.obj
 
 t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c
-	$(CC) $(WIN) $(O)t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
+	$(CC) $(O)t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
 
-test01: t/01-toolchain/01a-cc.exe t/01-toolchain/01b-icu.exe
-	prove -e '' --ext '.exe' t/01-toolchain
+# Test executables are named *.exe even on Unix so that prove can find them
+test01: t/01-toolchain/01a-cc.exe tools/build/prove$(EXE)
+	tools/build/prove -e "" --ext ".exe" t/01-toolchain
 
 test02: t/02-components/02a-hashtable.exe
-	prove -e '' --ext '.exe' t/02-components
+	prove -e "" --ext ".exe" t/02-components
 
 test: test01 test02
 
+tools/build/prove$(EXE): tools/build/prove.c
+	$(CC) $(O)tools/build/prove$(EXE) tools/build/prove.c
+    -$(RM_RF) prove.obj
+
 clean:
-	perl -MExtUtils::Command -e rm_rf *.exe *~
+	$(RM_RF) *.exe *.obj *.dll *.lib *.exp
 
 realclean: clean
 	perl -MExtUtils::Command -e rm_f Makefile
 
 help:
-	@echo 'In this 6model/c directory you can make the following targets:'
-	@echo 'test01 - tests the toolchain (C compiler, ICU etc)'
-	@echo 'help - you already found this'
+	@echo In this 6model/c directory you can make the following targets:
+	@echo test01 - tests the toolchain (C compiler, ICU etc)
+	@echo help - you already found this

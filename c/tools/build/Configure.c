@@ -1,11 +1,125 @@
 /* Configure.c */
 /* Compiled and run by 6model/c/Configure.(sh|bat) */
 
-#include <stdio.h>
-#include <stdlib.h>  /* getenv */
-#include <string.h>
+/*
+ * TODO
+
+ * Evaluate potential Win32 C compilers and development environments
+ * http://www.thefreecountry.com/compilers/cpp.shtml
+ * Most of them alias cc to their own filenames.
+
+ * msysGit
+ * The full install is a 39MB download instead of the 13MB Git install, but it expands to 1.3GB instead of
+ * about 200MB, and includes MinGW, which includes GCC.
+
+ * MinGW
+ * http://www.mingw.org/
+ * Also bundled with the Git full install.  It includes bash, so use Configure.sh rather than Configure.bat
+ * The libraries do not include dlopen.
+
+ * lcc-win32
+ * http://www.cs.virginia.edu/~lcc-win32/
+
+ * Microsoft Visual C++ Express Edition 1-2GB RAM, 3GB disk
+ * Registration required to avoid de-activation after 30 days.  Downloads a 3.2MB web installer.
+ * http://www.microsoft.com/express/vc/ do not need optional SQL express.
+ * Also installs Windows Installer 4.5, .NET Framework 4, SQL Server Compact 3.5, Help Viewer 1.0
+ * (download 146MB, disk space 2.3GB)
+
+ * Borland
+ * Registration required
+
+ * Tiny C Compiler
+ * http://bellard.org/tcc/
+
+ * OpenWatCom
+ * http://www.openwatcom.org/index.php/Download
+
+ * Digital Mars
+ * http://www.digitalmars.com/download/freecompiler.html
+
+*/
+
+#include <stdio.h>   /* fclose fgets FILE fopen fprintf printf stderr */
+#include <stdlib.h>  /* exit free getenv malloc realloc */
+#include <string.h>  /* memmove memcpy strcpy strlen strstr */
+
 
 #define LINEBUFFERSIZE 128
+/* Subscript names for configuration strings.  Almost like a hash ;) */
+enum { CC, EXE, LDL, MAKE_COMMAND, OS_TYPE, OUT, RM_RF,
+       CONFIG_END /* this one must always be last */ };
+char * config[CONFIG_END];
+/* forward references to internal functions */
+void detect(void);
+char * slurp(char * filename);
+void squirt(char * text, char * filename);
+void trans(char ** text, char * search, char * replace);
+
+
+/* config_set */
+/* Use environment variables and other clues to assign values to */
+/* members of the config[] array */
+void
+config_set(void)
+{
+    /* Operating system */
+    if (strcmp(getenv("OS"),"Windows_NT")==0) { /* any Windows system */
+	    config[OS_TYPE] = "Windows";
+	    config[EXE] = ".exe";
+    }
+	else {  /* non Windows operating systems default to Unix settings */
+	    config[OS_TYPE] = "Unix";
+	    config[EXE] = "";
+    }
+    /* C compiler */
+    if (strcmp(getenv("COMPILER"),"MSVC")==0) {
+        config[CC] = "cl -DMSVC ";
+	    config[OUT] = "-Fe";
+	    config[RM_RF] = "del /F /Q /S";
+    }
+    if (strcmp(getenv("COMPILER"),"GCC")==0) {
+        if (strcmp(getenv("OS"),"Windows_NT")==0)
+            config[CC] = "cc -DGCC ";
+        else
+            config[CC] = "cc -DGCC -ldl ";
+	    config[OUT] = "-o";
+	    config[RM_RF] = "rm -rf";
+    }
+    /* Make utility */
+    if (strcmp(getenv("COMPILER"),"GCC")==0) {
+	    config[MAKE_COMMAND] = "make";
+    } else {
+	    config[MAKE_COMMAND] = "nmake";
+    }
+}
+
+
+/* makefile_convert */
+void
+makefile_convert(char * programfilename, char * templatefilename,
+    char * outputfilename)
+{
+    char * makefiletext;
+    printf("    %s: reading from %s\n", programfilename, templatefilename);
+    makefiletext = slurp(templatefilename);
+    trans(&makefiletext, "# Makefile.in",    "# Makefile");
+    trans(&makefiletext, "This is the file", "This is NOT the file");
+    trans(&makefiletext, "@cc@",        config[CC]);
+    trans(&makefiletext, "@exe@",       config[EXE]);
+    trans(&makefiletext, "@out@",       config[OUT]);
+    trans(&makefiletext, "@rm_rf@",     config[RM_RF]);
+    if (strcmp(config[OS_TYPE], "Windows")==0 && strcmp(getenv("COMPILER"),"MSVC")==0) {
+        trans(&makefiletext, "tools/build/",     "tools\\build\\");
+        trans(&makefiletext, "t/01-toolchain/",  "t\\01-toolchain\\");
+        trans(&makefiletext, "t/01-toolchain",   "t\\01-toolchain");
+        trans(&makefiletext, "t/02-components/", "t\\02-components\\");
+        trans(&makefiletext, "t/02-components",  "t\\02-components");
+    }
+    printf("    %s: writing to %s\n", programfilename, outputfilename);
+    squirt(makefiletext, outputfilename);
+    free(makefiletext);
+}
 
 
 /* slurp */
@@ -31,10 +145,23 @@ slurp(char * filename)
 }
 
 
-/* subst */
-/* Perform a global search and replace on a string */
+/* squirt */
+/* Write a string to a file */
 void
-subst(char ** text, char * search, char * replace)
+squirt(char * text, char * filename)
+{
+    FILE * outfile;
+    outfile = fopen(filename, "w");
+    fputs(text, outfile);
+    fclose(outfile);
+}
+
+
+/* trans */
+/* Transliterate (find without a regular expression, then replace) */
+/* text in a string */
+void
+trans(char ** text, char * search, char * replace)
 {
     int textindex, searchlength, replacelength, foundcount = 0;
     int pass = 1, textlength, lengthdifference;
@@ -87,41 +214,18 @@ subst(char ** text, char * search, char * replace)
 }
 
 
-/* squirt */
-/* Write a string to a file */
-void
-squirt(char * text, char * filename)
-{
-    FILE * outfile;
-    outfile = fopen(filename, "w");
-    fputs(text, outfile);
-    fclose(outfile);
-}
-
-
 /* main */
 int
 main(int argc, char * argv[])
 {
-    char * makefiletext;
-    enum { GCC, MSVC } c_compiler;
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s path/to/Makefile.in path/to/Makefile\n");
+        fprintf(stderr, "Usage: %s path/to/Makefile.in path/to/Makefile\n", argv[0]);
         exit(1);
     }
-    printf("%s is converting %s to %s\n", argv[0], argv[1], argv[2]);
-
-    /* Quick and dirty OS check to decide which compiler to use */
-    c_compiler = getenv("HOME") ? GCC : MSVC;
-    makefiletext = slurp(argv[1]);
-    subst(&makefiletext, "# Makefile.in",    "# Makefile");
-    subst(&makefiletext, "This is the file", "This is NOT the file");
-    subst(&makefiletext, "@cc@",  c_compiler == GCC ? "cc"   : "cl"    );
-    subst(&makefiletext, "@exe@", c_compiler == GCC ? ""     : ".exe"  );
-    subst(&makefiletext, "@ldl@", c_compiler == GCC ? "-ldl" : "-DWIN" );
-    subst(&makefiletext, "@o@",   c_compiler == GCC ? "-o"   : "-Fo"   );
-    subst(&makefiletext, "@win@", c_compiler == GCC ? ""     : "-DWIN" );
-    squirt(makefiletext, argv[2]);
-    free(makefiletext);
+	config_set();  /* Figure out the configuration settings */
+    makefile_convert(argv[0], argv[1], argv[2]);
+    printf("Use '%s' to build and test 6model/c\n", config[MAKE_COMMAND]);
     return 0;
 }
+
+/* end of Configure.c */

@@ -49,7 +49,7 @@
 /* Subscript names for configuration strings.  Almost like a hash ;) */
 enum { CC, EXE, LDL, MAKE_COMMAND, OS_TYPE, OUT, RM_RF,
        CONFIG_END /* this one must always be last */ };
-char * config[CONFIG_END];
+char * config[CONFIG_END] = {"", "", "", "", "", "", ""};
 /* forward references to internal functions */
 void detect(void);
 char * slurp(char * filename);
@@ -63,8 +63,9 @@ void trans(char ** text, char * search, char * replace);
 void
 config_set(void)
 {
+    char * s;
     /* Operating system */
-    if (strcmp(getenv("OS"),"Windows_NT")==0) { /* any Windows system */
+    if ((s=getenv("OS")) && strcmp(s,"Windows_NT")==0) { /* any Windows system */
 	    config[OS_TYPE] = "Windows";
 	    config[EXE] = ".exe";
     }
@@ -73,13 +74,13 @@ config_set(void)
 	    config[EXE] = "";
     }
     /* C compiler */
-    if (strcmp(getenv("COMPILER"),"MSVC")==0) {
+    if ((s=getenv("COMPILER")) && strcmp(s,"MSVC")==0) {
         config[CC] = "cl -DMSVC ";
 	    config[OUT] = "-Fe";
 	    config[RM_RF] = "del /F /Q /S";
     }
-    if (strcmp(getenv("COMPILER"),"GCC")==0) {
-        if (strcmp(getenv("OS"),"Windows_NT")==0)
+    if ((s=getenv("COMPILER")) && strcmp(s,"GCC")==0) {
+        if ((s=getenv("OS")) && strcmp(s,"Windows_NT")==0)
             config[CC] = "cc -DGCC ";
         else
             config[CC] = "cc -DGCC -ldl ";
@@ -87,7 +88,7 @@ config_set(void)
 	    config[RM_RF] = "rm -rf";
     }
     /* Make utility */
-    if (strcmp(getenv("COMPILER"),"GCC")==0) {
+    if ((s=getenv("COMPILER")) && strcmp(s,"GCC")==0) {
 	    config[MAKE_COMMAND] = "make";
     } else {
 	    config[MAKE_COMMAND] = "nmake";

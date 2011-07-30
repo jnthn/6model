@@ -1,6 +1,7 @@
 :: Configure.bat
 
-:: This script is written for Microsoft Visual C++ Express 2010 or GCC.
+:: This script should work on a Microsoft Windows operating system with
+:: either Microsoft Visual C++ or GNU Compiler Collection gcc.
 
 :: TODO
 :: - Add a --help option and provide for more options in general

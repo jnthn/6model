@@ -1,18 +1,22 @@
 /* prove.c */
-/* Lightweigt Test Anything Protocol (TAP) harness */
+/* Lightweight TAP (Test Anything Protocol) harness */
 
-#include <stdio.h>   /* fclose fgets FILE fopen fprintf printf stderr */
-#include <stdlib.h>  /* exit free getenv malloc realloc */
-#include <string.h>  /* memmove memcpy strcpy strlen strstr */
+/* TODO: parse the test script output looking for 'ok', 'not ok' etc */
+/* and output a summary instead of every test result. */
+
+#include <glob.h>    /* glob globfree */
+#include <stdio.h>   /* FILE fprintf printf stderr */
+#include <stdlib.h>  /* exit free malloc realloc */
+#include <string.h>  /* strcat strcpy strlen */
 
 #ifdef _WIN32
-#define pclose _pclose
-#define popen  _popen
+    #define pclose _pclose
+    #define popen  _popen
 #endif
 #define LINEBUFFERSIZE 128
 
-char * executable_program;
-char * filename_extension;
+char * executable_program = NULL;
+char * filename_extension = NULL;
 
 
 /* options */
@@ -42,6 +46,7 @@ options(int argc, char * argv[])
     return argindex;
 }
 
+
 /* qx */
 /* Imitate the Perl qx operator, returning the results of running the */
 /* command passed as a parameter */
@@ -67,15 +72,64 @@ qx(char * command)
 }
 
 
+/* run_tests_in_dir */
+void
+run_tests_in_dir(char * dir)
+{
+    int patternlength, glob_flags, status, pathindex;
+    char * glob_pattern, * tap_output, * errormessage;
+    int (* glob_errfunc) (const char * epath, int eerrno);
+    glob_t globbuf;
+
+    /* Scan the specified directory for test files */
+    patternlength = strlen(dir) + strlen(filename_extension) + 3;
+    glob_pattern = (char *) malloc(patternlength);
+    strcpy(glob_pattern, dir);
+    strcat(glob_pattern, "/*");
+    strcat(glob_pattern, filename_extension);
+    glob_flags = 0;
+    glob_errfunc = NULL;
+    status = glob(glob_pattern, glob_flags, glob_errfunc, &globbuf);
+    free(glob_pattern);
+    if (status) {
+        switch (status) {
+            case GLOB_NOSPACE:
+                errormessage = "out of memory";
+                break;
+            case GLOB_ABORTED:
+                errormessage = "read error";
+                break;
+            case GLOB_NOMATCH:
+                errormessage = "no files found";
+                break;
+        }
+        fprintf(stderr,
+            "scanning directory '%s' ended unexpectedly with %s\n",
+            dir, errormessage);
+        exit(1);
+    }
+
+    /* Run each test file found in the directory and scan the output */
+    for (pathindex=0; pathindex<globbuf.gl_pathc; pathindex++) {
+        // printf("found path %s\n", globbuf.gl_pathv[pathindex]);
+        tap_output = qx(globbuf.gl_pathv[pathindex]);
+        printf("%s\n", tap_output);
+        free(tap_output);
+    }
+}
+
+
 /* main */
 int
 main(int argc, char * argv[])
 {
-    char * tap_output;
-    int argi;
+    int i, argi;
+
+    /* Get command line options and process them */
     argi = options(argc, argv);
-    printf("exe=%s ext=%s arg=%s\n", executable_program, filename_extension, argv[argi]);
-    tap_output = qx("dir");
-    printf("tap_output=%s\n", tap_output);
+
+    /* The remaining arguments are all expected to be directories */
+    for (i=argi; i<argc; ++i)
+        run_tests_in_dir(argv[i]);
     return 0;
 }

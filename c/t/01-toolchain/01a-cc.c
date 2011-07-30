@@ -137,13 +137,13 @@ remove_exe()
         perror("01a-cc error 6:");
         exit(6);
     }
-    printf("ok 6 - unlink testexe.c\n");
+    printf("ok 6 - remove testexe.c\n");
     status = unlink("testexe" EXT_EXE);
     if (status) {
         perror("01a-cc error 7:");
         exit(5);
     }
-    printf("ok 7 - unlink testexe" EXT_EXE "\n");
+    printf("ok 7 - remove testexe" EXT_EXE "\n");
 }
 
 
@@ -173,7 +173,7 @@ create_lib()
     );
     fclose(testlib_sourcefile);
     #ifdef _WIN32
-        #ifdef MSVC
+        #ifdef _MSC_VER
             status = system("cl -LD -WX -nologo testlib.c >nul"); /* Visual C++ */
         #else
             status = system("gcc -mdll -o testlib.dll testlib.c"); /* MinGW */
@@ -182,6 +182,9 @@ create_lib()
         status = system("gcc -c -fPIC -o testlib.o testlib.c"); /* Unix */
         if (status==0) {
             status = system("cc -shared -s -o testlib.so testlib.o");
+        }
+        if (status==0) {
+            status = system("rm testlib.o");
         }
     #endif
     if (status) {
@@ -215,7 +218,7 @@ load_lib()
             exit(9);
         }
     #endif
-    printf("ok 9 - loaded testlib" EXT_DYNLIB "\n");
+    printf("ok 9 - load testlib" EXT_DYNLIB "\n");
 
     #ifdef _WIN32
         pfunction = GetProcAddress(testlib, "testfunction");
@@ -223,30 +226,30 @@ load_lib()
         dlerror(); /* clear any possible error */
         pfunction = dlsym(testlib, "testfunction");
         if( (error = dlerror()) != NULL ) {
-            fprintf(stderr, "01a-cc error 11: %s\n", error);
+            fprintf(stderr, "01a-cc error 10: %s\n", error);
             exit(10);
         }
     #endif
     if (pfunction == NULL) {
-        fprintf(stderr, "01a-cc error 11a: GetProcAddress returned NULL\n");
-        exit(11);
+        fprintf(stderr, "01a-cc error 10a: GetProcAddress returned NULL\n");
+        exit(10);
     }
-    printf("ok 11 - dlsym testfunction\n");
-    result = (* pfunction)(12, "call testfunction"); /* prints "ok 12" */
-    if (result == 42+12)
-        printf("ok 13 - testfunction result\n");
+    printf("ok 10 - dlsym testfunction\n");
+    result = (* pfunction)(11, "call testfunction"); /* prints "ok 12" */
+    if (result == 42+11)
+        printf("ok 12 - testfunction result\n");
     else
-        printf("not ok 13 - testfunction result\n");
+        printf("not ok 12 - testfunction result\n");
     #ifdef _WIN32
         result = ! FreeLibrary(testlib); /* returns 0 for failure! */
     #else
         result = dlclose(testlib);
     #endif
     if (result) {
-        fprintf(stderr, "01a-cc error 14: %s\n", error);
+        fprintf(stderr, "01a-cc error 13: %s\n", error);
         exit(EXIT_FAILURE);
     }
-    printf("ok 14 - dlclose\n");
+    printf("ok 13 - unload library\n");
 }
 
 
@@ -257,26 +260,26 @@ remove_lib()
     int status;
     status = unlink("testlib.c");
     if (status) {
-        perror("01a-cc error 15:");
-        exit(15);
+        perror("01a-cc error 14:");
+        exit(14);
     }
-    printf("ok 15 - unlink testlib.c\n");
-    #ifdef MSVC
+    printf("ok 14 - remove testlib.c\n");
+    #ifdef _MSC_VER
         status = unlink("testlib" EXT_OBJ);
         if (status) {
-            perror("01a-cc error 16:");
-            exit(16);
+            perror("01a-cc error 15:");
+            exit(15);
         }
-        printf("ok 16 - unlink testlib" EXT_OBJ "\n");
+        printf("ok 15 - remove testlib" EXT_OBJ "\n");
     #else
-        printf("ok 16 - unlink testlib # SKIPPED\n");
+        printf("ok 15 - remove testlib # SKIPPED\n"); /* MinGW */
     #endif
     status = unlink("testlib" EXT_DYNLIB);
     if (status) {
-        perror("01a-cc error 17:");
-        exit(17);
+        perror("01a-cc error 16:");
+        exit(16);
     }
-    printf("ok 17 - unlink testlib" EXT_DYNLIB "\n");
+    printf("ok 16 - remove testlib" EXT_DYNLIB "\n");
 }
 
 
@@ -284,7 +287,7 @@ remove_lib()
 int
 main(int argc, char * argv[])
 {
-    printf("1..17\n"); /* tests */
+    printf("1..16\n"); /* tests */
     create_exe();  /* 1-2 make testexe.c and testexe.exe */
     run_exe();     /* 2-5 run testexe.exe */
     remove_exe();  /* 6-7 remove testexe.c and testexe.exe */

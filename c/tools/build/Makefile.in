@@ -6,36 +6,50 @@
 
 # Targets that do not produce files (tells make not to waste time
 # checking that such files exist).
-
 .PHONY: all clean test test01 test02
 
+# The compiled Configure.c will replace specific words between @ signs.
 CC        = @cc@
 EXE       = @exe@
 O         = @out@
 RM_RF     = @rm_rf@
 
+# The first target is default, will be used by a plain 'make' command.
 all: test
 
-t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c
+# Recipes to build executables
+t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c t/Test.h
 	$(CC) $(O)t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
-    -$(RM_RF) 01a-cc.obj
+	-$(RM_RF) 01a-cc.obj
 
-t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c
-	$(CC) $(O)t/02-components/02a-hashtable.exe t/02-components/02a-hashtable.c
+t/01-toolchain/01b-threads.exe: t/01-toolchain/01b-threads.c t/Test.h
+	$(CC) $(O)t/01-toolchain/01b-threads.exe t/01-toolchain/01b-threads.c
+	-$(RM_RF) 01b-threads.obj
+
+t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c \
+		src/hashtable.h src/hashtable.c t/Test.h
+	$(CC) $(O)t/02-components/02a-hashtable.exe src/hashtable.c t/02-components/02a-hashtable.c
+	-$(RM_RF) hashtable.obj
+
+t/02-components/02b-heapmanager.exe: t/02-components/02b-heapmanager.c \
+		src/heapmanager.h src/heapmanager.c t/Test.h
+	$(CC) $(O)t/02-components/02b-heapmanager.exe src/heapmanager.c t/02-components/02b-heapmanager.c
+	-$(RM_RF) hashtable.obj
+
+tools/build/prove$(EXE): tools/build/prove.c
+	$(CC) $(O)tools/build/prove$(EXE) tools/build/prove.c
+	-$(RM_RF) prove.obj
 
 # Test executables are named *.exe even on Unix so that prove can find them
 test01: t/01-toolchain/01a-cc.exe tools/build/prove$(EXE)
 	tools/build/prove -e "" --ext ".exe" t/01-toolchain
 
-test02: t/02-components/02a-hashtable.exe
-	prove -e "" --ext ".exe" t/02-components
+test02: t/02-components/02a-hashtable.exe tools/build/prove$(EXE)
+	tools/build/prove -e "" --ext ".exe" t/02-components
 
 test: test01 test02
 
-tools/build/prove$(EXE): tools/build/prove.c
-	$(CC) $(O)tools/build/prove$(EXE) tools/build/prove.c
-    -$(RM_RF) prove.obj
-
+# Miscellaneous targets
 clean:
 	$(RM_RF) *.exe *.obj *.dll *.lib *.exp
 
@@ -44,5 +58,9 @@ realclean: clean
 
 help:
 	@echo In this 6model/c directory you can make the following targets:
-	@echo test01 - tests the toolchain (C compiler, ICU etc)
-	@echo help - you already found this
+	@echo "test      - general test as far as 6model has been developed"
+	@echo "test01    - test the toolchain, eg C compiler, threads, ICU etc"
+	@echo "test02    - test 6model components, eg hashtable, heapmanager etc"
+	@echo "clean     - remove all generated files except this Makefile"
+	@echo "realclean - remove all generated files including this Makefile"
+	@echo "help      - you already found this"

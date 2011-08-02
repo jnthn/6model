@@ -13,6 +13,7 @@ CC        = @cc@
 EXE       = @exe@
 O         = @out@
 RM_RF     = @rm_rf@
+THREADS   = @threads@
 
 # The first target is default, will be used by a plain 'make' command.
 all: test
@@ -23,7 +24,7 @@ t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c t/Test.h
 	-$(RM_RF) 01a-cc.obj
 
 t/01-toolchain/01b-threads.exe: t/01-toolchain/01b-threads.c t/Test.h
-	$(CC) $(O)t/01-toolchain/01b-threads.exe t/01-toolchain/01b-threads.c
+	$(CC) -pthread $(O)t/01-toolchain/01b-threads.exe t/01-toolchain/01b-threads.c
 	-$(RM_RF) 01b-threads.obj
 
 t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c \

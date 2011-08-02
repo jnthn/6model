@@ -23,7 +23,9 @@ main(int argc, char * argv[])
 
 #include <stdio.h>
 
-#define plan(count) int testnumber=0; printf("1..%d\n", count)
+int testnumber=0; /* yes, namespace pollution. patches welcome ;-) */
+
+#define plan(count)  printf("1..%d\n", count)
 
 #define \
 ok(flag,desc) \
@@ -41,5 +43,9 @@ is_ii(got,expected,desc) \
 is_ss(got,expected,desc) \
     printf("%sok %d - %s\n", \
         strcmp(got,expected)?"not ":"",++testnumber,desc)
+
+#define \
+diag(message) \
+    printf("# %s\n", message)
 
 /* end of Test.h */

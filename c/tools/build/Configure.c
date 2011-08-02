@@ -1,10 +1,23 @@
 /* Configure.c */
 /* Compiled and run by 6model/c/Configure.(sh|bat) */
 
+/* This program (Configure) uses environment variables and C macros */
+/* to autodetect the operating system, compiler and other utilities */
+/* that can be used to build your software.  It then creates your */
+/* Makefile based on a template (Makefile.in).  To work also with */
+/* non-GNU systems such as Microsoft Visual C++, it follows the */
+/* style of Automake and Autoconf, but is written in only C and does */
+/* not rely on other tools such as M4. */
+
+/* This work will never be finished.  Reliable autodetection is hard. */
+/* There are always newer environments and tools to try out. */
+/* Systems usually predefine some variables and macros.  Users might */
+/* make the same definitions. */
+
 /*
  * TODO
 
- * Evaluate potential Win32 C compilers and development environments
+ * Explore more Win32 C compilers and toolchains
  * http://www.thefreecountry.com/compilers/cpp.shtml
  * Most of them alias cc to their own filenames.
 
@@ -60,12 +73,13 @@ void trans(char ** text, char * search, char * replace);
 /* config_set */
 /* Use environment variables and other clues to assign values to */
 /* members of the config[] array */
+
 void
 config_set(void)
 {
     char * s;
-    /* Operating system */
-    if ((s=getenv("OS")) && strcmp(s,"Windows_NT")==0) { /* any Windows system */
+    /* Operating system */ s=getenv("OS");
+    if (s && strcmp(s,"Windows_NT")==0) { /* any Windows system */
 	    config[OS_TYPE] = "Windows";
 	    config[EXE] = ".exe";
     }
@@ -73,22 +87,24 @@ config_set(void)
 	    config[OS_TYPE] = "Unix";
 	    config[EXE] = "";
     }
-    /* C compiler */
-    if ((s=getenv("COMPILER")) && strcmp(s,"MSVC")==0) {
+    /* C compiler */ s=getenv("COMPILER");
+    if (s && strcmp(s,"MSVC")==0) {
+        /* TODO: use _MSC_VER */
+        /* See http://msdn.microsoft.com/en-US/library/b0084kay%28v=VS.100%29.aspx */
         config[CC] = "cl -DMSVC ";
 	    config[OUT] = "-Fe";
 	    config[RM_RF] = "del /F /Q /S";
     }
-    if ((s=getenv("COMPILER")) && strcmp(s,"GCC")==0) {
-        if ((s=getenv("OS")) && strcmp(s,"Windows_NT")==0)
+    if (s && strcmp(s,"GCC")==0) { s=getenv("OS");
+        if (s && strcmp(s,"Windows_NT")==0)
             config[CC] = "cc -DGCC ";
         else
             config[CC] = "cc -DGCC -ldl ";
 	    config[OUT] = "-o";
 	    config[RM_RF] = "rm -rf";
     }
-    /* Make utility */
-    if ((s=getenv("COMPILER")) && strcmp(s,"GCC")==0) {
+    /* Make utility */ s=getenv("COMPILER");
+    if (s && strcmp(s,"GCC")==0) {
 	    config[MAKE_COMMAND] = "make";
     } else {
 	    config[MAKE_COMMAND] = "nmake";
@@ -228,5 +244,9 @@ main(int argc, char * argv[])
     printf("Use '%s' to build and test 6model/c\n", config[MAKE_COMMAND]);
     return 0;
 }
+
+/* See also: */
+/* Autoconf http://www.gnu.org/software/autoconf */
+/* Automake http://www.gnu.org/software/automake */
 
 /* end of Configure.c */

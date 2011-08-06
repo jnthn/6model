@@ -21,28 +21,33 @@ main(int argc, char * argv[])
 
 */
 
-#include <stdio.h>
+#include <stdio.h>  /* printf */
 
-int testnumber=0; /* yes, namespace pollution. patches welcome ;-) */
+int _test_number=0; /* yes, namespace pollution. patches welcome ;-) */
 
 #define plan(count)  printf("1..%d\n", count)
 
 #define \
 ok(flag,desc) \
     printf("%sok %d - %s\n", \
-        flag?"":"not ",++testnumber,desc)
+        flag?"":"not ",++_test_number,desc)
 
 #define \
 is_ii(got,expected,desc) \
     printf("%sok %d - %s\n", \
-        got==expected?"":"not ",++testnumber,desc); \
+        got==expected?"":"not ",++_test_number,desc); \
     if(got!=expected) \
         printf("# got      : %d\n# expected : %d\n", got, expected)
 
 #define \
 is_ss(got,expected,desc) \
     printf("%sok %d - %s\n", \
-        strcmp(got,expected)?"not ":"",++testnumber,desc)
+        strcmp(got,expected)?"not ":"",++_test_number,desc)
+
+#define \
+isnt_pp(got,expected,desc) \
+    printf("%sok %d - %s\n", \
+        (got!=expected)?"":"not ", ++_test_number, desc)
 
 #define \
 diag(message) \

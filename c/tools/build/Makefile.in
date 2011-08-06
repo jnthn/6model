@@ -4,9 +4,9 @@
 # to compile and run 6model/c/tools/build/Configure.c which reads from
 # 6model/c/tools/build/Makefile.in and generates 6model/c/Makefile.
 
-# Targets that do not produce files (tells make not to waste time
-# checking that such files exist).
-.PHONY: all clean test test01 test02
+# Targets that do not produce files (tells the make utility to skip
+# looking for such non existent files).
+.PHONY: all clean realclean test test01 test02
 
 # The compiled Configure.c will replace specific words between @ signs.
 CC        = @cc@
@@ -23,26 +23,31 @@ t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c t/Test.h
 	$(CC) $(O)t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
 	-$(RM_RF) 01a-cc.obj
 
-t/01-toolchain/01b-threads.exe: t/01-toolchain/01b-threads.c t/Test.h
-	$(CC) -pthread $(O)t/01-toolchain/01b-threads.exe t/01-toolchain/01b-threads.c
-	-$(RM_RF) 01b-threads.obj
+t/01-toolchain/01b-timing.exe: t/01-toolchain/01b-timing.c t/Test.h
+	$(CC) $(O)t/01-toolchain/01b-timing.exe t/01-toolchain/01b-timing.c
+	-$(RM_RF) 01b-timing.obj
+
+t/01-toolchain/01c-threads.exe: t/01-toolchain/01c-threads.c t/Test.h
+	$(CC) -pthread $(O)t/01-toolchain/01c-threads.exe t/01-toolchain/01c-threads.c
+	-$(RM_RF) 01c-threads.obj
 
 t/02-components/02a-hashtable.exe: t/02-components/02a-hashtable.c \
 		src/hashtable.h src/hashtable.c t/Test.h
 	$(CC) $(O)t/02-components/02a-hashtable.exe src/hashtable.c t/02-components/02a-hashtable.c
-	-$(RM_RF) hashtable.obj
+	-$(RM_RF) hashtable.obj 02a-hashtable.obj
 
 t/02-components/02b-heapmanager.exe: t/02-components/02b-heapmanager.c \
 		src/heapmanager.h src/heapmanager.c t/Test.h
 	$(CC) $(O)t/02-components/02b-heapmanager.exe src/heapmanager.c t/02-components/02b-heapmanager.c
-	-$(RM_RF) hashtable.obj
+	-$(RM_RF) heapmanager.obj 02b-heapmanager.obj
 
 tools/build/prove$(EXE): tools/build/prove.c
 	$(CC) $(O)tools/build/prove$(EXE) tools/build/prove.c
 	-$(RM_RF) prove.obj
 
 # Test executables are named *.exe even on Unix so that prove can find them
-test01: t/01-toolchain/01a-cc.exe tools/build/prove$(EXE)
+test01: t/01-toolchain/01a-cc.exe t/01-toolchain/01b-timing.exe \
+		t/01-toolchain/01c-threads.exe tools/build/prove$(EXE)
 	tools/build/prove -e "" --ext ".exe" t/01-toolchain
 
 test02: t/02-components/02a-hashtable.exe tools/build/prove$(EXE)
@@ -52,7 +57,9 @@ test: test01 test02
 
 # Miscellaneous targets
 clean:
-	$(RM_RF) *.exe *.obj *.dll *.lib *.exp
+	$(RM_RF) *.exe *.obj *.dll *.lib *.exp \
+		tools/build/Configure$(EXE) tools/build/prove$(EXE) \
+		t/01-toolchain/*.exe t/01-components/*.exe
 
 realclean: clean
 	perl -MExtUtils::Command -e rm_f Makefile

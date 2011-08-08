@@ -9,7 +9,6 @@
 #include <stdio.h>    /* printf */
 #include <stdlib.h>   /* malloc */
 #include <string.h>   /* memmove strlen */
-#include <sys/time.h> /* gettimeofday */
 #include "../../src/hashtable.h"
 #include "../Test.h"  /* diag is plan */
 
@@ -90,29 +89,24 @@ random_string(int maxlength)
 /* main */
 int main(int argc, char *argv[])
 {
-    struct timeval time_now, time_write, time_read;
     struct hashtable           * hashtable;
     struct hashtable_iterator    iter;
     struct hashtable_entry       entry;
     void * valuepointer;
-    int valueint, seed, stringcount = 0, stringlength, key_bytes = 0,
+    int valueint, seed = 0, stringcount = 0, stringlength, key_bytes = 0,
         value_bytes = 0, entrynumber, collisions = 0, delete_count;
-    char * source, * destination;
+    char * source, * destination, * value;
 
     diag("02a-hashtable");
     plan(4);
-    gettimeofday(&time_now, NULL);
-    time_write.tv_sec  = time_now.tv_sec + 5;
-    time_write.tv_usec = time_now.tv_usec;
-    seed = time_now.tv_sec ^ time_now.tv_usec;
     hashtable = hashtable_new();
-    srand(seed);
+    srand(seed);  /* TODO: get a portable seed from for example current time */
     while (stringcount<STRINGCOUNT) { /* nondeterministic because of collisions */
         char * key = random_string(MAXKEYLENGTH);
         /* create a value consisting of the key reversed followed by */
         /* the original key, for example 'abc' -> 'cbaabc' */
         stringlength = strlen(key);
-        char * value = (char *) malloc(2 * stringlength + 1);
+        value = (char *) malloc(2 * stringlength + 1);
         destination=value+stringlength;
         * destination -- = '\0';
         for (source=key; stringlength-->0; ) {
@@ -133,7 +127,6 @@ int main(int argc, char *argv[])
             value_bytes += strlen(value);
             ++ stringcount;
         }
-        gettimeofday(&time_now, NULL);
     }
     is_ii( stringcount, STRINGCOUNT, "created a hash with 5000 entries");
     srand(seed);

@@ -58,12 +58,17 @@
 #include <stdio.h>   /* fclose fgets FILE fopen fprintf printf stderr */
 #include <stdlib.h>  /* exit free getenv malloc realloc */
 #include <string.h>  /* memmove memcpy strcpy strlen strstr */
-#if __APPLE__
+#ifdef __APPLE__
     #include <sys/sysctl.h>
-#elif __linux__
-    #include <unistd.h>   /* sysconf */
-#elif _WIN32
-    #include <windows.h>  /* GetSystemInfo */
+#else
+    #ifdef __linux__
+        #include <unistd.h>   /* sysconf */
+    #else
+        #ifdef _WIN32
+            #include <windows.h>  /* GetSystemInfo */
+            /* note Microsoft C 2010 needs -wd4820 -wd4668 -wd4255 */
+        #endif
+    #endif
 #endif
 
 #define LINEBUFFERSIZE 128
@@ -72,7 +77,7 @@ enum { OS_VAR,
        DETECTED_END /* This one must always be last */};
 char * detected[DETECTED_END] = {""};
 /* Subscript names for configuration strings.  Almost like a hash ;) */
-enum { CC, EXE, LDL, MAKE_COMMAND, OSTYPE, OUTFILE, RM_RF,
+enum { CC, EXE, LDL, MAKE_COMMAND, OSTYPE, OUTFILE, RM_RF, THREADS,
        CONFIG_END /* this one must always be last */ };
        /* note the words OS_TYPE and OUT clash with MinGW */
 char * config[CONFIG_END] = {"", "", "", "", "", "", ""};
@@ -86,50 +91,53 @@ void trans(char ** text, char * search, char * replace);
 /* detection */
 /* Find and show differences between compilers and operating systems */
 void
-detection()
+detection(void)
 {
+    int processors = 0;
+    #if defined( _WIN32 )
+        SYSTEM_INFO sysinfo;  /* declare up here because MSC hates it lower */
+    #endif
     printf("Configure detects the following:\n");
 
     /* Operating system */
     printf("  Operating system in C predefined macro: ");
-    #if __APPLE__
+    #if defined( __APPLE__ )
         printf("__APPLE__");
     #endif
-    #if __linux__
+    #if defined( __linux__ )
         printf("__linux__");
     #endif
-    #if _WIN32
+    #if defined( _WIN32 )
         printf("_WIN32");
     #endif
-    #if !(__APPLE__ | __linux__ | _WIN32)
+    #if !(defined(__APPLE__) || defined(__linux__) || defined(_WIN32))
         printf("unknown\n  (not __APPLE__ __linux__ or _WIN32)\n");
     #endif
     printf("\n");
 
     /* C compiler */
     printf("  C compiler in predefined macro: ");
-    #if __GNUC__
+    #if defined( __GNUC__ )
         printf("__GNUC__");
     #endif
-    #if _MSC_VER
+    #if defined( _MSC_VER )
         printf("_MSC_VER");
     #endif
-    #if !(__GNUC__ | _MSC_VER)
-        printf("unknown\n  (not __GNUC__ or _MSC_VER)")
+    #if !(defined( __GNUC__ ) || defined( _MSC_VER ))
+        printf("unknown\n  (not __GNUC__ or _MSC_VER)");
     #endif
     printf("\n");
 
     /* Number of processors */
-    int processors = 0;
     /* from http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */
-    #if __APPLE__
+    #if defined( __APPLE__ )
         int mib[4] = {CTL_HW, HW_NCPU, 0, 0};
         size_t size = sizeof(processors);
         sysctl(mib, 2, &processors, &size, NULL, 0);
-    #elif linux
+    #elif defined( __linux__ )
         processors = sysconf(_SC_NPROCESSORS_ONLN);
-    #elif _WIN32
-        SYSTEM_INFO sysinfo; GetSystemInfo( &sysinfo );
+    #elif defined( _WIN32 )
+        GetSystemInfo( &sysinfo );
         processors = sysinfo.dwNumberOfProcessors;
     #endif
     printf("  Number of processors: %d\n", processors);
@@ -181,12 +189,22 @@ config_set(void)
 
     /* File delete command */
     config[RM_RF] =
-    #if __unix__
+    #if (defined( __APPLE__ ) || defined( __linux__ ))
 	    "rm -rf";
-    #if _WIN32
+    #elif defined( _WIN32 )
 	    "del /F /Q /S";
     #else
         "error: no file delete command";
+    #endif
+
+    /* Threads */
+    config[THREADS] =
+    #if (defined( __APPLE__ ) || defined( __linux__ ))
+	    "-pthread";  /* Posix threads */
+    #elif ( defined( _WIN32 ) && defined( __GNUC__ ))
+	    "-mthreads"; /* MinGW */
+    #else
+        "";
     #endif
 
     /* Make utility */ s=getenv("COMPILER");
@@ -212,13 +230,17 @@ makefile_convert(char * programfilename, char * templatefilename,
     trans(&makefiletext, "@exe@",       config[EXE]);
     trans(&makefiletext, "@outfile@",   config[OUTFILE]);
     trans(&makefiletext, "@rm_rf@",     config[RM_RF]);
-    #if _WIN32
+    trans(&makefiletext, "@threads@",   config[THREADS]);
+    #if defined( _WIN32 )
         trans(&makefiletext, "src/",             "src\\");
         trans(&makefiletext, "tools/build/",     "tools\\build\\");
         trans(&makefiletext, "t/01-toolchain/",  "t\\01-toolchain\\");
         trans(&makefiletext, "t/01-toolchain",   "t\\01-toolchain");
         trans(&makefiletext, "t/02-components/", "t\\02-components\\");
         trans(&makefiletext, "t/02-components",  "t\\02-components");
+    #endif
+    #if defined( _MSC_VER )
+        trans(&makefiletext, "$(O) ",            "$(O)");
     #endif
     printf("    %s: writing to %s\n", programfilename, outputfilename);
     squirt(makefiletext, outputfilename);

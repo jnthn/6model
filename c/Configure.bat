@@ -47,7 +47,7 @@ echo Compiling tools\build\Configure.c to tools\build\Configure.exe
 :: are not blessed with strcpy_s and so on, this project opts to
 :: continue using the "older, less secure functions" and disable the
 :: warnings with -D_CRT_SECURE_NO_WARNINGS
-set opts_msvc=-nologo -Wall -DCC=MSVC -D_CRT_SECURE_NO_WARNINGS
+set opts_msvc=-nologo -Wall -DCC=MSVC -D_CRT_SECURE_NO_WARNINGS -wd4820 -wd4668 -wd4255
 set opts_gcc=-Wall -DCC=GCC
 if "%COMPILER%"=="MSVC" cl %opts_msvc% -Fotools\build\Configure.obj -Fetools\build\Configure.exe tools\build\Configure.c
 if "%COMPILER%"=="GCC" gcc %opts_gcc% -otools\build\Configure.exe tools\build\Configure.c

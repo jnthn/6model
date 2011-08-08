@@ -4,15 +4,21 @@
 /* TODO: parse the test script output looking for 'ok', 'not ok' etc */
 /* and output a summary instead of every test result. */
 
-#include <glob.h>    /* glob globfree */
+/* TODO: handle multiple directory arguments instead of just one */
+
+/* TODO: replace glob code with opendir() etc / FindFirstFile() etc */
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define pclose _pclose
+    #define popen  _popen
+#else
+    #include <glob.h>  /* glob globfree */
+#endif
 #include <stdio.h>   /* FILE fprintf printf stderr */
 #include <stdlib.h>  /* exit free malloc realloc */
 #include <string.h>  /* strcat strcpy strlen */
 
-#ifdef _WIN32
-    #define pclose _pclose
-    #define popen  _popen
-#endif
 #define LINEBUFFERSIZE 128
 
 char * executable_program = NULL;
@@ -72,23 +78,31 @@ qx(char * command)
 }
 
 
-/* run_tests_in_dir */
-void
-run_tests_in_dir(char * dir)
+/* main */
+int
+main(int argc, char * argv[])
 {
-    int patternlength, glob_flags, status, pathindex;
     char * glob_pattern, * tap_output, * errormessage;
+    int argi, patternlength, glob_flags;
     int (* glob_errfunc) (const char * epath, int eerrno);
+    int status, pathindex;
+    #ifdef _WIN32
+    #else
     glob_t globbuf;
 
+    /* Get command line options and process them */
+    argi = options(argc, argv);
+
     /* Scan the specified directory for test files */
-    patternlength = strlen(dir) + strlen(filename_extension) + 3;
+    patternlength = strlen(argv[argi]) + strlen(filename_extension) + 3;
     glob_pattern = (char *) malloc(patternlength);
-    strcpy(glob_pattern, dir);
+    strcpy(glob_pattern,argv[argi]);
     strcat(glob_pattern, "/*");
     strcat(glob_pattern, filename_extension);
     glob_flags = 0;
     glob_errfunc = NULL;
+    printf("pattern=%s exe=%s ext=%s arg=%s\n", glob_pattern,
+        executable_program, filename_extension, argv[argi]);
     status = glob(glob_pattern, glob_flags, glob_errfunc, &globbuf);
     free(glob_pattern);
     if (status) {
@@ -104,8 +118,8 @@ run_tests_in_dir(char * dir)
                 break;
         }
         fprintf(stderr,
-            "scanning directory '%s' ended unexpectedly with %s\n",
-            dir, errormessage);
+            "%s: scanning directory '%s' ended unexpectedly with %s\n",
+            argv[0], argv[argi], errormessage);
         exit(1);
     }
 
@@ -116,20 +130,6 @@ run_tests_in_dir(char * dir)
         printf("%s\n", tap_output);
         free(tap_output);
     }
-}
-
-
-/* main */
-int
-main(int argc, char * argv[])
-{
-    int i, argi;
-
-    /* Get command line options and process them */
-    argi = options(argc, argv);
-
-    /* The remaining arguments are all expected to be directories */
-    for (i=argi; i<argc; ++i)
-        run_tests_in_dir(argv[i]);
+    #endif
     return 0;
 }

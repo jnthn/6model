@@ -11,7 +11,7 @@
 #include <string.h>   /* memmove strlen */
 #include <sys/time.h> /* gettimeofday */
 #include "../../src/hashtable.h"
-#include "../Test.h"  /* is plan */
+#include "../Test.h"  /* diag is plan */
 
 /* The number of allocations is O((STRINGCOUNT ** 2) * MAXKEYLENGTH), */
 /* so be careful when increasing it.  5000 strings use 250MiB. */
@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
         value_bytes = 0, entrynumber, collisions = 0, delete_count;
     char * source, * destination;
 
+    diag("02a-hashtable");
     plan(4);
     gettimeofday(&time_now, NULL);
     time_write.tv_sec  = time_now.tv_sec + 5;

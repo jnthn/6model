@@ -287,6 +287,7 @@ remove_lib()
 int
 main(int argc, char * argv[])
 {
+    printf("# 01a-cc\n");
     printf("1..16\n"); /* tests */
     create_exe();  /* 1-2 make testexe.c and testexe.exe */
     run_exe();     /* 2-5 run testexe.exe */

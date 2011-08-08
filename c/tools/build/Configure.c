@@ -21,14 +21,16 @@
  * http://www.thefreecountry.com/compilers/cpp.shtml
  * Most of them alias cc to their own filenames.
 
+ * MinGW
+ * http://mingw.org/
+ * Currently based on GCC 4.5.2, 85MB disk.
+ * Targets Win32 libraries, no Posix emulation or dlopen.
+ * (older version bundled with Git full install)
+
  * msysGit
  * The full install is a 39MB download instead of the 13MB Git install, but it expands to 1.3GB instead of
  * about 200MB, and includes MinGW, which includes GCC.
-
- * MinGW
- * http://www.mingw.org/
- * Also bundled with the Git full install.  It includes bash, so use Configure.sh rather than Configure.bat
- * The libraries do not include dlopen.
+ * It includes bash, so use Configure.sh rather than Configure.bat
 
  * lcc-win32
  * http://www.cs.virginia.edu/~lcc-win32/
@@ -56,12 +58,23 @@
 #include <stdio.h>   /* fclose fgets FILE fopen fprintf printf stderr */
 #include <stdlib.h>  /* exit free getenv malloc realloc */
 #include <string.h>  /* memmove memcpy strcpy strlen strstr */
-
+#if __APPLE__
+    #include <sys/sysctl.h>
+#elif __linux__
+    #include <unistd.h>   /* sysconf */
+#elif _WIN32
+    #include <windows.h>  /* GetSystemInfo */
+#endif
 
 #define LINEBUFFERSIZE 128
+/* Subscript names for scanned evidence.  Almost like a perl hash ;) */
+enum { OS_VAR,
+       DETECTED_END /* This one must always be last */};
+char * detected[DETECTED_END] = {""};
 /* Subscript names for configuration strings.  Almost like a hash ;) */
-enum { CC, EXE, LDL, MAKE_COMMAND, OS_TYPE, OUT, RM_RF,
+enum { CC, EXE, LDL, MAKE_COMMAND, OSTYPE, OUTFILE, RM_RF,
        CONFIG_END /* this one must always be last */ };
+       /* note the words OS_TYPE and OUT clash with MinGW */
 char * config[CONFIG_END] = {"", "", "", "", "", "", ""};
 /* forward references to internal functions */
 void detect(void);
@@ -70,21 +83,84 @@ void squirt(char * text, char * filename);
 void trans(char ** text, char * search, char * replace);
 
 
+/* detection */
+/* Find and show differences between compilers and operating systems */
+void
+detection()
+{
+    printf("Configure detects the following:\n");
+
+    /* Operating system */
+    printf("  Operating system in C predefined macro: ");
+    #if __APPLE__
+        printf("__APPLE__");
+    #endif
+    #if __linux__
+        printf("__linux__");
+    #endif
+    #if _WIN32
+        printf("_WIN32");
+    #endif
+    #if !(__APPLE__ | __linux__ | _WIN32)
+        printf("unknown\n  (not __APPLE__ __linux__ or _WIN32)\n");
+    #endif
+    printf("\n");
+
+    /* C compiler */
+    printf("  C compiler in predefined macro: ");
+    #if __GNUC__
+        printf("__GNUC__");
+    #endif
+    #if _MSC_VER
+        printf("_MSC_VER");
+    #endif
+    #if !(__GNUC__ | _MSC_VER)
+        printf("unknown\n  (not __GNUC__ or _MSC_VER)")
+    #endif
+    printf("\n");
+
+    /* Number of processors */
+    int processors = 0;
+    /* from http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */
+    #if __APPLE__
+        int mib[4] = {CTL_HW, HW_NCPU, 0, 0};
+        size_t size = sizeof(processors);
+        sysctl(mib, 2, &processors, &size, NULL, 0);
+    #elif linux
+        processors = sysconf(_SC_NPROCESSORS_ONLN);
+    #elif _WIN32
+        SYSTEM_INFO sysinfo; GetSystemInfo( &sysinfo );
+        processors = sysinfo.dwNumberOfProcessors;
+    #endif
+    printf("  Number of processors: %d\n", processors);
+
+    /* Sizes of built in data types */
+    printf("Data sizes:  char short int long long_long float double pointer\n");
+    printf("      bytes:  %3d  %3d  %3d  %3d       %3d   %3d    %3d     %3d\n",
+           (int)sizeof(char), (int)sizeof(short), (int)sizeof(int),
+           (int)sizeof(long), (int)sizeof(long long), (int)sizeof(float),
+           (int)sizeof(double), (int)sizeof(void *) );
+    printf("      bits:   %3d  %3d  %3d  %3d       %3d   %3d    %3d     %3d\n",
+           (int)sizeof(char)*8, (int)sizeof(short)*8, (int)sizeof(int)*8,
+           (int)sizeof(long)*8, (int)sizeof(long long)*8, (int)sizeof(float)*8,
+           (int)sizeof(double)*8, (int)sizeof(void *)*8);
+}
+
 /* config_set */
 /* Use environment variables and other clues to assign values to */
 /* members of the config[] array */
-
 void
 config_set(void)
 {
     char * s;
-    /* Operating system */ s=getenv("OS");
+    /* Operating system */
+    s=getenv("OS");
     if (s && strcmp(s,"Windows_NT")==0) { /* any Windows system */
-	    config[OS_TYPE] = "Windows";
+	    config[OSTYPE] = "Windows";
 	    config[EXE] = ".exe";
     }
 	else {  /* non Windows operating systems default to Unix settings */
-	    config[OS_TYPE] = "Unix";
+	    config[OSTYPE] = "Unix";
 	    config[EXE] = "";
     }
     /* C compiler */ s=getenv("COMPILER");
@@ -92,17 +168,27 @@ config_set(void)
         /* TODO: use _MSC_VER */
         /* See http://msdn.microsoft.com/en-US/library/b0084kay%28v=VS.100%29.aspx */
         config[CC] = "cl -DMSVC ";
-	    config[OUT] = "-Fe";
-	    config[RM_RF] = "del /F /Q /S";
+	    config[OUTFILE] = "-Fe";
     }
-    if (s && strcmp(s,"GCC")==0) { s=getenv("OS");
+    if (s && strcmp(s,"GCC")==0) {
+        s=getenv("OS");
         if (s && strcmp(s,"Windows_NT")==0)
-            config[CC] = "cc -DGCC ";
+            config[CC] = "gcc -DGCC ";
         else
             config[CC] = "cc -DGCC -ldl ";
-	    config[OUT] = "-o";
-	    config[RM_RF] = "rm -rf";
+	    config[OUTFILE] = "-o";
     }
+
+    /* File delete command */
+    config[RM_RF] =
+    #if __unix__
+	    "rm -rf";
+    #if _WIN32
+	    "del /F /Q /S";
+    #else
+        "error: no file delete command";
+    #endif
+
     /* Make utility */ s=getenv("COMPILER");
     if (s && strcmp(s,"GCC")==0) {
 	    config[MAKE_COMMAND] = "make";
@@ -124,15 +210,16 @@ makefile_convert(char * programfilename, char * templatefilename,
     trans(&makefiletext, "This is the file", "This is NOT the file");
     trans(&makefiletext, "@cc@",        config[CC]);
     trans(&makefiletext, "@exe@",       config[EXE]);
-    trans(&makefiletext, "@out@",       config[OUT]);
+    trans(&makefiletext, "@outfile@",   config[OUTFILE]);
     trans(&makefiletext, "@rm_rf@",     config[RM_RF]);
-    if (strcmp(config[OS_TYPE], "Windows")==0 && strcmp(getenv("COMPILER"),"MSVC")==0) {
+    #if _WIN32
+        trans(&makefiletext, "src/",             "src\\");
         trans(&makefiletext, "tools/build/",     "tools\\build\\");
         trans(&makefiletext, "t/01-toolchain/",  "t\\01-toolchain\\");
         trans(&makefiletext, "t/01-toolchain",   "t\\01-toolchain");
         trans(&makefiletext, "t/02-components/", "t\\02-components\\");
         trans(&makefiletext, "t/02-components",  "t\\02-components");
-    }
+    #endif
     printf("    %s: writing to %s\n", programfilename, outputfilename);
     squirt(makefiletext, outputfilename);
     free(makefiletext);
@@ -239,6 +326,7 @@ main(int argc, char * argv[])
         fprintf(stderr, "Usage: %s path/to/Makefile.in path/to/Makefile\n", argv[0]);
         exit(1);
     }
+    detection();
 	config_set();  /* Figure out the configuration settings */
     makefile_convert(argv[0], argv[1], argv[2]);
     printf("Use '%s' to build and test 6model/c\n", config[MAKE_COMMAND]);

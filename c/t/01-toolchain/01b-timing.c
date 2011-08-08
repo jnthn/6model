@@ -53,12 +53,12 @@ seconds_microseconds_sleep()
         seconds2, microseconds2);
     ok(seconds2 > seconds1 || microseconds2 >= microseconds1, message);
 
-    /* test 3 - time3 is approximately time2 + 1000000 microseconds */
+    /* test 3 - time3 is within 2ms of time2 + 1 second */
     timediff = (seconds3 - seconds2) * 1000000
                + microseconds3 - microseconds2;
     sprintf(message, "one second sleep measured %lld microseconds",
         timediff);
-    ok(999000 < timediff && timediff < 1000999, message);
+    ok(998000 < timediff && timediff < 1002000, message);
 }
 
 
@@ -66,6 +66,7 @@ seconds_microseconds_sleep()
 int
 main(int arg, char * argv[])
 {
+    diag("01b-timing");
     plan(3);
     seconds_microseconds_sleep();
     return 0;

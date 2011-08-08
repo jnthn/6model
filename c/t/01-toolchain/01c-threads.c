@@ -1,4 +1,4 @@
-/* 01b-threads.c */
+/* 01c-threads.c */
 /* Check that threading in the operating system and libraries are ok */
 
 
@@ -38,7 +38,7 @@ void
 tests1_4()
 {
     int            status;
-	#ifdef _MSC_VER
+	#ifdef _WIN32
         HANDLE threadhandle1, threadhandle2;
         DWORD threadId1, threadId2;
 	#else
@@ -53,7 +53,7 @@ tests1_4()
     thread1arguments.seconds     = 2;
     thread1arguments.description = "first";
     threadstacksize = 16384;  /* Minimum allowed by Posix threads */
-	#ifdef _MSC_VER
+	#ifdef _WIN32
 	    threadhandle1 = CreateThread(NULL, threadstacksize,
             (LPTHREAD_START_ROUTINE) test1_thread, &thread1arguments, 0,
              &threadId1);
@@ -71,7 +71,7 @@ tests1_4()
     thread2arguments.testnumber  = 4;
     thread2arguments.seconds     = 2;
     thread2arguments.description = "second";
-	#ifdef _MSC_VER
+	#ifdef _WIN32
 	    threadhandle2 = CreateThread(NULL, threadstacksize,
             (LPTHREAD_START_ROUTINE) test1_thread, &thread2arguments, 0,
              &threadId1);
@@ -81,7 +81,7 @@ tests1_4()
                  &thread2arguments);
     #endif
     is_ii(status, 0, "created second thread");
-    #ifndef _MSC_VER
+    #ifndef _WIN32
         pthread_attr_destroy(&thread_attr);
     #endif
     
@@ -94,7 +94,10 @@ tests1_4()
 int
 main(int arg, char * argv[])
 {
+    diag("01c-threads");
     plan(4);
     tests1_4();  /* two simple child threads */
     return 0;
 }
+
+/* end of 01c-threads.c */

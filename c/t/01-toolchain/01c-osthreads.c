@@ -1,4 +1,4 @@
-/* 01c-threads.c */
+/* 01c-osthreads.c */
 /* Check that threading in the operating system and libraries is ok */
 
 #include <assert.h>   /* assert */
@@ -205,11 +205,11 @@ tests5_6charcount()
 int
 main(int arg, char * argv[])
 {
-    diag("01c-threads");
+    diag("01c-osthreads");
     plan(5);
     tests1_4sleeps();  /* two threads that sleep and print */
     tests5_6charcount();  /* four threads returning integers */
     return 0;
 }
 
-/* end of 01c-threads.c */
+/* end of 01c-osthreads.c */

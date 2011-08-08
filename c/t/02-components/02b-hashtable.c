@@ -1,4 +1,4 @@
-/* 02a-hashtable.c */
+/* 02b-hashtable.c */
 /* Create several hashes and store, fetch and delete a large number */
 /* of random data values.  Count the number of such random operations */
 /* (not exactly repeatable) that can be performed in a 10 second */
@@ -10,7 +10,7 @@
 #include <stdlib.h>   /* malloc */
 #include <string.h>   /* memmove strlen */
 #include "../../src/hashtable.h"
-#include "../Test.h"  /* diag is plan */
+#include "../Test.h"  /* diag is_ii plan */
 
 /* The number of allocations is O((STRINGCOUNT ** 2) * MAXKEYLENGTH), */
 /* so be careful when increasing it.  5000 strings use 250MiB. */
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
         value_bytes = 0, entrynumber, collisions = 0, delete_count;
     char * source, * destination, * value;
 
-    diag("02a-hashtable");
+    diag("02b-hashtable");
     plan(4);
     hashtable = hashtable_new();
     srand(seed);  /* TODO: get a portable seed from for example current time */
@@ -160,4 +160,4 @@ int main(int argc, char *argv[])
 }
 #endif
 
-/* end of 02a-hashtable.c */
+/* end of 02b-hashtable.c */

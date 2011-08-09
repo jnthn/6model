@@ -1,5 +1,5 @@
 /* 01c-osthreads.c */
-/* Check that threading in the operating system and libraries is ok */
+/* Check that threading in the operating system and libraries work ok */
 
 #include <assert.h>   /* assert */
 #include <stdio.h>    /* perror printf */
@@ -50,7 +50,7 @@ tests1_4sleeps()
         HANDLE threadhandle1, threadhandle2;
         DWORD threadId1, threadId2;
 	#else
-        pthread_t      thread_id;
+        pthread_t      thread_id1, thread_id2;
         pthread_attr_t thread_attr;
 	#endif
     int threadnumber, threadstacksize;
@@ -69,7 +69,7 @@ tests1_4sleeps()
 	#else
         status = pthread_attr_init(&thread_attr);
         pthread_attr_setstacksize(&thread_attr, threadstacksize);
-        status = pthread_create(&thread_id, &thread_attr, test1_thread,
+        status = pthread_create(&thread_id1, &thread_attr, test1_thread,
                  &thread1arguments);
 	#endif
     is_ii(status, 0, "created first thread");
@@ -85,7 +85,7 @@ tests1_4sleeps()
              &threadId1);
         status = (threadhandle2 == NULL);
 	#else
-        status = pthread_create(&thread_id, &thread_attr, test1_thread,
+        status = pthread_create(&thread_id2, &thread_attr, test1_thread,
                  &thread2arguments);
     #endif
     is_ii(status, 0, "created second thread");
@@ -95,6 +95,10 @@ tests1_4sleeps()
     
     /* Give both threads enough time to complete */
     sleep(3);
+
+    /* Clean up the thread zombies */
+    pthread_join(thread_id1, NULL);
+    pthread_join(thread_id2, NULL);
 }
 
 

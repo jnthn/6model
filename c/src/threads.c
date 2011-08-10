@@ -5,6 +5,7 @@
 /* is a very thin wrapper on Posix systems, and does a lightweight */
 /* emulation elsewhere. */
 
+
 #include "threads.h"  /* thread_create */
 
 
@@ -38,9 +39,18 @@ thread_join(struct thread_info * info)
 }
 
 
+/* Caution - do not underestimate the overheads of creating and */
+/* synchronizing threads.  See for example the HPL-2004-209 report */
+/* below, stating that some of the machine code instructions took */
+/* over 100 machine cycles on a Pentium 4.  More detailed and recent */
+/* performance figures would be very welcome. */
+
 /* See also: */
 /* Lawrence Livermore National Laboratory tutorials: */
-/* pthreads https://computing.llnl.gov/tutorials/pthreads/ */
-/* OpenMP https://computing.llnl.gov/tutorials/openMP/ */
+/*   pthreads https://computing.llnl.gov/tutorials/pthreads/ */
+/*   OpenMP https://computing.llnl.gov/tutorials/openMP/ */
+/* Threads Cannot be Implemented as a Library (may now be outdated): */
+/*   http://www.hpl.hp.com/techreports/2004/HPL-2004-209.html */
+/* http://en.wikipedia.org/wiki/Lock-free_and_wait-free_algorithms */
 
 /* end of threads.c */

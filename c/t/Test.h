@@ -2,24 +2,29 @@
 
 /* Lightweight TAP (Test Anything Protocol) emitter in C macros. */
 
-/* Example usage:
-
-#include <string.h>
+/* SYNOPSIS
 #include "../Test.h"
 
 int
 main(int argc, char * argv[])
 {
-    char s[7];
     plan(1);
     ok(1==1, "1 is equal to 1");
-    is_ii(1+1, 2, "1 plus 1 is equal to 2");
-    strcpy(s, "foo"); strcat(s, "bar");
-    is_ss(s, "foobar", "strcpy and strcat");
+    is_ii(2 + 2, 4, "2 plus 2 equals 4");
     return 0;
 }
-
 */
+
+/* DEFINITIONS
+plan(i);
+diag(s);
+is_ii(i1, i2, "integers match");
+is_ss(s1, s2, "strings match");
+ok(b, "any boolean expression");
+TODO: is_pp(p1, p2, "pointers match");
+TODO: done_testing();
+*/
+
 
 #include <stdio.h>  /* printf */
 

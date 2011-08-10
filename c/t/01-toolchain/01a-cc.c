@@ -20,7 +20,7 @@
 #include <stdio.h>   /* fclose fopen fprintf perror printf */
 #include <stdlib.h>  /* system */
 
-#ifdef _WIN32
+#if defined( _WIN32 )
     #include <windows.h>
     #define pclose _pclose
     #define popen  _popen
@@ -66,7 +66,7 @@ create_exe()
     printf("ok 1 - create testexe.c\n");
 
     /* test 2: compile the source file to an executable */
-    #ifdef MSVC
+    #if defined( _MSC_VER )
         status = system("cl -WX -Fetestexe.exe -nologo testexe.c >nul");
         if (status==0)
             status = unlink("testexe" EXT_OBJ);
@@ -88,7 +88,7 @@ run_exe()
     int status, c;
     FILE * childfile;
     char inputbuffer[80], * pbuffer, * pbufferend, * testcommand;
-    #ifdef _WIN32
+    #if defined( _WIN32 )
         testcommand = ".\\testexe foo bar";
     #else
         testcommand = "./testexe foo bar";
@@ -103,7 +103,7 @@ run_exe()
 
     /* test 4: read the output of the child process into inputbuffer */
     pbuffer = inputbuffer;  pbufferend = inputbuffer + 80 - 1;
-    while ((c=getc(childfile))!=EOF) {
+    while ((c=getc(childfile)) != EOF) {
         * pbuffer = c;
         if (++pbuffer >= pbufferend) {
             fprintf(stderr,"not ok 4 - buffer overflow\n");
@@ -172,7 +172,7 @@ create_lib()
         "}\n"
     );
     fclose(testlib_sourcefile);
-    #ifdef _WIN32
+    #if defined( _WIN32 )
         #ifdef _MSC_VER
             status = system("cl -LD -WX -nologo testlib.c >nul"); /* Visual C++ */
         #else
@@ -203,7 +203,7 @@ load_lib()
     char * error;
     int result;
     /* test 9: load the library */
-    #ifdef _WIN32
+    #if defined( _WIN32 )
         FARPROC pfunction;
         testlib = LoadLibrary("./testlib.dll");
         if (testlib==NULL) {
@@ -220,7 +220,7 @@ load_lib()
     #endif
     printf("ok 9 - load testlib" EXT_DYNLIB "\n");
 
-    #ifdef _WIN32
+    #if defined( _WIN32 )
         pfunction = GetProcAddress(testlib, "testfunction");
     #else
         dlerror(); /* clear any possible error */
@@ -240,7 +240,7 @@ load_lib()
         printf("ok 12 - testfunction result\n");
     else
         printf("not ok 12 - testfunction result\n");
-    #ifdef _WIN32
+    #if defined( _WIN32 )
         result = ! FreeLibrary(testlib); /* returns 0 for failure! */
     #else
         result = dlclose(testlib);
@@ -264,7 +264,7 @@ remove_lib()
         exit(14);
     }
     printf("ok 14 - remove testlib.c\n");
-    #ifdef _MSC_VER
+    #if defined( _MSC_VER )
         status = unlink("testlib" EXT_OBJ);
         if (status) {
             perror("01a-cc error 15:");

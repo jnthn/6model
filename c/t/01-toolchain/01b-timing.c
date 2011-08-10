@@ -46,7 +46,7 @@ seconds_microseconds_sleep()
     /* test 1 - time1 is nonzero */
     sprintf(message, "clock returned %lld seconds and %d microseconds",
         seconds1, microseconds1);
-    ok(seconds1 > 0L && microseconds1 > 0, message);
+    ok(seconds1 > 0L, message);
 
     /* test 2 - time2 >= time1 */
     sprintf(message, "clock returned %lld seconds and %d microseconds",

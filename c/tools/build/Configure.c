@@ -14,61 +14,33 @@
 /* Systems usually predefine some variables and macros.  Users might */
 /* make the same definitions. */
 
-/*
- * TODO
-
- * Explore more Win32 C compilers and toolchains
- * http://www.thefreecountry.com/compilers/cpp.shtml
- * Most of them alias cc to their own filenames.
-
+/* Currently works on:
  * MinGW
  * http://mingw.org/
  * Currently based on GCC 4.5.2, 85MB disk.
  * Targets Win32 libraries, no Posix emulation or dlopen.
  * (older version bundled with Git full install)
 
- * msysGit
- * The full install is a 39MB download instead of the 13MB Git install, but it expands to 1.3GB instead of
- * about 200MB, and includes MinGW, which includes GCC.
- * It includes bash, so use Configure.sh rather than Configure.bat
-
- * lcc-win32
- * http://www.cs.virginia.edu/~lcc-win32/
-
  * Microsoft Visual C++ Express Edition 1-2GB RAM, 3GB disk
  * Registration required to avoid de-activation after 30 days.  Downloads a 3.2MB web installer.
  * http://www.microsoft.com/express/vc/ do not need optional SQL express.
  * Also installs Windows Installer 4.5, .NET Framework 4, SQL Server Compact 3.5, Help Viewer 1.0
  * (download 146MB, disk space 2.3GB)
-
- * Borland
- * Registration required
-
- * Tiny C Compiler
- * http://bellard.org/tcc/
-
- * OpenWatCom
- * http://www.openwatcom.org/index.php/Download
-
- * Digital Mars
- * http://www.digitalmars.com/download/freecompiler.html
-
-*/
+ */
 
 #include <stdio.h>   /* fclose fgets FILE fopen fprintf printf stderr */
 #include <stdlib.h>  /* exit free getenv malloc realloc */
 #include <string.h>  /* memmove memcpy strcpy strlen strstr */
-#ifdef __APPLE__
+#if defined( __APPLE__ )
     #include <sys/sysctl.h>
-#else
-    #ifdef __linux__
-        #include <unistd.h>   /* sysconf */
-    #else
-        #ifdef _WIN32
-            #include <windows.h>  /* GetSystemInfo */
-            /* note Microsoft C 2010 needs -wd4820 -wd4668 -wd4255 */
-        #endif
-    #endif
+#elif defined( __linux__ )
+    #include <unistd.h>   /* sysconf */
+#elif defined( _WIN32 )
+    #include <windows.h>  /* GetSystemInfo */
+    /* note Microsoft C 2010 needs -wd4820 -wd4668 -wd4255 */
+#endif
+#if defined( _OPENMP )
+    #include <omp.h> /* on Debian/Ubuntu install gcc-4.4-source */
 #endif
 
 #define LINEBUFFERSIZE 128
@@ -77,9 +49,9 @@ enum { OS_VAR,
        DETECTED_END /* This one must always be last */};
 char * detected[DETECTED_END] = {""};
 /* Subscript names for configuration strings.  Almost like a hash ;) */
-enum { CC, EXE, LDL, MAKE_COMMAND, OSTYPE, OUTFILE, RM_RF, THREADS,
+enum { CC, EXE, LDL, MAKE_COMMAND, OUTFILE, RM_RF, THREADS,
        CONFIG_END /* this one must always be last */ };
-       /* note the words OS_TYPE and OUT clash with MinGW */
+       /* note the words and OUT clash with MinGW */
 char * config[CONFIG_END] = {"", "", "", "", "", "", ""};
 /* forward references to internal functions */
 void detect(void);
@@ -128,19 +100,28 @@ detection(void)
     #endif
     printf("\n");
 
-    /* Number of processors */
-    /* from http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */
-    #if defined( __APPLE__ )
-        int mib[4] = {CTL_HW, HW_NCPU, 0, 0};
-        size_t size = sizeof(processors);
-        sysctl(mib, 2, &processors, &size, NULL, 0);
-    #elif defined( __linux__ )
-        processors = sysconf(_SC_NPROCESSORS_ONLN);
-    #elif defined( _WIN32 )
-        GetSystemInfo( &sysinfo );
-        processors = sysinfo.dwNumberOfProcessors;
+    printf("  OpenMP: ");
+    #if defined( _OPENMP )
+        processors = omp_get_num_procs();
+        printf("_OPENMP is %d with max %d threads on %d processors\n",
+            _OPENMP, omp_get_max_threads(), processors);
+    #else
+        printf("not enabled in the C compiler\n");
+
+        /* Number of processors */
+        /* from http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */
+        #if defined( __APPLE__ )
+            int mib[4] = {CTL_HW, HW_NCPU, 0, 0};
+            size_t size = sizeof(processors);
+            sysctl(mib, 2, &processors, &size, NULL, 0);
+        #elif defined( __linux__ )
+            processors = sysconf(_SC_NPROCESSORS_ONLN);
+        #elif defined( _WIN32 )
+            GetSystemInfo( &sysinfo );
+            processors = sysinfo.dwNumberOfProcessors;
+        #endif
+        printf("  Processor count from operating system: %d\n", processors);
     #endif
-    printf("  Number of processors: %d\n", processors);
 
     /* Sizes of built in data types */
     printf("Data sizes:  char short int long long_long float double pointer\n");
@@ -160,32 +141,26 @@ detection(void)
 void
 config_set(void)
 {
-    char * s;
     /* Operating system */
-    s=getenv("OS");
-    if (s && strcmp(s,"Windows_NT")==0) { /* any Windows system */
-	    config[OSTYPE] = "Windows";
+    #if defined( _WIN32 )
 	    config[EXE] = ".exe";
-    }
-	else {  /* non Windows operating systems default to Unix settings */
-	    config[OSTYPE] = "Unix";
+    #else
 	    config[EXE] = "";
-    }
-    /* C compiler */ s=getenv("COMPILER");
-    if (s && strcmp(s,"MSVC")==0) {
-        /* TODO: use _MSC_VER */
+    #endif
+
+    /* C compiler */
+    #if defined( _MSC_VER )
         /* See http://msdn.microsoft.com/en-US/library/b0084kay%28v=VS.100%29.aspx */
-        config[CC] = "cl -DMSVC ";
+        config[CC] = "cl ";
 	    config[OUTFILE] = "-Fe";
-    }
-    if (s && strcmp(s,"GCC")==0) {
-        s=getenv("OS");
-        if (s && strcmp(s,"Windows_NT")==0)
-            config[CC] = "gcc -DGCC ";
-        else
-            config[CC] = "cc -DGCC -ldl ";
-	    config[OUTFILE] = "-o";
-    }
+    #elif defined( __GNUC__ )
+        #if defined( _WIN32 )
+            config[CC] = "mingw32-gcc ";
+        #else
+            config[CC] = "gcc -ldl ";
+        #endif
+        config[OUTFILE] = "-o";
+    #endif
 
     /* File delete command */
     config[RM_RF] =
@@ -207,12 +182,17 @@ config_set(void)
         "";
     #endif
 
-    /* Make utility */ s=getenv("COMPILER");
-    if (s && strcmp(s,"GCC")==0) {
-	    config[MAKE_COMMAND] = "make";
-    } else {
-	    config[MAKE_COMMAND] = "nmake";
-    }
+    /* Make utility */
+    config[MAKE_COMMAND] =
+    #if defined( _WIN32 )
+        #if defined( __GNUC__ )
+            "mingw32-make";
+        #else
+            "nmake";
+        #endif
+    #else
+	    "make";
+    #endif
 }
 
 
@@ -354,6 +334,20 @@ main(int argc, char * argv[])
     printf("Use '%s' to build and test 6model/c\n", config[MAKE_COMMAND]);
     return 0;
 }
+
+/*
+ * TODO
+
+ * Explore more Win32 C compilers and toolchains
+ * http://www.thefreecountry.com/compilers/cpp.shtml
+ * lcc-win32 http://www.cs.virginia.edu/~lcc-win32/
+ * Borland (Registration required)
+ * Tiny C Compiler http://bellard.org/tcc/
+ * OpenWatcom http://www.openwatcom.org/index.php/Download
+ * Digital Mars http://www.digitalmars.com/download/freecompiler.html
+
+*/
+
 
 /* See also: */
 /* Autoconf http://www.gnu.org/software/autoconf */

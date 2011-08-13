@@ -11,43 +11,44 @@
 # Configure.c replaces words it recognizes between the @ signs.
 CC        = @cc@
 EXE       = @exe@
-O         = @outfile@
+OUTFILE   = @outfile@
 RM_RF     = @rm_rf@
 THREADS   = @threads@
+OPENMP    = @openmp@
 
 # The first target is default, will be used by a plain 'make' command.
 all: test
 
 # Recipes to build executables
 t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c t/Test.h
-	$(CC) $(O) t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
+	$(CC) $(OUTFILE) t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
 	-$(RM_RF) 01a-cc.obj
 
 t/01-toolchain/01b-timing.exe: t/01-toolchain/01b-timing.c t/Test.h
-	$(CC) $(O) t/01-toolchain/01b-timing.exe t/01-toolchain/01b-timing.c
+	$(CC) $(OUTFILE) t/01-toolchain/01b-timing.exe t/01-toolchain/01b-timing.c
 	-$(RM_RF) 01b-timing.obj
 
 t/01-toolchain/01c-osthreads.exe: t/01-toolchain/01c-osthreads.c t/Test.h
-	$(CC) $(THREADS) $(O) t/01-toolchain/01c-osthreads.exe t/01-toolchain/01c-osthreads.c
+	$(CC) $(THREADS) $(OPENMP) $(OUTFILE) t/01-toolchain/01c-osthreads.exe t/01-toolchain/01c-osthreads.c
 	-$(RM_RF) 01c-osthreads.obj
 
 t/02-components/02a-threads.exe: t/02-components/02a-threads.c \
 		src/threads.h src/threads.c src/timing.c src/timing.h t/Test.h
-	$(CC) $(THREADS) $(O) t/02-components/02a-threads.exe src/threads.c src/timing.c t/02-components/02a-threads.c
+	$(CC) $(THREADS) $(OUTFILE) t/02-components/02a-threads.exe src/threads.c src/timing.c t/02-components/02a-threads.c
 	-$(RM_RF) threads.obj 02a-threads.obj
 
 t/02-components/02b-hashtable.exe: t/02-components/02b-hashtable.c \
 		src/hashtable.h src/hashtable.c t/Test.h
-	$(CC) $(O) t/02-components/02b-hashtable.exe src/hashtable.c t/02-components/02b-hashtable.c
+	$(CC) $(OUTFILE) t/02-components/02b-hashtable.exe src/hashtable.c t/02-components/02b-hashtable.c
 	-$(RM_RF) hashtable.obj 02b-hashtable.obj
 
 t/02-components/02c-heapmanager.exe: t/02-components/02c-heapmanager.c \
 		src/heapmanager.h src/heapmanager.c t/Test.h
-	$(CC) $(O) t/02-components/02c-heapmanager.exe src/heapmanager.c t/02-components/02c-heapmanager.c
+	$(CC) $(OUTFILE) t/02-components/02c-heapmanager.exe src/heapmanager.c t/02-components/02c-heapmanager.c
 	-$(RM_RF) heapmanager.obj 02b-heapmanager.obj
 
 tools/build/prove$(EXE): tools/build/prove.c
-	$(CC) $(O) tools/build/prove$(EXE) tools/build/prove.c
+	$(CC) $(OUTFILE) tools/build/prove$(EXE) tools/build/prove.c
 	-$(RM_RF) prove.obj
 
 # Note: test executables are named *.exe on all operating systems so

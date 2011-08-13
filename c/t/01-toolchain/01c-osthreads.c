@@ -6,10 +6,12 @@
 #include <stdlib.h>   /* system */
 #include <string.h>   /* strlen */
 #include "../Test.h"  /* diag is_ii ok plan */
+#if defined( _OPENMP )
+    #include <omp.h>
+#endif
 
 #ifdef _WIN32
-    #include <windows.h>
-    #define sleep(seconds) Sleep(seconds*1000)
+    #include <windows.h>  /* FILETIME GetSystemTimeAsFileTime Sleep */
 #else
     #include <pthread.h>  /* pthread_create pthread_join */
 #endif
@@ -57,9 +59,9 @@ tests1_4sleeps()
     struct test1_threadargs thread1arguments, thread2arguments;
 
     /* Create the first thread */
-    thread1arguments.testnumber  = 3;
-    thread1arguments.seconds     = 2;
-    thread1arguments.description = "first";
+    thread1arguments.testnumber   = 3;
+    thread1arguments.seconds      = 2;
+    thread1arguments.description  = "first";
     threadstacksize = 16384;  /* Minimum allowed by Posix threads */
 	#ifdef _WIN32
 	    threadhandle1 = CreateThread(NULL, threadstacksize,
@@ -76,9 +78,9 @@ tests1_4sleeps()
     sleep(1); /* Let the first thread run immediately */
 
     /* Create the second thread */
-    thread2arguments.testnumber  = 4;
-    thread2arguments.seconds     = 2;
-    thread2arguments.description = "second";
+    thread2arguments.testnumber   = 4;
+    thread2arguments.seconds      = 2;
+    thread2arguments.description  = "second";
 	#ifdef _WIN32
 	    threadhandle2 = CreateThread(NULL, threadstacksize,
             (LPTHREAD_START_ROUTINE) test1_thread, &thread2arguments, 0,
@@ -205,14 +207,118 @@ tests5_6charcount()
 }
 
 
+/* tests6_8vectordotproduct */
+void
+tests6_8vectordotproduct()
+{
+    /* Calculate a vector dot product three ways, first in a single */
+    /* thread for comparison, then with native OS threads, and then */
+    /* with OpenMP threads.  Test with 10, 1000 and 1000000 elements. */
+    int i, j, vectorsize[3] = {10,1000,1000000}, elements, chunk = 3;
+    long long time1, time2, * v1, * v2, dp1, dp2;
+//  double * u, * v, dotproduct1, dotproduct2;
+    char message[80];
+    #if defined( _WIN32 )
+        FILETIME now;
+    #else
+        struct timeval now;
+    #endif
+
+    /* Do the tests three times, with 10, 100 and 100000 elements */
+    for (i=0; i<3; ++i) {
+        elements = vectorsize[i];
+//      u = (double *) malloc(elements * sizeof(double)); assert(u!=NULL);
+//      v = (double *) malloc(elements * sizeof(double)); assert(v!=NULL);
+        v1 = (long long *) malloc(elements * sizeof(long long)); assert(v1!=NULL);
+        v2 = (long long *) malloc(elements * sizeof(long long)); assert(v2!=NULL);
+        /* Fill the two vectors with data */
+        for (j=0; j<elements; ++j) {
+//          u[j] = (double)(j);
+//          v[j] = (double)(elements - j);
+            v1[j] = (long long)(j);
+            v2[j] = (long long)(elements - j);
+        }
+        /* Calculate the dot product with just the main thread */
+        /* Get the system time in microseconds into time1 */
+        #if defined( _WIN32 )
+            GetSystemTimeAsFileTime(&now);
+            time1 = ((((long long)now.dwHighDateTime) << 32) | now.dwLowDateTime)/10;
+        #else
+            gettimeofday(&now, NULL);
+            time1 = now.tv_sec * 1000000LL + now.tv_usec;
+        #endif
+//      dotproduct1 = 0.0;
+        dp1 = 0;
+        for (j=0; j<elements; ++j) {
+//          dotproduct1 += u[j] * v[j];
+            dp1 += v1[j] * v2[j];
+        }
+        /* Get the system time in microseconds into time2 */
+        #if defined( _WIN32 )
+            GetSystemTimeAsFileTime(&now);
+            time2 = ((((long long)now.dwHighDateTime) << 32) | now.dwLowDateTime)/10;
+        #else
+            gettimeofday(&now, NULL);
+            time2 = now.tv_sec * 1000000LL + now.tv_usec;
+        #endif
+        sprintf(message, "single threaded%9d elements%7d microseconds", elements, (int)(time2-time1));
+        diag(message);
+        /* Calculate the dot product with OpenMP threads, if available */
+        #if defined( _OPENMP )
+            /* Get the system time in microseconds into time1 */
+            #if defined( _WIN32 )
+                GetSystemTimeAsFileTime(&now);
+                time1 = ((((long long)now.dwHighDateTime) << 32) | now.dwLowDateTime)/10;
+            #else
+                gettimeofday(&now, NULL);
+                time1 = now.tv_sec * 1000000LL + now.tv_usec;
+            #endif
+//          dotproduct2 = 0.0;
+            dp2 = 0;
+//          #pragma omp parallel for default(shared) private(j) schedule(static) reduction(+:dotproduct2) reduction(+:dp2)
+            #pragma omp parallel for default(shared) private(j) schedule(static) reduction(+:dp2)
+            for (j=0; j < elements; j++) {
+//              dotproduct2 = dotproduct2 + (u[j] * v[j]);
+                dp2 = dp2 + (v1[j] * v2[j]);
+            }
+
+            /* Get the system time in microseconds into time2 */
+            #if defined( _WIN32 )
+                GetSystemTimeAsFileTime(&now);
+                time2 = ((((long long)now.dwHighDateTime) << 32) | now.dwLowDateTime)/10;
+            #else
+                gettimeofday(&now, NULL);
+                time2 = now.tv_sec * 1000000LL + now.tv_usec;
+            #endif
+            sprintf(message, "OpenMP threaded%9d elements%7d microseconds", elements, (int)(time2-time1));
+            diag(message);
+//          sprintf(message, "OpenMP dot products double %lf %lf", dotproduct1, dotproduct2);
+//          diag(message);
+//          sprintf(message, "OpenMP dot products long long %lld %lld", dp1, dp2);
+//          diag(message);
+//          ok(dotproduct2 == dotproduct1, "dot products match double");
+            ok(dp2 == dp1, "dot products match");
+        #else
+            diag("OpenMP not available");
+        #endif
+//      free(u); free(v);
+        free(v1); free(v2);
+    }
+}
+
 /* main */
 int
 main(int arg, char * argv[])
 {
+    int testplan = 5;
     diag("01c-osthreads");
-    plan(5);
-    tests1_4sleeps();  /* two threads that sleep and print */
+    #if defined( _OPENMP )
+        testplan += 3;
+    #endif
+    plan(testplan);
+    tests1_4sleeps();     /* two threads that sleep and print */
     tests5_6charcount();  /* four threads returning integers */
+    tests6_8vectordotproduct();
     return 0;
 }
 

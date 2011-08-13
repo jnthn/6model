@@ -14,7 +14,7 @@
 /* Systems usually predefine some variables and macros.  Users might */
 /* make the same definitions. */
 
-/* Currently works on:
+/* Currently works with:
  * MinGW
  * http://mingw.org/
  * Currently based on GCC 4.5.2, 85MB disk.
@@ -49,7 +49,7 @@ enum { OS_VAR,
        DETECTED_END /* This one must always be last */};
 char * detected[DETECTED_END] = {""};
 /* Subscript names for configuration strings.  Almost like a hash ;) */
-enum { CC, EXE, LDL, MAKE_COMMAND, OUTFILE, RM_RF, THREADS,
+enum { CC, EXE, LDL, MAKE_COMMAND, OPENMP, OUTFILE, RM_RF, THREADS,
        CONFIG_END /* this one must always be last */ };
        /* note the words and OUT clash with MinGW */
 char * config[CONFIG_END] = {"", "", "", "", "", "", ""};
@@ -81,6 +81,9 @@ detection(void)
     #endif
     #if defined( _WIN32 )
         printf("_WIN32");
+	    config[EXE] = ".exe";
+    #else
+	    config[EXE] = "";
     #endif
     #if !(defined(__APPLE__) || defined(__linux__) || defined(_WIN32))
         printf("unknown\n  (not __APPLE__ __linux__ or _WIN32)\n");
@@ -103,8 +106,14 @@ detection(void)
     printf("  OpenMP: ");
     #if defined( _OPENMP )
         processors = omp_get_num_procs();
-        printf("_OPENMP is %d with max %d threads on %d processors\n",
-            _OPENMP, omp_get_max_threads(), processors);
+        printf("v%d max processors/threads %d/%d\n", _OPENMP,
+            processors, omp_get_max_threads());
+        config[OPENMP] =
+        #if defined( __GNUC__ )
+            "-fopenmp";
+        #else
+            "-openmp";
+        #endif
     #else
         printf("not enabled in the C compiler\n");
 
@@ -141,13 +150,6 @@ detection(void)
 void
 config_set(void)
 {
-    /* Operating system */
-    #if defined( _WIN32 )
-	    config[EXE] = ".exe";
-    #else
-	    config[EXE] = "";
-    #endif
-
     /* C compiler */
     #if defined( _MSC_VER )
         /* See http://msdn.microsoft.com/en-US/library/b0084kay%28v=VS.100%29.aspx */
@@ -193,6 +195,7 @@ config_set(void)
     #else
 	    "make";
     #endif
+    /* TODO: verify that the chosen make command actually works */
 }
 
 
@@ -208,6 +211,7 @@ makefile_convert(char * programfilename, char * templatefilename,
     trans(&makefiletext, "This is the file", "This is NOT the file");
     trans(&makefiletext, "@cc@",        config[CC]);
     trans(&makefiletext, "@exe@",       config[EXE]);
+    trans(&makefiletext, "@openmp@",    config[OPENMP]);
     trans(&makefiletext, "@outfile@",   config[OUTFILE]);
     trans(&makefiletext, "@rm_rf@",     config[RM_RF]);
     trans(&makefiletext, "@threads@",   config[THREADS]);

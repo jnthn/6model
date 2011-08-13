@@ -31,7 +31,7 @@ thread_join(struct thread_info * info)
 {
     int status;
     #if defined( __APPLE__ ) || defined( __linux__ )
-        status = pthread_join(&info->thread_id, NULL);
+        status = pthread_join(info->thread_id, NULL);
     #elif defined( _WIN32 )
         status = WaitForSingleObject(threadhandle[i], INFINITE);
     #endif
@@ -39,11 +39,11 @@ thread_join(struct thread_info * info)
 }
 
 
-/* Caution - do not underestimate the overheads of creating and */
-/* synchronizing threads.  See for example the HPL-2004-209 report */
-/* below, stating that some of the machine code instructions took */
-/* over 100 machine cycles on a Pentium 4.  More detailed and recent */
-/* performance figures would be very welcome. */
+/* Caution - bear in mind the time required to create and synchronize */
+/* threads.  See for example the HPL-2004-209 report below, stating */
+/* that some of the machine code instructions took over 100 machine */
+/* cycles on a Pentium 4.  More detailed and recent measurements are */
+/* very welcome. */
 
 /* See also: */
 /* Lawrence Livermore National Laboratory tutorials: */
@@ -52,5 +52,7 @@ thread_join(struct thread_info * info)
 /* Threads Cannot be Implemented as a Library (may now be outdated): */
 /*   http://www.hpl.hp.com/techreports/2004/HPL-2004-209.html */
 /* http://en.wikipedia.org/wiki/Lock-free_and_wait-free_algorithms */
+/* Ross Bencina - Some notes on lock-free and wait-free algorithms */
+/*   http://www.rossbencina.com/code/lockfree */
 
 /* end of threads.c */

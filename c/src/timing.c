@@ -4,10 +4,10 @@
 /* systems give the current time and do delays. */
 
 #ifdef _WIN32
-    #include <windows.h>   /* FILETIME GetSystemTimeAsFileTime */
+    #include <windows.h>   /* FILETIME GetSystemTimeAsFileTime Sleep */
 #else
     #include <stdlib.h>    /* NULL */
-    #include <sys/time.h>  /* gettimeofday */
+    #include <sys/time.h>  /* gettimeofday nanosleep */
 #endif
 #include "timing.h"
 
@@ -21,17 +21,17 @@ gettime()
     int microseconds;
     long long seconds, result;
     #ifdef _WIN32
-        FILETIME time1;
-        GetSystemTimeAsFileTime(&time1);
-        seconds = (((long long)time1.dwHighDateTime) << 32)
-                             | time1.dwLowDateTime;
-        seconds -= 11644473600; /* from 1601-01-01 to 1970-01-01 */
+        FILETIME now;
+        GetSystemTimeAsFileTime(&now);
+        seconds = (((long long)now.dwHighDateTime) << 32)
+                             | now.dwLowDateTime;
+        seconds -= 11644473600LL; /* from 1601-01-01 to 1970-01-01 */
         microseconds = (seconds % 10000000)/10; seconds /= 10000000;
     #else
-        struct timeval time1;
-        gettimeofday(&time1, NULL);
-        seconds      = time1.tv_sec;
-        microseconds = time1.tv_usec;
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        seconds      = now.tv_sec;
+        microseconds = now.tv_usec;
     #endif
     return (seconds << 20) | microseconds;
 }

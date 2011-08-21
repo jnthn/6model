@@ -181,7 +181,11 @@ create_lib()
     #else
         status = system("gcc -c -fPIC -o testlib.o testlib.c"); /* Unix */
         if (status==0) {
-            status = system("cc -shared -s -o testlib.so testlib.o");
+            #if defined( __APPLE__ )
+                status = system("cc -shared -o testlib.so testlib.o");
+            #else
+                status = system("cc -shared -s -o testlib.so testlib.o");
+            #endif
         }
         if (status==0) {
             status = system("rm testlib.o");

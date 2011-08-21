@@ -1,5 +1,9 @@
 /* 01b-timing.c */
 
+/* TODO: try these functions on Win32 for better precision: */
+/* _ftime usleep QueryPerformanceCounter QueryPerformanceFrequency */
+
+
 #include <stdio.h>   /* sprintf */
 #ifdef _WIN32
     #include <windows.h>
@@ -18,13 +22,13 @@ seconds_microseconds_sleep()
     int microseconds1, microseconds2, microseconds3, microseconds4, microseconds5;
     char message[80];
 
-    /* Read the clock twice in quick succession, sleep for 1 second, */
-    /* then read the clock a third time.  Report the differences */
-    /* between the times and verify that the sleep was about 1 sec. */
+    /* Read the clock multiple times with various delays in between. */
+    /* Check that the time differences are within reason */
     #ifdef _WIN32
         FILETIME time1, time2, time3, time4, time5;
         GetSystemTimeAsFileTime(&time1); /* * 100ns since 1601-01-01 */
         GetSystemTimeAsFileTime(&time2);
+        _ftime(); // TODO
         Sleep(0);     /* 0 milliseconds */
         GetSystemTimeAsFileTime(&time3);
         Sleep(1);     /* 1 millisecond */

@@ -1,27 +1,28 @@
 /* Configure.c */
-/* Compiled and run by 6model/c/Configure.(sh|bat) */
+/* Compiled and run by 6model/c/Configure.{sh,bat} */
 
 /* This program (Configure) uses environment variables and C macros */
 /* to autodetect the operating system, compiler and other utilities */
 /* that can be used to build your software.  It then creates your */
-/* Makefile based on a template (Makefile.in).  To work also with */
-/* non-GNU systems such as Microsoft Visual C++, it follows the */
-/* style of Automake and Autoconf, but is written in only C and does */
-/* not rely on other tools such as M4. */
+/* Makefile based on a template (Makefile.in).  To also work with */
+/* non-GNU systems such as Microsoft C/C++, it follows the style of */
+/* Automake and Autoconf, but is written only in C and does not rely */
+/* on other tools such as M4. */
 
-/* This work will never be finished.  Reliable autodetection is hard. */
-/* There are always newer environments and tools to try out. */
-/* Systems usually predefine some variables and macros.  Users might */
-/* make the same definitions. */
+/* This work will never be complete, because autodetection is hard. */
+/* New software emerges, environments and tools evolve, users make */
+/* unforeseen choices.  Monitor the changes through regular testing. */
 
-/* Currently works with:
+/* Currently verified to work with:
+ * GNU C compiler on Linux, OS X and Windows (as MinGW).
+ *
  * MinGW
  * http://mingw.org/
  * Currently based on GCC 4.5.2, 85MB disk.
  * Targets Win32 libraries, no Posix emulation or dlopen.
  * (older version bundled with Git full install)
 
- * Microsoft Visual C++ Express Edition 1-2GB RAM, 3GB disk
+ * Microsoft Visual C++ Express Edition 1-2GB RAM
  * Registration required to avoid de-activation after 30 days.  Downloads a 3.2MB web installer.
  * http://www.microsoft.com/express/vc/ do not need optional SQL express.
  * Also installs Windows Installer 4.5, .NET Framework 4, SQL Server Compact 3.5, Help Viewer 1.0
@@ -66,7 +67,7 @@ void
 detection(void)
 {
     int processors = 0;
-    #if defined( _WIN32 )
+    #if defined( _WIN32 ) && ! defined( _OPENMP )
         SYSTEM_INFO sysinfo;  /* declare up here because MSC hates it lower */
     #endif
     printf("Configure detects the following:\n");
@@ -224,7 +225,7 @@ makefile_convert(char * programfilename, char * templatefilename,
         trans(&makefiletext, "t/02-components",  "t\\02-components");
     #endif
     #if defined( _MSC_VER )
-        trans(&makefiletext, "$(O) ",            "$(O)");
+        trans(&makefiletext, "$(OUTFILE) ",      "$(OUTFILE)");
     #endif
     printf("    %s: writing to %s\n", programfilename, outputfilename);
     squirt(makefiletext, outputfilename);
@@ -341,16 +342,16 @@ main(int argc, char * argv[])
 
 /*
  * TODO
-
- * Explore more Win32 C compilers and toolchains
+ *
+ * Explore more C compilers and toolchains
  * http://www.thefreecountry.com/compilers/cpp.shtml
  * lcc-win32 http://www.cs.virginia.edu/~lcc-win32/
  * Borland (Registration required)
  * Tiny C Compiler http://bellard.org/tcc/
  * OpenWatcom http://www.openwatcom.org/index.php/Download
  * Digital Mars http://www.digitalmars.com/download/freecompiler.html
-
-*/
+ *
+ */
 
 
 /* See also: */

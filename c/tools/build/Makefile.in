@@ -20,32 +20,32 @@ OPENMP    = @openmp@
 all: test
 
 # Recipes to build executables
-t/01-toolchain/01a-cc.exe: t/01-toolchain/01a-cc.c t/Test.h
-	$(CC) $(OUTFILE) t/01-toolchain/01a-cc.exe t/01-toolchain/01a-cc.c
-	-$(RM_RF) 01a-cc.obj
+t/01-toolchain/01a-cc.t.exe: t/01-toolchain/01a-cc.t.c t/Test.h
+	$(CC) $(OUTFILE) t/01-toolchain/01a-cc.t.exe t/01-toolchain/01a-cc.t.c
+	-$(RM_RF) 01a-cc.t.obj
 
-t/01-toolchain/01b-timing.exe: t/01-toolchain/01b-timing.c t/Test.h
-	$(CC) $(OUTFILE) t/01-toolchain/01b-timing.exe t/01-toolchain/01b-timing.c
-	-$(RM_RF) 01b-timing.obj
+t/01-toolchain/01b-timing.t.exe: t/01-toolchain/01b-timing.t.c t/Test.h
+	$(CC) $(OUTFILE) t/01-toolchain/01b-timing.t.exe t/01-toolchain/01b-timing.t.c
+	-$(RM_RF) 01b-timing.t.obj
 
-t/01-toolchain/01c-osthreads.exe: t/01-toolchain/01c-osthreads.c t/Test.h
-	$(CC) $(THREADS) $(OPENMP) $(OUTFILE) t/01-toolchain/01c-osthreads.exe t/01-toolchain/01c-osthreads.c
-	-$(RM_RF) 01c-osthreads.obj
+t/01-toolchain/01c-osthreads.t.exe: t/01-toolchain/01c-osthreads.t.c t/Test.h
+	$(CC) $(THREADS) $(OPENMP) $(OUTFILE) t/01-toolchain/01c-osthreads.t.exe t/01-toolchain/01c-osthreads.t.c
+	-$(RM_RF) 01c-osthreads.t.obj
 
-t/02-components/02a-threads.exe: t/02-components/02a-threads.c \
+t/02-components/02a-threads.t.exe: t/02-components/02a-threads.t.c \
 		src/threads.h src/threads.c src/timing.c src/timing.h t/Test.h
-	$(CC) $(THREADS) $(OUTFILE) t/02-components/02a-threads.exe src/threads.c src/timing.c t/02-components/02a-threads.c
-	-$(RM_RF) threads.obj 02a-threads.obj
+	$(CC) $(THREADS) $(OUTFILE) t/02-components/02a-threads.t.exe src/threads.c src/timing.c t/02-components/02a-threads.t.c
+	-$(RM_RF) threads.obj 02a-threads.t.obj
 
-t/02-components/02b-hashtable.exe: t/02-components/02b-hashtable.c \
+t/02-components/02b-hashtable.t.exe: t/02-components/02b-hashtable.t.c \
 		src/hashtable.h src/hashtable.c t/Test.h
-	$(CC) $(OUTFILE) t/02-components/02b-hashtable.exe src/hashtable.c t/02-components/02b-hashtable.c
-	-$(RM_RF) hashtable.obj 02b-hashtable.obj
+	$(CC) $(OUTFILE) t/02-components/02b-hashtable.t.exe src/hashtable.c t/02-components/02b-hashtable.t.c
+	-$(RM_RF) hashtable.obj 02b-hashtable.t.obj
 
-t/02-components/02c-heapmanager.exe: t/02-components/02c-heapmanager.c \
-		src/heapmanager.h src/heapmanager.c t/Test.h
-	$(CC) $(OUTFILE) t/02-components/02c-heapmanager.exe src/heapmanager.c t/02-components/02c-heapmanager.c
-	-$(RM_RF) heapmanager.obj 02b-heapmanager.obj
+t/02-components/02c-mem.t.exe: t/02-components/02c-mem.t.c \
+		src/mem.h src/mem.c t/Test.h
+	$(CC) $(OUTFILE) t/02-components/02c-mem.t.exe src/mem.c t/02-components/02c-mem.t.c
+	-$(RM_RF) mem.obj 02b-mem.t.obj
 
 tools/build/prove$(EXE): tools/build/prove.c
 	$(CC) $(OUTFILE) tools/build/prove$(EXE) tools/build/prove.c
@@ -58,13 +58,13 @@ test: test01 test02
 # The test01 target checks that the C compiler and so on perform the
 # functions needed by the rest of the code.  It is generally unnecessary
 # to run this test, but is useful when troubleshooting.
-test01: t/01-toolchain/01a-cc.exe t/01-toolchain/01b-timing.exe \
-		t/01-toolchain/01c-osthreads.exe tools/build/prove$(EXE)
+test01: t/01-toolchain/01a-cc.t.exe t/01-toolchain/01b-timing.t.exe \
+		t/01-toolchain/01c-osthreads.t.exe tools/build/prove$(EXE)
 	tools/build/prove -e "" --ext ".exe" t/01-toolchain
 
 # The test02 target validates the internal libraries of 6model/c
-test02: t/02-components/02a-threads.exe \
-		t/02-components/02b-hashtable.exe tools/build/prove$(EXE)
+test02: t/02-components/02a-threads.t.exe t/02-components/02b-hashtable.t.exe \
+		 tools/build/prove$(EXE)
 	tools/build/prove -e "" --ext ".exe" t/02-components
 
 # Miscellaneous targets
@@ -81,7 +81,7 @@ help:
 	@echo In this 6model/c directory you can make the following targets:
 	@echo "test      - general test as far as 6model has been developed"
 	@echo "test01    - test the toolchain, eg C compiler, threads, ICU etc"
-	@echo "test02    - test 6model components, eg hashtable, heapmanager etc"
+	@echo "test02    - test 6model components, eg hashtable, mem etc"
 	@echo "clean     - remove all generated files except this Makefile"
 	@echo "realclean - remove all generated files including this Makefile"
 	@echo "help      - you already found this"

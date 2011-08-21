@@ -1,26 +1,34 @@
 /* prove.c */
-/* Lightweight TAP (Test Anything Protocol) harness */
+/* Lightweight C version of a TAP (Test Anything Protocol) harness */
 
-/* TODO: parse the test script output looking for 'ok', 'not ok' etc */
-/* and output a summary instead of every test result. */
+/* TODO: support for TODO tests (that are expected to fail) */
+/* TODO: ensure the '1..n' (plan) output is either first or last line */
+/* TODO: check exit status from child process */
+
+/* Functions are placed in this file at the point just before they */
+/* are needed, but all global variables are declared at the start. */
 
 #include <assert.h>  /* assert */
 #include <stdio.h>   /* FILE fprintf printf stderr */
-#include <stdlib.h>  /* exit free malloc qsort realloc */
+#include <stdlib.h>  /* atoi exit free malloc qsort realloc */
 #include <string.h>  /* strcat strcpy strlen */
 #if defined( _WIN32 )
     #include <windows.h>
     #define pclose _pclose
     #define popen  _popen
+    #define DIRECTORY_SEPARATOR "\\"
 #else
-    #include <dirent.h> /* opendir readdir */
+    #include <dirent.h>  /* opendir readdir */
+    #define DIRECTORY_SEPARATOR "/"
 #endif
 
 #define LINEBUFFERSIZE 128
 
+/* Global variables */
 char * program_name;
 char * executable_program;
 char * filename_extension;
+int tests_passed=0, tests_failed=0, todos_passed=0, total_files=0;
 
 
 /* options */
@@ -35,7 +43,10 @@ options(int argc, char * argv[])
     executable_program = NULL; /* should be "perl6" ;-) */
     filename_extension = NULL; /* should be ".t" */
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s test_directory\n", argv[0]);
+        fprintf(stderr,
+            "Usage: %s [-e \"cmd\"] [--ext \"extension\"] test_directory\n",
+             argv[0]
+        );
         exit(1);
     }
     scanning_args = 1;
@@ -85,6 +96,51 @@ qx(char * command)
 }
 
 
+/* split_str */
+int
+split_str(char * str, char * delim, char *** substrings)
+{
+    int substringcount = 0, substringlen, delimiterlen;
+    char * p1, * p2, * substr;
+    delimiterlen = strlen(delim);
+    assert( delimiterlen>0 );
+    p1 = str;
+    while ((p2=strstr(p1, delim)) != NULL) {
+        substringlen = p2 - p1;
+        /* Create or extend the list of pointers to strings */
+        if (substringcount++ == 0) {
+            * substrings = (char **) malloc(sizeof(char **));
+        }
+        else {
+            * substrings = (char **) realloc(* substrings, substringcount * sizeof(char **));
+        }
+        /* Push the substring onto the end of the list */
+        substr = (char *) malloc(substringlen+1);
+        strncpy(substr, p1, substringlen);
+        substr[substringlen] = '\0';
+        (* substrings)[substringcount-1] = substr;
+        /* Move the search pointer past the delimiter */
+        p1 += substringlen + delimiterlen;
+    }
+    /* There is often another substring after the last delimiter */
+    if ((substringlen=strlen(p1))>0) {
+        /* Create or extend the list of pointers to strings */
+        if (substringcount++ == 0) {
+            * substrings = (char **) malloc(sizeof(char **));
+        }
+        else {
+            * substrings = (char **) realloc(* substrings, substringcount * sizeof(char **));
+        }
+        /* Push the substring onto the end of the list */
+        substr = (char *) malloc(substringlen+1);
+        strncpy(substr, p1, substringlen);
+        substr[substringlen] = '\0';
+        (* substrings)[substringcount-1] = substr;
+    }
+    return substringcount;
+}
+
+
 #if ! defined( _WIN32 )
 /* scandirectory_comparenames */
 int
@@ -122,7 +178,6 @@ scandirectory(char * dirname, char *** filenamelist) /* yes, triple pointer */
         strcat(filename, "\\*");
         if (filename_extension != NULL)
             strcat(filename, filename_extension);
-        printf("%s\n", filename);
         hFind = FindFirstFile(filename, &dir);
         found_a_file = (hFind != INVALID_HANDLE_VALUE);
     #else
@@ -134,7 +189,6 @@ scandirectory(char * dirname, char *** filenamelist) /* yes, triple pointer */
         }
         direntry = readdir(dir);
         found_a_file = (direntry != NULL);
-        printf("scandirectory %s\n", dirname);
     #endif
     while (found_a_file) {
         #if defined( _WIN32 )
@@ -184,7 +238,8 @@ scandirectory(char * dirname, char *** filenamelist) /* yes, triple pointer */
 }
 
 
-/* filecollection - a list of directory names containing file names */
+/* filecollection */
+/* a list of directory names containing file names */
 struct filecollection {
     int dircount;
     struct filecollection_dir {
@@ -196,15 +251,14 @@ struct filecollection {
 
 
 /* filecollection_free */
+/* Frees all the memory allocated to a filecollection */
 void
 filecollection_free(struct filecollection * coll)
 {
     int i, j;
     for (i=0; i<coll->dircount; ++i) {
-//      printf("Freeing %s has %d files\n", coll->dirs[i].dirname, coll->dirs[i].filecount);
         free(coll->dirs[i].dirname);
         for (j=0; j<coll->dirs[i].filecount; ++j) {
-//          printf("  Freeing %s\n", coll->dirs[i].filenames[j]);
             free(coll->dirs[i].filenames[j]);
         }
         free(coll->dirs[i].filenames);
@@ -213,7 +267,11 @@ filecollection_free(struct filecollection * coll)
     free(coll);
 }
 
+
 /* scandirectories */
+/* Takes a list of directory names and returns a filecollection which */
+/* is a list of those directory names and also either all the files */
+/* in each directory or those that have a specified extension. */
 struct filecollection *
 scandirectories(int argc, char * argv[])
 {
@@ -266,7 +324,6 @@ scandirectories(int argc, char * argv[])
                 filedir->filenames[filedir->filecount-1] =
                     (char *) malloc(strlen(filenamelist[j])+1);
                 strcpy(filedir->filenames[filedir->filecount-1], filenamelist[j]);
-//              printf("  %s\n", filenamelist[j]);
                 free(filenamelist[j]);
             }
         }
@@ -276,15 +333,94 @@ scandirectories(int argc, char * argv[])
 }
 
 
-/* runtests */
+/* TAP_Parser */
 void
-runtests(struct filecollection * coll)
+TAP_Parser(FILE * program_output)
+{
+    int planned=0, passed=0, failed=0, testnumber, testnumber_expected;
+    int len;
+    char line[LINEBUFFERSIZE];
+
+    testnumber_expected = 1;
+    while (fgets(line, LINEBUFFERSIZE, program_output)) {
+        if (strncmp(line, "1..", 3)==0) { /* plan() output */
+            planned = atoi(line+3);
+        }
+        else {
+            if (strncmp(line, "ok ", 3)==0) { /* passed test */
+                testnumber = atoi(line+3);
+                if (testnumber == testnumber_expected) {
+                    ++testnumber_expected;
+                }
+                else {
+                    fprintf(stderr,
+                        "tap_parser expected test number %d but got %d\n",
+                        testnumber_expected, testnumber );
+                    testnumber_expected = testnumber + 1;
+                }
+                ++passed;
+            }
+            else {
+                if (strncmp(line, "not ok ", 7)==0) { /* failed test */
+                    testnumber = atoi(line+7);
+                    if (testnumber == testnumber_expected) {
+                        ++testnumber_expected;
+                    }
+                    else {
+                        fprintf(stderr,
+                            "tap_parser expected test number %d but got %d\n",
+                            testnumber_expected, testnumber );
+                        testnumber_expected = testnumber + 1;
+                    }
+                    ++failed;
+                }
+                else {
+                    if (strncmp(line, "#", 1)==0) { /* comment */
+                        ;
+                    }
+                    else {
+                        fprintf(stderr, "tap_parser: unexpected line: %s\n", line);
+                    }
+                }
+            }
+        }
+        /* Display a running X/Y count of results as they arrive */
+        len = printf(" %d/%d", passed, planned ? planned : passed+failed);
+        while (len--)
+            printf("\b");
+        fflush(stdout);
+    }
+    printf("%d/%d %sok", passed, passed+failed,
+        (passed!=planned || failed!=0) ? "*NOT* " : "");
+    if (planned != passed + failed ) {
+        printf(" (%d planned)", planned);
+    }
+}
+
+
+/* runtest */
+void
+runtest(char * command)
+{
+    FILE * childprocess;
+
+    /* Run the test and capture its standard output */
+    childprocess = popen(command, "r");
+    /* Analyze the output for planned number of tests, passes and fails */
+    TAP_Parser(childprocess);
+    /* Clean up */
+    pclose(childprocess);
+}
+
+
+/* runtestdirs */
+void
+runtestdirs(struct filecollection * coll)
 {
     int i, j, commandlen;
     char * command, * tap_output;
     for (i=0; i<coll->dircount; ++i) {
         for (j=0; j<coll->dirs[i].filecount; ++j) {
-            printf("runtest %s / %s\n", coll->dirs[i].dirname, coll->dirs[i].filenames[j]);
             commandlen = (executable_program ? strlen(executable_program) + 1 : 0)
                          + strlen(coll->dirs[i].dirname) + 1
                          + strlen(coll->dirs[i].filenames[j]) + 1;
@@ -295,41 +431,44 @@ runtests(struct filecollection * coll)
                 strcat(command, " ");
             }
             strcat(command, coll->dirs[i].dirname);
-            #if defined( _WIN32 )
-                strcat(command, "\\");
-            #else
-                strcat(command, "/");
-            #endif
+            strcat(command, DIRECTORY_SEPARATOR );
             strcat(command, coll->dirs[i].filenames[j]);
-            
-            tap_output = qx(command);
-            printf("%s\n", tap_output);
+            printf("%s%s%s ", coll->dirs[i].dirname,
+                DIRECTORY_SEPARATOR, coll->dirs[i].filenames[j]);
+            fflush(stdout);
+            /* Run each test and parse its output */
+            runtest(command);
+            printf("\n");
             free(command);
-            free(tap_output);
         }
     }
 }
+
 
 /* main */
 int
 main(int argc, char * argv[])
 {
     int argi;
-    struct filecollection * files;
+    struct filecollection * dirs_and_files;
 
     /* Get command line options and process them */
     argi = options(argc, argv);
 
     /* Scan the remaining non-option arguments as directory names */
-    files = scandirectories(argc-argi, argv+argi);  /* argi hides what options() saw */
+    dirs_and_files = scandirectories(argc-argi, argv+argi);
+    /* argi hides what options() took from argv */
 
     /* Perform each test and parse its TAP output */
-    runtests(files);
+    runtestdirs(dirs_and_files);
 
     /* Clean up when finished */
-    filecollection_free(files);
+    filecollection_free(dirs_and_files);
     return 0;
 }
 
+/* See also: */
+/* perldoc prove, TAP::Harness, TAP::Parser::Aggregator */
+/* TAP::Parser::Grammar, TAP::Formatter::Console */
 
 /* end of prove.c */

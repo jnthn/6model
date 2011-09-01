@@ -27,6 +27,7 @@ TODO: done_testing();
 
 
 #include <stdio.h>  /* printf */
+#include <string.h> /* strcmp */
 
 int _test_number=0; /* yes, namespace pollution. patches welcome ;-) */
 

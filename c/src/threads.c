@@ -42,8 +42,8 @@ thread_join(struct thread_info * info)
 /* Caution - bear in mind the time required to create and synchronize */
 /* threads.  See for example the HPL-2004-209 report below, stating */
 /* that some of the machine code instructions took over 100 machine */
-/* cycles on a Pentium 4.  More detailed and recent measurements are */
-/* very welcome. */
+/* cycles on a Pentium 4.  More recent and detailed measurements are */
+/* welcome. */
 
 /* See also: */
 /* Lawrence Livermore National Laboratory tutorials: */
@@ -54,5 +54,14 @@ thread_join(struct thread_info * info)
 /* http://en.wikipedia.org/wiki/Lock-free_and_wait-free_algorithms */
 /* Ross Bencina - Some notes on lock-free and wait-free algorithms */
 /*   http://www.rossbencina.com/code/lockfree */
+
+/* Atomic operations with various C compilers: */
+/* http://gcc.gnu.org/onlinedocs/gcc/Atomic-Builtins.html */
+/* http://msdn.microsoft.com/en-us/library/ms684122%28v=VS.85%29.aspx */
+
+/* Lock-free concurrent queue algorithms */
+/* http://www.cs.rochester.edu/u/michael/PODC96.html */
+/* ftp://ftp.cs.rochester.edu/pub/packages/sched_conscious_synch/ */
+/* http://developer.amd.com/documentation/articles/pages/125200689.aspx */
 
 /* end of threads.c */

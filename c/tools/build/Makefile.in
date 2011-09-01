@@ -64,7 +64,7 @@ test01: t/01-toolchain/01a-cc.t.exe t/01-toolchain/01b-timing.t.exe \
 
 # The test02 target validates the internal libraries of 6model/c
 test02: t/02-components/02a-threads.t.exe t/02-components/02b-hashtable.t.exe \
-		 tools/build/prove$(EXE)
+		t/02-components/02c-mem.t.exe tools/build/prove$(EXE)
 	tools/build/prove -e "" --ext ".exe" t/02-components
 
 # Miscellaneous targets

@@ -13,10 +13,12 @@
 /* New software emerges, environments and tools evolve, users make */
 /* unforeseen choices.  Monitor the changes through regular testing. */
 
-/* Currently verified to work with:
- * GNU C compiler on Linux, OS X and Windows (as MinGW).
+/* This project uses only a standard C compiler, currently verified to
+ * work with:
+ * GCC, the GNU Compiler Collection on Linux and OS X.
+ * http://www.gnu.org/software/gcc/
  *
- * MinGW
+ * MinGW, Minimalist GNU for Windows
  * http://mingw.org/
  * Currently based on GCC 4.5.2, 85MB disk.
  * Targets Win32 libraries, no Posix emulation or dlopen.
@@ -107,8 +109,8 @@ detection(void)
     printf("  OpenMP: ");
     #if defined( _OPENMP )
         processors = omp_get_num_procs();
-        printf("v%d max processors/threads %d/%d\n", _OPENMP,
-            processors, omp_get_max_threads());
+            printf("v%d max processors/threads %d/%d %.9lfs ticks\n",
+            _OPENMP, processors, omp_get_max_threads(), omp_get_wtick());
         config[OPENMP] =
         #if defined( __GNUC__ )
             "-fopenmp";

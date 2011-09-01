@@ -390,8 +390,9 @@ TAP_Parser(FILE * program_output)
             printf("\b");
         fflush(stdout);
     }
-    printf("%d/%d %sok", passed, passed+failed,
-        (passed!=planned || failed!=0) ? "*NOT* " : "");
+    printf("%d/%d %sok", passed,
+        (planned > passed+failed ? planned : passed+failed),
+        (passed!=planned || failed!=0) ? "some not " : "");
     if (planned != passed + failed ) {
         printf(" (%d planned)", planned);
     }
@@ -468,7 +469,7 @@ main(int argc, char * argv[])
 }
 
 /* See also: */
-/* perldoc prove, TAP::Harness, TAP::Parser::Aggregator */
+/* perldoc prove, TAP::Harness, TAP::Parser::Aggregator, */
 /* TAP::Parser::Grammar, TAP::Formatter::Console */
 
 /* end of prove.c */

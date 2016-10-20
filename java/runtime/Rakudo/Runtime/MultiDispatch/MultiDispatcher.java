@@ -93,7 +93,7 @@ public class MultiDispatcher
                     continue;
                 }
             }
-            
+
             /* Check if it's admissible by arity. */
             int numArgs = nativeCapture.Positionals.length;
             if (numArgs < candidate.Sig.NumRequiredPositionals ||
@@ -142,9 +142,9 @@ public class MultiDispatcher
     private static ArrayList<RakudoObject> candidateSort(RakudoObject[] unsorted)
     {
         ArrayList<RakudoObject> sorted = new ArrayList<RakudoObject>();
-        for (RakudoObject obj : unsorted) {
+        for (RakudoObject obj : unsorted)
             sorted.add(obj);
-        }
+
         sorted.add(null); // XXX does this actually sort?
         return sorted;
     }
@@ -171,7 +171,8 @@ public class MultiDispatcher
             return 0;
 
         /* Analyse each parameter in the two candidates. */
-        for (i = 0; i < TypesToCheck; i++) {
+        for (i = 0; i < TypesToCheck; i++)
+        {
             RakudoObject TypeObjA = a.Sig.Parameters[i].Type;
             RakudoObject TypeObjB = b.Sig.Parameters[i].Type;
             if (TypeObjA == TypeObjB)
@@ -216,4 +217,3 @@ public class MultiDispatcher
             return true;
     }
 }
-

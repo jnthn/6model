@@ -1116,13 +1116,13 @@ public class Ops  // public static in the C# version
         // Load the assembly and grab the first type in it.
         //var assembly = AppDomain.CurrentDomain.Load(Ops.unbox_str(tc, path));
         //var class = Assembly.GetTypes()[0];
-        
+
         // Call the Load method, passing along the current thread context
         // and the setting to use with it. What's returned is what the main
         // body of the compilation unit evaluates to.
         //var method = class.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static);
         if (true) // sneak by the "unreachable code" monster
-            throw new UnsupportedOperationException("load_module NYI");        
+            throw new UnsupportedOperationException("load_module NYI");
         return (RakudoObject)null;
         //return (RakudoObject)method.Invoke.Invoke(null, new Object[] { tc, tc.Domain.Setting });
     }
@@ -1136,7 +1136,8 @@ public class Ops  // public static in the C# version
     {
         Context curContext = tc.CurrentContext;
         while (curContext != null) {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+            if (curContext.LexPad.SlotMapping.containsKey(name))
+            {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
             }
@@ -1157,7 +1158,8 @@ public class Ops  // public static in the C# version
         Context curContext = tc.CurrentContext.Outer;
         while (curContext != null)
         {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+            if (curContext.LexPad.SlotMapping.containsKey(name))
+            {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
             }
@@ -1179,7 +1181,7 @@ public class Ops  // public static in the C# version
         {
             if (curContext.LexPad.SlotMapping.containsKey(name))
             {
-                int index = curContext.LexPad.SlotMapping.get(name);                        
+                int index = curContext.LexPad.SlotMapping.get(name);
                 curContext.LexPad.Storage[index] = value;
                 return value;
             }
@@ -1198,7 +1200,8 @@ public class Ops  // public static in the C# version
     {
         Context curContext = tc.CurrentContext;
         while (curContext != null) {
-            if (curContext.LexPad.SlotMapping.containsKey(name)) {
+            if (curContext.LexPad.SlotMapping.containsKey(name))
+            {
                 int index = curContext.LexPad.SlotMapping.get(name);
                 return curContext.LexPad.Storage[index];
             }
@@ -1230,4 +1233,3 @@ public class Ops  // public static in the C# version
     }
 
 }
-

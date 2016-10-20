@@ -31,12 +31,12 @@ public class LexicalCandidateFinder
                 break;
 
             // Any candidates here?
-            if (curScope.LexPad.SlotMapping != null && curScope.LexPad.SlotMapping.containsKey(candidateHolderName)) {
+            if (curScope.LexPad.SlotMapping != null && curScope.LexPad.SlotMapping.containsKey(candidateHolderName))
+            {
                 Integer index = curScope.LexPad.SlotMapping.get(candidateHolderName);
                 P6list.Instance p6listInstance = (P6list.Instance)curScope.LexPad.Storage[index];
-                for (RakudoObject candidate : p6listInstance.Storage) {
+                for (RakudoObject candidate : p6listInstance.Storage)
                     result.add((RakudoCodeRef.Instance)candidate);
-                }
             }
         } while (curScope != protoScope);
         return result;

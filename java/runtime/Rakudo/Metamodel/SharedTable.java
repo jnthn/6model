@@ -27,7 +27,7 @@ public final class SharedTable  // C# has public sealed
     public RakudoObject HOW;
 
     /// <summary>
-    /// The type-object. If we do $obj.WHAT then it will refer to a 
+    /// The type-object. If we do $obj.WHAT then it will refer to a
     /// getting of this field.
     /// </summary>
     public RakudoObject WHAT;
@@ -71,7 +71,10 @@ public final class SharedTable  // C# has public sealed
 
         // Otherwise, try method cache.
         else if (MethodCache != null && MethodCache.containsKey(name))
-            { cachedMethod = MethodCache.get(name); return cachedMethod; }
+        {
+            cachedMethod = MethodCache.get(name);
+            return cachedMethod;
+        }
 
         // Otherwise, go ask the meta-object.
         else
@@ -84,7 +87,11 @@ public final class SharedTable  // C# has public sealed
                     tc, HOW, "find_method", Hints.NO_HINT);
 
             // Call it.
-            RakudoObject capture = CaptureHelper.FormWith(new RakudoObject[] { HOW, obj, Ops.box_str(tc, name, tc.DefaultStrBoxType) });
+            RakudoObject capture = CaptureHelper.FormWith(new RakudoObject[] {
+                    HOW,
+                    obj,
+                    Ops.box_str(tc, name, tc.DefaultStrBoxType)
+                } );
             return method.getSTable().Invoke(tc, method, capture);
         }
     }
@@ -111,7 +118,12 @@ public final class SharedTable  // C# has public sealed
         if (SpecialInvoke != null)
             return SpecialInvoke.Invoke(threadContext, method, capture);
         SharedTable sharedTable = method.getSTable();
-        RakudoObject invokable = sharedTable.CachedInvoke; if (invokable == null) { invokable = sharedTable.CachedInvoke = method.getSTable().FindMethod(threadContext, method, "postcircumfix:<( )>", Hints.NO_HINT); }
+        RakudoObject invokable  = sharedTable.CachedInvoke;
+        if (invokable == null)
+        { invokable
+                = sharedTable.CachedInvoke
+                = method.getSTable().FindMethod(threadContext, method, "postcircumfix:<( )>", Hints.NO_HINT);
+        }
         return invokable.getSTable().Invoke(threadContext, method, capture);
     }
 
@@ -184,4 +196,3 @@ public final class SharedTable  // C# has public sealed
     private static long TypeCacheIDSource = 4;
 
 }
-

@@ -97,7 +97,7 @@ public class CaptureHelper   // C# has static class
         if (nativeCapture != null)
         {
             RakudoObject[] possies = nativeCapture.Positionals;
-            if (possies != null && pos < possies.length)
+            if (possies != null && pos < possies.length && pos >= 0)
                 return possies[pos];
             else
                 return null;
